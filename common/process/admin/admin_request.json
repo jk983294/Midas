@@ -1,0 +1,6 @@
+{
+    "command" : "help",
+    "userId" : "kun",
+    "requestId" : "1",
+    "arguments" : ["-f file", "-s"]
+}
