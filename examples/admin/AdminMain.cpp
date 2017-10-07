@@ -92,8 +92,8 @@ int main(int argc, char* argv[]) {
         string response = pt.get<string>("response");
         std::cout << response << endl;
     } catch (std::exception& e) {
-        std::cerr << "error connect to server " << host << ":" << port << " with parameter: " << arguments
-                  << ", error: " << e.what() << std::endl;
+        std::cerr << "error connect to server " << host << ":" << port << " with parameter: " << arguments << endl
+                  << "reason: " << e.what() << std::endl;
     }
     return 0;
 }

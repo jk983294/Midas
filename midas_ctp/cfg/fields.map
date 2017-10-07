@@ -1,0 +1,59 @@
+ty              # type
+id              # id
+e               # exchange
+nts             # norm time stamp (UNIX format)
+tp              # last trade price
+nc              # net change between tp and the historical closing value or settlement price
+ot              # open time
+ht              # high time
+lt              # low time
+hp              # today's high
+lp              # today's low
+op              # today's open
+ccpd            # date of the most recent ccp
+cp              # current price
+ccp             # closing price or settlement price
+sp              # settlement price.The official closing price of a futures or option contract set by the clearing house at the end of the trading day
+sdt             # settlement price date
+ap              # latest ask price
+bp              # latest bid price
+as              # ask size
+bs              # bid size
+vs              # volume size, today's total trading volume
+tpd             # tp date
+pu              # price unit
+lsu             # lot size unit
+pc              # percentage change
+ob              # open bid
+oa              # open ask
+clb             # close bid, last bid
+cla             # close ask, last ask
+ois             # open interest. The total number of option or futures contracts that have not been closed
+oinc            # open interest net change
+stp             # strike price
+exp             # The date on which the future, option or warrant expires
+ul              # upper trading limit
+ll              # lower trading limit
+tcnt            # number of trades today
+tmv             # total market volume
+pci             # put/call indicator, indicates whether option is a put or a call.
+pq1             # price qualifier code
+lotsa           # lot size which defines the number of contracts traded for a particular instrument
+itp             # cancelled, inserted, retransmitted or irregular price
+its             # volume associated with itp
+tc              # type code for itp
+to              # daily turnover
+tosc            # scaling factor for the to
+lvs             # previous day's accumulated volume
+lsp             # Previous settlement price
+lap             # previous day's ask price
+lbp             # previous day's bid price
+lccp            # previous day's closing price or settlement price
+ex              # number of options contracts exercised during the trading day
+bbp1            # best bid price
+bap1            # best ask price
+bbs1            # best bid size
+bas1            # best ask size
+vxp             # latest vs * tp
+wgt             # weight of an instrument within an index
+rcvt            # receive time

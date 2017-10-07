@@ -1,8 +1,14 @@
-#include "TradeManager.h"
-#include <unistd.h>
 #include "../helper/CtpVisualHelper.h"
+#include "TradeManager.h"
 #include "utils/log/Log.h"
 
+/**
+ * 0 send success
+ * -1 failed due to network issue
+ * -2 failed due to unhandled request number exceed threshold
+ * -3 failed due to request number per second exceed threshold
+ * so -2 and -3 means you can sleep one second then request again
+ */
 bool IsFlowControl(int iResult) { return ((iResult == -2) || (iResult == -3)); }
 
 void TradeManager::request_login() {
@@ -29,8 +35,7 @@ void TradeManager::request_confirm_settlement() {
 }
 
 void TradeManager::query_trading_account() {
-    CThostFtdcQryTradingAccountField req;
-    memset(&req, 0, sizeof(req));
+    CThostFtdcQryTradingAccountField req{0};
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.InvestorID, data->investorId.c_str());
     while (true) {
@@ -45,8 +50,7 @@ void TradeManager::query_trading_account() {
 }
 
 void TradeManager::query_position(string instrument) {
-    CThostFtdcQryInvestorPositionField req;
-    memset(&req, 0, sizeof(req));
+    CThostFtdcQryInvestorPositionField req{0};
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.InvestorID, data->investorId.c_str());
     strcpy(req.InstrumentID, instrument.c_str());
@@ -62,8 +66,7 @@ void TradeManager::query_position(string instrument) {
 }
 
 void TradeManager::request_insert_order(string instrument) {
-    CThostFtdcInputOrderField req;
-    memset(&req, 0, sizeof(req));
+    CThostFtdcInputOrderField req{0};
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.InvestorID, data->investorId.c_str());
     strcpy(req.InstrumentID, instrument.c_str());
@@ -268,6 +271,18 @@ void TradeManager::ReqQuoteAction(CThostFtdcQuoteField *pQuote) {
     QUOTE_ACTION_SENT = true;
 }
 
+int TradeManager::request_buy(string instrument, double limitPrice, int volume) {
+    int iResult = request_open_position(instrument, limitPrice, volume, true);
+    MIDAS_LOG_INFO("request buy order insert: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_sell(string instrument, double limitPrice, int volume) {
+    int iResult = request_open_position(instrument, limitPrice, volume, false);
+    MIDAS_LOG_INFO("request sell order insert: " << iResult);
+    return iResult;
+}
+
 /**
  * query instrument, like cu1712
  * @param name if empty name provided, then query all instruments
@@ -281,7 +296,7 @@ void TradeManager::query_instrument(const string &name) {
         if (!IsFlowControl(iResult)) {
             break;
         } else {
-            MIDAS_LOG_ERROR("query single instrument: " << iResult << ", under flow control");
+            MIDAS_LOG_ERROR("query instrument: " << iResult << ", under flow control");
             sleep(1);
         }
     }
@@ -299,10 +314,66 @@ void TradeManager::query_product(const string &name) {
         if (!IsFlowControl(iResult)) {
             break;
         } else {
-            MIDAS_LOG_ERROR("query single instrument: " << iResult << ", under flow control");
+            MIDAS_LOG_ERROR("query instrument: " << iResult << ", under flow control");
+            sleep(1);
+        }
+    }
+}
+
+/**
+ * query exchange, like SHFE
+ * ExchangeID: CFFEX ExchangeName: 中国金融交易所 ExchangeProperty: 0
+ * ExchangeID: CZCE ExchangeName: 郑州商品交易所 ExchangeProperty: 0
+ * ExchangeID: DCE ExchangeName: 大连商品交易所 ExchangeProperty: 1
+ * ExchangeID: INE ExchangeName: 上海国际能源交易中心股份有限公司 ExchangeProperty: 0
+ * ExchangeID: SHFE ExchangeName: 上海期货交易所 ExchangeProperty: 0
+ * @param name if empty name provided, then query all exchanges
+ */
+void TradeManager::query_exchange(const string &name) {
+    CThostFtdcQryExchangeField req = {0};
+    strcpy(req.ExchangeID, name.c_str());
+    while (true) {
+        int iResult = api->ReqQryExchange(&req, ++requestId);
+        if (!IsFlowControl(iResult)) {
+            break;
+        } else {
+            MIDAS_LOG_ERROR("query exchange: " << iResult << ", under flow control");
             sleep(1);
         }
     }
 }
 
 TradeManager::TradeManager(CThostFtdcTraderApi *a, CtpData *d) : api(a), data(d) {}
+
+void TradeManager::init_ctp() {
+    data->state = TradeInit;
+    query_exchange("");
+}
+
+int TradeManager::request_open_position(string instrument, double limitPrice, int volume, bool isBuy) {
+    CThostFtdcInputOrderField req{0};
+    strcpy(req.BrokerID, data->brokerId.c_str());
+    strcpy(req.InvestorID, data->investorId.c_str());
+    strcpy(req.InstrumentID, instrument.c_str());
+    strcpy(req.OrderRef, data->orderRef);
+    req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
+
+    if (isBuy)
+        req.Direction = THOST_FTDC_D_Buy;
+    else
+        req.Direction = THOST_FTDC_D_Sell;
+
+    req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+    req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;
+    req.LimitPrice = limitPrice;
+    req.VolumeTotalOriginal = volume;
+    req.TimeCondition = THOST_FTDC_TC_GFD;                // 当日有效
+    req.VolumeCondition = THOST_FTDC_VC_AV;               // 任何数量
+    req.MinVolume = 1;                                    // 最小成交量
+    req.ContingentCondition = THOST_FTDC_CC_Immediately;  //触发条件: 立即
+    req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;  //强平原因: 非强平
+    req.IsAutoSuspend = 0;                                //自动挂起标志: 否
+    req.UserForceClose = 0;                               //用户强评标志: 否
+
+    return api->ReqOrderInsert(&req, ++requestId);
+}

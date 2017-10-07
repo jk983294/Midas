@@ -83,6 +83,13 @@ inline string get_bool_string(bool value) {
         return "false";
 }
 
+inline string get_bool_string(int value) {
+    if (value)
+        return "true";
+    else
+        return "false";
+}
+
 inline bool is_localhost(const std::string& host) { return "localhost" == host || "127.0.0.1" == host; }
 
 template <typename Object>

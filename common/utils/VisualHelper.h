@@ -3,6 +3,7 @@
 
 #include <ctp/ThostFtdcUserApiStruct.h>
 #include <iconv.h>
+#include <utils/ConvertHelper.h>
 #include <algorithm>
 #include <cmath>
 #include <cstring>

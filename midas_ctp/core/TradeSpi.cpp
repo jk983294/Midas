@@ -1,5 +1,5 @@
-#include "TradeSpi.h"
 #include "../helper/CtpVisualHelper.h"
+#include "TradeSpi.h"
 #include "utils/log/Log.h"
 
 using namespace std;
@@ -11,8 +11,9 @@ void TradeSpi::OnFrontConnected() {
 
 void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo,
                               int nRequestID, bool bIsLast) {
-    MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspUserLogin: " << *pRspUserLogin);
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
+        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspUserLogin: " << *pRspUserLogin);
+
         // save session parameters to test if my own order
         data->frontId = pRspUserLogin->FrontID;
         data->sessionId = pRspUserLogin->SessionID;
@@ -31,57 +32,82 @@ void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
 
 void TradeSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm,
                                           CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspSettlementInfoConfirm " << *pSettlementInfoConfirm);
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        // query_instrument("cu1712");
-        manager->query_product("");
+        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspSettlementInfoConfirm " << *pSettlementInfoConfirm);
     }
 }
 
 void TradeSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo,
                                   int nRequestID, bool bIsLast) {
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspQryInstrument " << *pInstrument);
-    data->instruments.insert(make_pair(string(pInstrument->InstrumentID), *pInstrument));
+    if (pInstrument) data->instruments.insert(make_pair(string(pInstrument->InstrumentID), *pInstrument));
+
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        // manager->query_trading_account();
+        MIDAS_LOG_INFO("request ID " << nRequestID << " query instrument success.");
+        if (data->state == TradeInit) {
+            sleep(1);
+            manager->query_trading_account();
+        }
+    } else {
+        /**
+         * no need to log error in this block, because if this is error msg,
+         * then bIsLast must be true, then error logged in IsErrorRspInfo(pRspInfo) function
+         */
     }
 }
 
 ///请求查询交易所响应
 void TradeSpi::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
                                 bool bIsLast) {
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspQryExchange " << *pExchange);
+    if (pExchange) data->exchanges.insert(make_pair(string(pExchange->ExchangeID), *pExchange));
+
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        // TODO record all info
+        MIDAS_LOG_INFO("request ID " << nRequestID << " query exchange success.");
+        if (data->state == TradeInit) {
+            sleep(1);
+            manager->query_product("");
+        }
     }
 }
 
 ///请求查询产品响应
 void TradeSpi::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
                                bool bIsLast) {
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspQryProduct " << *pProduct);
-    data->products.insert(make_pair(string(pProduct->ProductID), *pProduct));
+    if (pProduct) data->products.insert(make_pair(string(pProduct->ProductID), *pProduct));
+
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        // TODO record all info
+        MIDAS_LOG_INFO("request ID " << nRequestID << " query product success.");
+        if (data->state == TradeInit) {
+            sleep(1);
+            manager->query_instrument("");
+        }
     }
 }
 
 void TradeSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo,
                                       int nRequestID, bool bIsLast) {
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspQryTradingAccount " << *pTradingAccount);
+    if (pTradingAccount) data->accounts.insert(make_pair(string(pTradingAccount->AccountID), *pTradingAccount));
+
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        // query_position();
+        MIDAS_LOG_INFO("request ID " << nRequestID << " query account success.");
+        if (data->state == TradeInit) {
+            sleep(1);
+            manager->query_position("");
+        }
     }
 }
 
 void TradeSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition,
                                         CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     if (pInvestorPosition) {
+        data->positions.push_back(*pInvestorPosition);
         MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspQryInvestorPosition " << *pInvestorPosition);
-    } else {
-        MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspQryInvestorPosition ");
     }
+
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
+        MIDAS_LOG_INFO("request ID " << nRequestID << " query position success.");
+        if (data->state == TradeInit) {
+            data->state = MarketInit;
+        }
         // 报单录入请求
         // request_insert_order();
         // 执行宣告录入请求

@@ -6,47 +6,56 @@
 
 using namespace std;
 
-static string ctp_default_value{"null"};
+const static string ctp_default_value{"null"};
 
-inline string& ctp_order_source(TThostFtdcOrderSourceType orderSource) {
-    static string desc[]{"participant", "administrator"};
+inline const string& ctp_order_source(TThostFtdcOrderSourceType orderSource) {
+    const static string desc[]{"participant", "administrator"};
     return desc[orderSource - THOST_FTDC_OSRC_Participant];
 }
 
-inline string& ctp_position_direction(TThostFtdcPosiDirectionType direction) {
-    static string desc[]{"net", "long", "short"};
+inline const string& ctp_position_direction(TThostFtdcPosiDirectionType direction) {
+    const static string desc[]{"net", "long", "short"};
     return desc[direction - THOST_FTDC_PD_Net];
 }
 
-inline string& ctp_position_type(TThostFtdcPositionTypeType type) {
-    static string desc[]{"net", "gross"};
+inline string ctp_options_type(TThostFtdcOptionsTypeType type) {
+    if (type == THOST_FTDC_CP_CallOptions)
+        return "call";
+    else if (type == THOST_FTDC_CP_PutOptions)
+        return "put";
+    else
+        return "NA";
+}
+
+inline const string& ctp_position_type(TThostFtdcPositionTypeType type) {
+    const static string desc[]{"net", "gross"};
     return desc[type - THOST_FTDC_PT_Net];
 }
 
-inline string& ctp_direction(TThostFtdcDirectionType direction) {
-    static string desc[]{"buy", "sell"};
+inline const string& ctp_direction(TThostFtdcDirectionType direction) {
+    const static string desc[]{"buy", "sell"};
     return desc[direction - THOST_FTDC_D_Buy];
 }
 
-inline string& ctp_time_condition(TThostFtdcTimeConditionType timeCondition) {
+inline const string& ctp_time_condition(TThostFtdcTimeConditionType timeCondition) {
     // 立即完成，否则撤销 / 本节有效 / 当日有效 / 指定日期前有效 / 撤销前有效 / 集合竞价有效
-    static string desc[]{"IOC", "GFS", "GFD", "GTD", "GTC", "GFA"};
+    const static string desc[]{"IOC", "GFS", "GFD", "GTD", "GTC", "GFA"};
     return desc[timeCondition - THOST_FTDC_TC_IOC];
 }
 
-inline string& ctp_product_class(TThostFtdcProductClassType productClass) {
-    static string desc[]{"Futures", "Options", "Combination", "Spot", "EFP", "SpotOption", "ETFOption", "Stock"};
+inline const string& ctp_product_class(TThostFtdcProductClassType productClass) {
+    const static string desc[]{"Futures", "Options", "Combination", "Spot", "EFP", "SpotOption", "ETFOption", "Stock"};
     return desc[productClass - THOST_FTDC_PC_Futures];
 }
 
-inline string& ctp_volume_condition(TThostFtdcVolumeConditionType volumeCondition) {
+inline const string& ctp_volume_condition(TThostFtdcVolumeConditionType volumeCondition) {
     // 任何数量 / 最小数量 / 全部数量
-    static string desc[]{"any", "min", "complete"};
+    const static string desc[]{"any", "min", "complete"};
     return desc[volumeCondition - THOST_FTDC_VC_AV];
 }
 
-inline string& ctp_contingent_condition(TThostFtdcContingentConditionType contingentCondition) {
-    static string desc1[]{
+inline const string& ctp_contingent_condition(TThostFtdcContingentConditionType contingentCondition) {
+    const static string desc1[]{
         "Immediately",                     // 立即
         "Touch",                           // 止损
         "TouchProfit",                     // 止赢
@@ -57,7 +66,7 @@ inline string& ctp_contingent_condition(TThostFtdcContingentConditionType contin
         "LastPriceLesserEqualStopPrice",   // 最新价小于等于条件价
         "AskPriceGreaterThanStopPrice"     // 卖一价大于条件价
     };
-    static string desc2[]{
+    const static string desc2[]{
         "apGreaterEqualStopPrice",  // 卖一价大于等于条件价
         "apLesserThanStopPrice",    // 卖一价小于条件价
         "apLesserEqualStopPrice",   // 卖一价小于等于条件价
@@ -65,7 +74,7 @@ inline string& ctp_contingent_condition(TThostFtdcContingentConditionType contin
         "bpGreaterEqualStopPrice",  // 买一价大于等于条件价
         "bpLesserThanStopPrice"     // 买一价小于条件价
     };
-    static string desc3{"bpLesserEqualStopPrice"};  // 买一价小于等于条件价
+    const static string desc3{"bpLesserEqualStopPrice"};  // 买一价小于等于条件价
     if (contingentCondition >= THOST_FTDC_CC_Immediately &&
         contingentCondition <= THOST_FTDC_CC_AskPriceGreaterThanStopPrice) {
         return desc1[contingentCondition - THOST_FTDC_CC_Immediately];
@@ -78,12 +87,12 @@ inline string& ctp_contingent_condition(TThostFtdcContingentConditionType contin
     return ctp_default_value;
 }
 
-inline string& ctp_order_status(TThostFtdcOrderStatusType orderStatus) {
+inline const string& ctp_order_status(TThostFtdcOrderStatusType orderStatus) {
     // 全部成交 / 部分成交还在队列中 / 分成交不在队列中 / 未成交还在队列中 / 未成交不在队列中 / 撤单
-    static string desc1[]{"AllTraded",       "PartTradedQueueing", "PartTradedNotQueueing",
-                          "NoTradeQueueing", "NoTradeNotQueueing", "Canceled"};
+    const static string desc1[]{"AllTraded",       "PartTradedQueueing", "PartTradedNotQueueing",
+                                "NoTradeQueueing", "NoTradeNotQueueing", "Canceled"};
     // 未知 / 尚未触发 / 已触发
-    static string desc2[]{"Unknown", "NotTouched", "Touched"};
+    const static string desc2[]{"Unknown", "NotTouched", "Touched"};
     if (orderStatus >= THOST_FTDC_OST_AllTraded && orderStatus <= THOST_FTDC_OST_Canceled) {
         return desc1[orderStatus - THOST_FTDC_OST_AllTraded];
     } else {
@@ -91,8 +100,8 @@ inline string& ctp_order_status(TThostFtdcOrderStatusType orderStatus) {
     }
 }
 
-inline string& ctp_force_close_reason(TThostFtdcForceCloseReasonType forceCloseReason) {
-    static string desc[]{
+inline const string& ctp_force_close_reason(TThostFtdcForceCloseReasonType forceCloseReason) {
+    const static string desc[]{
         "NotForceClose",            // 非强平
         "LackDeposit",              // 资金不足
         "ClientOverPositionLimit",  // 客户超仓
@@ -105,18 +114,64 @@ inline string& ctp_force_close_reason(TThostFtdcForceCloseReasonType forceCloseR
     return desc[forceCloseReason - THOST_FTDC_FCC_NotForceClose];
 }
 
-inline string& ctp_order_submit_status(TThostFtdcOrderSubmitStatusType orderSubmitStatus) {
+inline const string& ctp_order_submit_status(TThostFtdcOrderSubmitStatusType orderSubmitStatus) {
     // 已经提交 / 撤单已经提交 / 修改已经提交 / 已经接受 / 报单已经被拒绝 / 撤单已经被拒绝 / 改单已经被拒绝
-    static string desc[]{"InsertSubmitted", "CancelSubmitted", "ModifySubmitted", "Accepted",
-                         "InsertRejected",  "CancelRejected",  "ModifyRejected"};
+    const static string desc[]{"InsertSubmitted", "CancelSubmitted", "ModifySubmitted", "Accepted",
+                               "InsertRejected",  "CancelRejected",  "ModifyRejected"};
     return desc[orderSubmitStatus - THOST_FTDC_OSS_InsertSubmitted];
 }
 
-inline string& ctp_order_type(TThostFtdcOrderTypeType orderType) {
+inline const string& ctp_order_type(TThostFtdcOrderTypeType orderType) {
     // 正常 / 报价衍生 / 组合衍生 / 组合报单 / 条件单 / 互换单
-    static string desc[]{"Normal",      "DeriveFromQuote",  "DeriveFromCombination",
-                         "Combination", "ConditionalOrder", "Swap"};
+    const static string desc[]{"Normal",      "DeriveFromQuote",  "DeriveFromCombination",
+                               "Combination", "ConditionalOrder", "Swap"};
     return desc[orderType - THOST_FTDC_ORDT_Normal];
+}
+
+inline const string& ctp_phase_type(TThostFtdcInstLifePhaseType phaseType) {
+    // 未上市 / 上市 / 停牌 / 到期
+    const static string desc[]{"NotStart", "Started", "Pause", "Expired"};
+    return desc[phaseType - THOST_FTDC_IP_NotStart];
+}
+
+inline const string& ctp_position_date_type(TThostFtdcPositionDateTypeType dateTypeType) {
+    const static string desc[]{"UseHistory", "NoUseHistory"};
+    return desc[dateTypeType - THOST_FTDC_PDT_UseHistory];
+}
+
+inline string ctp_mmsa(TThostFtdcMaxMarginSideAlgorithmType algorithmType) {
+    if (algorithmType == THOST_FTDC_MMSA_NO)
+        return "false";
+    else
+        return "true";
+}
+
+inline const string& ctp_combination_type(TThostFtdcCombinationTypeType combinationTypeType) {
+    // 期货组合 / Bull价差 / Bear价差 / 跨式组合 / 宽跨式组合 / 备兑组合 / 时间价差组合
+    const static string desc[]{"Future", "Bull", "Bear", "STD", "STG", "PRT", "CLD"};
+    return desc[combinationTypeType - THOST_FTDC_COMBT_Future];
+}
+
+inline string ctp_close_deal_type(TThostFtdcCloseDealTypeType closeDealType) {
+    if (closeDealType == THOST_FTDC_CDT_Normal)
+        return "normal";
+    else
+        return "speculation_first";
+}
+
+inline const string& ctp_mortgage_range_type(TThostFtdcMortgageFundUseRangeType mortgageFundUseRangeType) {
+    // 不能使用 / 用于保证金 / 用于手续费、盈亏、保证金
+    const static string desc[]{"None", "Margin", "All"};
+    return desc[mortgageFundUseRangeType - THOST_FTDC_MFUR_None];
+}
+
+inline string ctp_business_type(TThostFtdcBizTypeType bizTypeType) {
+    if (bizTypeType == THOST_FTDC_BZTP_Future)
+        return "future";
+    else if (bizTypeType == THOST_FTDC_BZTP_Stock)
+        return "stock";
+    else
+        return "NA";
 }
 
 #endif

@@ -6,6 +6,7 @@
 #include "utils/VisualHelper.h"
 
 using namespace std;
+using namespace midas;
 
 inline std::ostream& operator<<(std::ostream& os, const CThostFtdcRspUserLoginField& field) {
     os << "TradingDay: " << field.TradingDay << " LoginTime: " << field.LoginTime << " BrokerID: " << field.BrokerID
@@ -24,20 +25,22 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcSettlementInfo
 inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInstrumentField& field) {
     os << "InstrumentID: " << field.InstrumentID << " ExchangeID: " << field.ExchangeID
        << " ExchangeInstID: " << field.ExchangeInstID << " ProductID: " << field.ProductID
-       << " ProductClass: " << field.ProductClass << " DeliveryYear: " << field.DeliveryYear
+       << " ProductClass: " << ctp_product_class(field.ProductClass) << " DeliveryYear: " << field.DeliveryYear
        << " DeliveryMonth: " << field.DeliveryMonth << " MaxMarketOrderVolume: " << field.MaxMarketOrderVolume
        << " MinMarketOrderVolume: " << field.MinMarketOrderVolume
        << " MaxLimitOrderVolume: " << field.MaxLimitOrderVolume << " MinLimitOrderVolume: " << field.MinLimitOrderVolume
        << " VolumeMultiple: " << field.VolumeMultiple << " PriceTick: " << field.PriceTick
        << " CreateDate: " << field.CreateDate << " OpenDate: " << field.OpenDate << " ExpireDate: " << field.ExpireDate
        << " StartDelivDate: " << field.StartDelivDate << " EndDelivDate: " << field.EndDelivDate
-       << " InstLifePhase: " << field.InstLifePhase << " IsTrading: " << field.IsTrading
-       << " PositionType: " << ctp_position_type(field.PositionType) << " PositionDateType: " << field.PositionDateType
+       << " InstLifePhase: " << ctp_phase_type(field.InstLifePhase)
+       << " IsTrading: " << get_bool_string(field.IsTrading)
+       << " PositionType: " << ctp_position_type(field.PositionType)
+       << " PositionDateType: " << ctp_position_date_type(field.PositionDateType)
        << " LongMarginRatio: " << field.LongMarginRatio << " ShortMarginRatio: " << field.ShortMarginRatio
-       << " MaxMarginSideAlgorithm: " << field.MaxMarginSideAlgorithm
+       << " MaxMarginSideAlgorithm: " << ctp_mmsa(field.MaxMarginSideAlgorithm)
        << " UnderlyingInstrID: " << field.UnderlyingInstrID << " StrikePrice: " << field.StrikePrice
-       << " OptionsType: " << field.OptionsType << " UnderlyingMultiple: " << field.UnderlyingMultiple
-       << " CombinationType: " << field.CombinationType << " MinBuyVolume: " << field.MinBuyVolume
+       << " OptionsType: " << ctp_options_type(field.OptionsType) << " UnderlyingMultiple: " << field.UnderlyingMultiple
+       << " CombinationType: " << ctp_combination_type(field.CombinationType) << " MinBuyVolume: " << field.MinBuyVolume
        << " MinSellVolume: " << field.MinSellVolume << " InstrumentCode: " << field.InstrumentCode;
     return os;
 }
@@ -67,7 +70,8 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcTradingAccount
        << " SpecProductPositionProfit: " << field.SpecProductPositionProfit
        << " SpecProductCloseProfit: " << field.SpecProductCloseProfit
        << " SpecProductPositionProfitByAlg: " << field.SpecProductPositionProfitByAlg
-       << " SpecProductExchangeMargin: " << field.SpecProductExchangeMargin << " BizType: " << field.BizType;
+       << " SpecProductExchangeMargin: " << field.SpecProductExchangeMargin
+       << " BizType: " << ctp_business_type(field.BizType);
     return os;
 }
 
@@ -266,7 +270,7 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcTradeField& fi
 }
 
 inline std::ostream& operator<<(std::ostream& os, const CThostFtdcExchangeField& field) {
-    os << "ExchangeID: " << field.ExchangeID << " ExchangeName: " << field.ExchangeName
+    os << "ExchangeID: " << field.ExchangeID << " ExchangeName: " << gbk2utf8((char*)field.ExchangeName)
        << " ExchangeProperty: " << field.ExchangeProperty;
     return os;
 }
@@ -278,10 +282,12 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcProductField& 
        << " MaxMarketOrderVolume: " << field.MaxMarketOrderVolume
        << " MinMarketOrderVolume: " << field.MinMarketOrderVolume
        << " MaxLimitOrderVolume: " << field.MaxLimitOrderVolume << " MinLimitOrderVolume: " << field.MinLimitOrderVolume
-       << " PositionType: " << ctp_position_type(field.PositionType) << " PositionDateType: " << field.PositionDateType
-       << " CloseDealType: " << field.CloseDealType << " TradeCurrencyID: " << field.TradeCurrencyID
-       << " MortgageFundUseRange: " << field.MortgageFundUseRange << " ExchangeProductID: " << field.ExchangeProductID
-       << " UnderlyingMultiple: " << field.UnderlyingMultiple;
+       << " PositionType: " << ctp_position_type(field.PositionType)
+       << " PositionDateType: " << ctp_position_date_type(field.PositionDateType)
+       << " CloseDealType: " << ctp_close_deal_type(field.CloseDealType)
+       << " TradeCurrencyID: " << field.TradeCurrencyID
+       << " MortgageFundUseRange: " << ctp_mortgage_range_type(field.MortgageFundUseRange)
+       << " ExchangeProductID: " << field.ExchangeProductID << " UnderlyingMultiple: " << field.UnderlyingMultiple;
     return os;
 }
 

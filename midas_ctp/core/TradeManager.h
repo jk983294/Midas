@@ -35,13 +35,30 @@ public:
     ///报价操作请求
     void ReqQuoteAction(CThostFtdcQuoteField *pQuote);
 
+    int request_buy(string instrument, double limitPrice, int volume);
+
+    int request_sell(string instrument, double limitPrice, int volume);
+
     void query_instrument(const string &name);
 
     void query_product(const string &name);
+
+    void query_exchange(const string &name);
     ///请求查询资金账户
     void query_trading_account();
     ///请求查询投资者持仓
     void query_position(string instrument);
+
+    /**
+     * query sequence: query_exchange query_product query_instrument query_trading_account query_position
+     * event driven, the this function only invoke query_exchange, the callback will invoke one by one
+     * the last query action's callback will set CtpState to init finish
+     * so that other invoke won't get the all chain queried
+     */
+    void init_ctp();
+
+private:
+    int request_open_position(string instrument, double limitPrice, int volume, bool isBuy);
 };
 
 #endif

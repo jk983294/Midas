@@ -46,10 +46,19 @@ private:
     void trade_thread();
     void market_thread();
 
+private:
     // admin section
     string admin_meters(const string& cmd, const TAdminCallbackArgs& args) const;
+
+    /**
+     * send request to server, because its async nature, this interface won't get back any answer
+     * use admin_query to get the real answer after a few seconds to let server respond
+     * use admin_dump to dump real answer
+     */
     string admin_request(const string& cmd, const TAdminCallbackArgs& args);
     string admin_query(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_dump(const string& cmd, const TAdminCallbackArgs& args);
+
     string admin_get_async_result(const string& cmd, const TAdminCallbackArgs& args, const std::string& userId);
     string admin_clear_async_result(const string& cmd, const TAdminCallbackArgs& args, const std::string& userId);
     string admin_buy(const string& cmd, const TAdminCallbackArgs& args) const;

@@ -1,8 +1,6 @@
+#include <utils/FileUtils.h>
 #include "../helper/CtpVisualHelper.h"
 #include "CtpProcess.h"
-#include "net/tcp/TcpPublisherAsync.h"
-#include "process/admin/MidasAdminBase.h"
-#include "utils/log/Log.h"
 
 void CtpProcess::init_admin() {
     admin_handler().register_callback("meters", boost::bind(&CtpProcess::admin_meters, this, _1, _2),
@@ -11,7 +9,10 @@ void CtpProcess::init_admin() {
                                       "request (instrument|product|exchange|account|position)",
                                       "request data from ctp server");
     admin_handler().register_callback("query", boost::bind(&CtpProcess::admin_query, this, _1, _2),
-                                      "query (instrument|product|exchange|account|position)", "query data in local");
+                                      "query (instrument|product|exchange|account|position)",
+                                      "query data in local memory");
+    admin_handler().register_callback("dump", boost::bind(&CtpProcess::admin_dump, this, _1, _2),
+                                      "dump (instrument|product|exchange|account|position)", "dump data");
     admin_handler().register_callback("get_async_result",
                                       boost::bind(&CtpProcess::admin_get_async_result, this, _1, _2, _3),
                                       "get_async_result", "get_async_result");
@@ -19,9 +20,9 @@ void CtpProcess::init_admin() {
                                       boost::bind(&CtpProcess::admin_clear_async_result, this, _1, _2, _3),
                                       "clear_async_result", "clear_async_result");
     admin_handler().register_callback("buy", boost::bind(&CtpProcess::admin_buy, this, _1, _2),
-                                      "buy instrument size price", "buy instrument size price");
+                                      "buy instrument price size", "buy in limit order manner");
     admin_handler().register_callback("sell", boost::bind(&CtpProcess::admin_sell, this, _1, _2),
-                                      "sell instrument size price", "sell instrument size price");
+                                      "sell instrument price size", "sell in limit order manner");
     admin_handler().register_callback("close", boost::bind(&CtpProcess::admin_close, this, _1, _2),
                                       "close instrument size", "close instrument size");
 }
@@ -30,15 +31,22 @@ string CtpProcess::admin_request(const string& cmd, const TAdminCallbackArgs& ar
     string param1, param2;
     if (args.size() > 0) param1 = args[0];
     if (args.size() > 1) param2 = args[1];
-    ostringstream oss;
+
     if (param1 == "instrument") {
         manager->query_instrument(param2);
     } else if (param1 == "product") {
         manager->query_product(param2);
+    } else if (param1 == "exchange") {
+        manager->query_exchange(param2);
+    } else if (param1 == "account") {
+        manager->query_trading_account();
+    } else if (param1 == "position") {
+        data.positions.clear();
+        manager->query_position(param2);
     } else if (param1 == "") {
-        oss << "unknown parameter";
+        return "unknown parameter";
     }
-    return oss.str();
+    return "request sent";
 }
 
 string CtpProcess::admin_query(const string& cmd, const TAdminCallbackArgs& args) {
@@ -47,25 +55,37 @@ string CtpProcess::admin_query(const string& cmd, const TAdminCallbackArgs& args
     if (args.size() > 1) param2 = args[1];
     ostringstream oss;
     if (param1 == "instrument") {
-        if (param2 == "" || param2 == "all") {
-            for (auto it = data.instruments.begin(); it != data.instruments.end(); ++it) oss << it->second << endl;
-        } else if (data.instruments.find(param2) != data.instruments.end()) {
-            oss << data.instruments[param2];
-        } else {
-            oss << "can not find instrument for " << param2;
-        }
+        dump2stream(oss, data.instruments, param2);
     } else if (param1 == "product") {
-        if (param2 == "" || param2 == "all") {
-            for (auto it = data.products.begin(); it != data.products.end(); ++it) oss << it->second << endl;
-        } else if (data.products.find(param2) != data.products.end()) {
-            oss << data.products[param2];
-        } else {
-            oss << "can not find instrument for " << param2;
-        }
+        dump2stream(oss, data.products, param2);
+    } else if (param1 == "exchange") {
+        dump2stream(oss, data.exchanges, param2);
+    } else if (param1 == "account") {
+        dump2stream(oss, data.accounts, param2);
+    } else if (param1 == "position") {
+        oss << data.positions << endl;
     } else if (param1 == "") {
         oss << "unknown parameter";
     }
     return oss.str();
+}
+
+string CtpProcess::admin_dump(const string& cmd, const TAdminCallbackArgs& args) {
+    string param1, param2;
+    if (args.size() > 0) param1 = args[0];
+    if (args.size() > 1) param2 = args[1];
+
+    if (param1 == "instrument" || param1 == "" || param1 == "all")
+        dump2file(data.instruments, data.dataDirectory + "/instrument.dump");
+    if (param1 == "product" || param1 == "" || param1 == "all")
+        dump2file(data.products, data.dataDirectory + "/product.dump");
+    if (param1 == "exchange" || param1 == "" || param1 == "all")
+        dump2file(data.exchanges, data.dataDirectory + "/exchange.dump");
+    if (param1 == "account" || param1 == "" || param1 == "all")
+        dump2file(data.accounts, data.dataDirectory + "/account.dump");
+    if (param1 == "position" || param1 == "" || param1 == "all")
+        dump2file(data.positions, data.dataDirectory + "/position.dump");
+    return "dump finished";
 }
 
 string CtpProcess::admin_get_async_result(const string& cmd, const TAdminCallbackArgs& args,
@@ -102,22 +122,38 @@ string CtpProcess::admin_clear_async_result(const string& cmd, const TAdminCallb
 
 string CtpProcess::admin_buy(const string& cmd, const TAdminCallbackArgs& args) const {
     ostringstream oss;
-    if (args.size() == 0)
-        oss << "missing parameter\n";
+    if (args.size() < 3)
+        oss << "missing parameter: buy instrument price size";
     else {
-        string content = args[0];
-        oss << "parameter: " << content << endl;
+        string instrument = args[0];
+        double price = boost::lexical_cast<double>(args[1]);
+        int size = boost::lexical_cast<int>(args[2]);
+        oss << "parameter: " << instrument << " " << price << " " << size << endl;
+        int ret = manager->request_buy(instrument, price, size);
+        if (ret == 0) {
+            oss << "buy order sent success for " << instrument << " " << price << " " << size << endl;
+        } else {
+            oss << "buy order sent failed with error code " << ret << endl;
+        }
     }
     return oss.str();
 }
 
 string CtpProcess::admin_sell(const string& cmd, const TAdminCallbackArgs& args) const {
     ostringstream oss;
-    if (args.size() == 0)
-        oss << "missing parameter\n";
+    if (args.size() < 3)
+        oss << "missing parameter: sell instrument price size";
     else {
-        string content = args[0];
-        oss << "parameter: " << content << endl;
+        string instrument = args[0];
+        double price = boost::lexical_cast<double>(args[1]);
+        int size = boost::lexical_cast<int>(args[2]);
+        oss << "parameter: " << instrument << " " << price << " " << size << endl;
+        int ret = manager->request_sell(instrument, price, size);
+        if (ret == 0) {
+            oss << "sell order sent success for " << instrument << " " << price << " " << size << endl;
+        } else {
+            oss << "sell order sent failed with error code " << ret << endl;
+        }
     }
     return oss.str();
 }

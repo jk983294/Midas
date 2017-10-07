@@ -202,6 +202,16 @@ inline timeval now_timeval() {
     gettimeofday(&tv, 0);
     return tv;
 }
+
+inline std::string now_string() {
+    time_t tNow =time(NULL);
+    struct tm tm;
+    localtime_r(&tNow, &tm);
+    char buffer[16];
+    std::snprintf(buffer, sizeof buffer, "%4u%02u%02u.%02u%02u%02u", tm.tm_year + 1900, tm.tm_mon + 1,
+                  tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    return buffer;
+}
 }
 
 #endif

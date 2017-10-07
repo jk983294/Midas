@@ -21,7 +21,6 @@ void CtpProcess::trade_thread() {
     traderApi->SubscribePrivateTopic(THOST_TERT_QUICK);          // 注册私有流
     traderApi->RegisterFront((char*)(data.tradeFront.c_str()));  // connect
     traderApi->Init();
-
     traderApi->Join();
 }
 
@@ -38,6 +37,7 @@ void CtpProcess::app_start() {
     // marketDataThread = std::thread([this] { market_thread(); });
     tradeDataThread = std::thread([this] { trade_thread(); });
     sleep(5);
+    manager->init_ctp();
 }
 
 void CtpProcess::app_stop() {
