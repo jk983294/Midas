@@ -1,10 +1,6 @@
 #include "CtpProcess.h"
 
-CtpProcess::CtpProcess(int argc, char** argv) : MidasProcessBase(argc, argv) {
-    register_command_line_args('L', "loglevel", SwitchWithArg, SwitchOptional, "set log level", "set log level");
-    set_log_level(argc, argv);
-    init_admin();
-}
+CtpProcess::CtpProcess(int argc, char** argv) : MidasProcessBase(argc, argv) { init_admin(); }
 
 CtpProcess::~CtpProcess() {
     cancelAdmin = true;

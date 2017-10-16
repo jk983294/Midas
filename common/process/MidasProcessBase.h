@@ -79,6 +79,8 @@ private:
     string admin_shutdown(const string& cmd, const TAdminCallbackArgs& args);
     string admin_get_env(const string& cmd, const TAdminCallbackArgs& args);
     void _init_admin();
+
+    void set_log_level(int argc, char** argv) const;
 };
 }
 

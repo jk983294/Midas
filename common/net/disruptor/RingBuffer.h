@@ -15,6 +15,7 @@
 using namespace std;
 
 namespace midas {
+
 template <typename Payload, typename ClaimStrategy, typename WaitStrategy, typename ConsumerStrategy>
 class RingBuffer {
 public:
@@ -49,7 +50,101 @@ public:
 
     long get_cursor() const { return cursor.load(std::memory_order::memory_order_acquire); }
 
-    void set_cursor(long seq) const { return cursor.store(seq, std::memory_order::memory_order_release); }
+    void set_cursor(long seq) { return cursor.store(seq, std::memory_order::memory_order_release); }
+
+public:
+    class ConsumerTrackingProducerBarrier : public ProducerBarrier<Payload, ConsumerTrackingProducerBarrier> {
+    private:
+        const bool multiProducer;
+        RingBuffer<Payload, ClaimStrategy, WaitStrategy, ConsumerStrategy>& ringBufferRef;
+        const typename ConsumerStrategy::SharedPtr consumerPtr;
+        typename WaitStrategy::SharedPtr waitStrategyPtr;
+        long previousSize;
+
+    public:
+        ConsumerTrackingProducerBarrier(const bool multiProducer_,
+                                        RingBuffer<Payload, ClaimStrategy, WaitStrategy, ConsumerStrategy>& ringBuffer_,
+                                        const typename ConsumerStrategy::SharedPtr consumerPtr_,
+                                        typename WaitStrategy::SharedPtr waitStrategyPtr_)
+            : multiProducer(multiProducer_),
+              ringBufferRef(ringBuffer_),
+              consumerPtr(consumerPtr_),
+              waitStrategyPtr(waitStrategyPtr_),
+              previousSize(1) {}
+
+        Payload& get_next_entry() {
+            const long consumptionPoint = consumerPtr->get_consumption_point();
+            const long nextSeqNo = ringBufferRef.claimStrategyPtr->increment_and_get();
+
+            const long wrapPoint = nextSeqNo - ringBufferRef.ringSize;
+            if (midas::is_unlikely_hint(wrapPoint > consumerPtr->get_consumption_point())) {
+                bool loggedRingFullMsg = false;
+                while (wrapPoint > consumerPtr->get_consumption_point()) {
+                    if (!loggedRingFullMsg) {
+                        MIDAS_LOG_WARNING(ringBufferRef.name << " Ring full detected");
+                        loggedRingFullMsg = true;
+                    }
+
+                    sched_yield();
+                }
+            }
+
+            Payload& entry = ringBufferRef.ring[nextSeqNo & ringBufferRef.bitMask];
+
+            entry.set_sequence_value(nextSeqNo, consumptionPoint);
+            return entry;
+        }
+
+        void publish_entry(Payload& entry, bool isValid = true) {
+            entry.set_is_valid(isValid);
+
+            if (multiProducer) {
+                while ((entry.get_sequence_value() - 1) != ringBufferRef.get_cursor()) {
+                    // Wait here until preceding producers have published their entries
+                    sched_yield();
+                }
+            }
+
+            ringBufferRef.set_cursor(entry.get_sequence_value());
+            waitStrategyPtr->data_available();
+        }
+    };
+
+    class ConsumerTrackingConsumerBarrier : public ConsumerBarrier<Payload, ConsumerTrackingConsumerBarrier> {
+    public:
+        typedef ProducerBarrier<Payload, ConsumerTrackingProducerBarrier> TProducerBarrier;
+        typedef ConsumerBarrier<Payload, ConsumerTrackingConsumerBarrier> TConsumerBarrier;
+
+    public:
+        ConsumerTrackingConsumerBarrier(RingBuffer<Payload, ClaimStrategy, WaitStrategy, ConsumerStrategy>& ringBuffer_,
+                                        const ConsumerStrategy* pConsumer_)
+            : ringBufferRef(ringBuffer_), pConsumer(pConsumer_) {}
+
+        Payload& get_entry(const long sequence) { return ringBufferRef.ring[sequence & ringBufferRef.bitMask]; }
+
+        long wait_for(const long sequence, std::atomic<bool>& interruptRef,
+                      typename ConsumerStrategy::TPostQueue& postQueue) {
+            return ringBufferRef.waitStrategyPtr->wait_for(sequence, ringBufferRef, pConsumer, interruptRef, postQueue);
+        }
+
+        void interrupt() { ringBufferRef.waitStrategyPtr->data_available(); }
+
+    private:
+        RingBuffer<Payload, ClaimStrategy, WaitStrategy, ConsumerStrategy>& ringBufferRef;
+        const ConsumerStrategy* pConsumer;
+    };
+
+    typedef ProducerBarrier<Payload, ConsumerTrackingProducerBarrier> TProducerBarrier;
+    typedef ConsumerBarrier<Payload, ConsumerTrackingConsumerBarrier> TConsumerBarrier;
+
+    typename TProducerBarrier::SharedPtr create_producer_barrier(
+        bool multiProducer, const typename ConsumerStrategy::SharedPtr consumerPtr) {
+        return boost::make_shared<ConsumerTrackingProducerBarrier>(multiProducer, *this, consumerPtr, waitStrategyPtr);
+    }
+
+    typename TConsumerBarrier::SharedPtr create_consumer_barrier(const ConsumerStrategy* pConsumerToTrack = nullptr) {
+        return boost::make_shared<ConsumerTrackingConsumerBarrier>(*this, pConsumerToTrack);
+    }
 };
 }
 

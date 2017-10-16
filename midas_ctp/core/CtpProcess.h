@@ -38,7 +38,6 @@ protected:
     void app_stop() override;
 
 private:
-    void set_log_level(int argc, char** argv) const;
     bool configure();
     void init_admin();
 

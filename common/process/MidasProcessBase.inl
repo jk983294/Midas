@@ -1,6 +1,7 @@
 #ifndef MIDAS_MIDAS_PROCESS_BASE_INL
 #define MIDAS_MIDAS_PROCESS_BASE_INL
 
+#include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <cstring>
 #include "midas/MidasConstants.h"
@@ -33,6 +34,7 @@ inline MidasProcessBase::MidasProcessBase(int argc, char* argv[], shared_ptr<Adm
                                "run control script on the fly");
     register_command_line_args('a', "admin_port", SwitchWithArg, SwitchOptional, "admin port",
                                "change listening admin port");
+    register_command_line_args('L', "loglevel", SwitchWithArg, SwitchOptional, "set log level", "set log level");
 
     _init_admin();
 }
@@ -216,6 +218,8 @@ inline void MidasProcessBase::init_config(int argc, char* argv[]) {
         os << host << ":" << processName << ":" << pid;
         Config::instance().put("identity.name", os.str());
     }
+
+    set_log_level(argc, argv);
 }
 
 inline void MidasProcessBase::_init_admin() {
@@ -428,6 +432,47 @@ inline string MidasProcessBase::usage_text() {
         }
     }
     return string(cmdLine.str() + optHelp.str());
+}
+
+inline void MidasProcessBase::set_log_level(int argc, char** argv) const {
+    string opt = Config::instance().get<string>("cmd.loglevel");
+    if (opt.empty()) {
+        // try to find -L info or --loglevel info
+        bool isLevel = false;
+        for (auto pos = 1; pos < argc; ++pos) {
+            const auto arg = argv[pos];
+            if (isLevel) {
+                opt = arg;
+                break;
+            }
+
+            if ('-' == arg[0]) {
+                if (!strcmp("L", arg + 1))
+                    isLevel = true;
+                else if ('-' == arg[1] && !strcmp("loglevel", arg + 2)) {
+                    isLevel = true;
+                }
+            }
+        }
+    }
+
+    if (opt.empty()) return;
+
+    LogPriority newLevel;
+    if (boost::iequals(MIDAS_LOG_PRIORITY_STRING_ERROR, opt)) {
+        newLevel = ERROR;
+    } else if (boost::iequals(MIDAS_LOG_PRIORITY_STRING_WARNING, opt)) {
+        newLevel = WARNING;
+    } else if (boost::iequals(MIDAS_LOG_PRIORITY_STRING_INFO, opt)) {
+        newLevel = INFO;
+    } else if (boost::iequals(MIDAS_LOG_PRIORITY_STRING_DEBUG, opt)) {
+        newLevel = DEBUG;
+    } else {
+        MIDAS_LOG_WARNING("ignoring unknown value cmd.loglevel :" << opt);
+        return;
+    }
+
+    MIDAS_LOG_SET_PRIORITY(newLevel);
 }
 }
 

@@ -13,7 +13,7 @@ T get_cfg_value(const char* root, const char* key, const T& defaultValue = T()) 
 
     auto path = string{root} + "." + key;
     T configValue = Config::instance().get<T>(path, defaultValue);
-    if (envValue != defaultValue) return envValue;
+    if (configValue != defaultValue) return configValue;
 
     configValue = Config::instance().get<T>(to_lower_case(path), defaultValue);
     if (configValue == defaultValue) {

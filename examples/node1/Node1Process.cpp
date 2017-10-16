@@ -10,8 +10,6 @@ typedef TcpAcceptor<TcpPublisherAsync<TcpOutput>> TTcpOutputAcceptor;
 
 Node1Process::Node1Process(int argc, char** argv)
     : MidasProcessBase(argc, argv), channelIn("input"), channelOut("output") {
-    register_command_line_args('L', "loglevel", SwitchWithArg, SwitchOptional, "set log level", "set log level");
-    set_log_level(argc, argv);
     init_admin();
     timer.pause();
     timer.set_callback([this] { heart_beat_timer(); });
@@ -42,47 +40,6 @@ uint32_t Node1Process::configure_heart_beats(bool lock) {
     uint32_t interval = Config::instance().get<uint32_t>("cmd.heart_beat_interval", 5);
     timer.set_interval(interval);
     return interval;
-}
-
-void Node1Process::set_log_level(int argc, char** argv) const {
-    string opt = Config::instance().get<string>("cmd.loglevel");
-    if (opt.empty()) {
-        // try to find -L info or --loglevel info
-        bool isLevel = false;
-        for (auto pos = 1; pos < argc; ++pos) {
-            const auto arg = argv[pos];
-            if (isLevel) {
-                opt = arg;
-                break;
-            }
-
-            if ('-' == arg[0]) {
-                if (!strcmp("L", arg + 1))
-                    isLevel = true;
-                else if ('-' == arg[1] && !strcmp("loglevel", arg + 2)) {
-                    isLevel = true;
-                }
-            }
-        }
-    }
-
-    if (opt.empty()) return;
-
-    LogPriority newLevel;
-    if (MIDAS_LOG_PRIORITY_STRING_ERROR == opt) {
-        newLevel = ERROR;
-    } else if (MIDAS_LOG_PRIORITY_STRING_WARNING == opt) {
-        newLevel = WARNING;
-    } else if (MIDAS_LOG_PRIORITY_STRING_INFO == opt) {
-        newLevel = INFO;
-    } else if (MIDAS_LOG_PRIORITY_STRING_DEBUG == opt) {
-        newLevel = DEBUG;
-    } else {
-        MIDAS_LOG_WARNING("ignoring unknown value cmd.loglevel :" << opt);
-        return;
-    }
-
-    MIDAS_LOG_SET_PRIORITY(newLevel);
 }
 
 void Node1Process::heart_beat_timer() {

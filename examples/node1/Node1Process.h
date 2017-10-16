@@ -33,7 +33,6 @@ private:
     struct TcpInput {};
     typedef midas::TcpReceiver<TcpInput> TTcpReceiver;
 
-    void set_log_level(int argc, char** argv) const;
     bool configure();
     void init_admin();
     uint32_t configure_heart_beats(bool lock = true);
