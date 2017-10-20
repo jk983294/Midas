@@ -291,6 +291,64 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcProductField& 
     return os;
 }
 
+inline std::ostream& operator<<(std::ostream& os, const CThostFtdcSpecificInstrumentField& field) {
+    os << "InstrumentID: " << field.InstrumentID;
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const CThostFtdcDepthMarketDataField& field) {
+    os << "e " << field.ExchangeID << " ,"
+       << "id " << field.InstrumentID << " ,"
+       << "tp " << field.LastPrice << " ,"
+       << "lsp " << field.PreSettlementPrice << " ,"
+       << "lccp " << field.PreClosePrice << " ,"
+       << "lois " << field.PreOpenInterest << " ,"
+       << "op " << field.OpenPrice << " ,"
+       << "hp " << field.HighestPrice << " ,"
+       << "lp " << field.LowestPrice << " ,"
+       << "ts " << field.Volume << " ,"
+       << "to " << field.Turnover << " ,"
+       << "ois " << field.OpenInterest << " ,"
+       << "cp " << field.ClosePrice << " ,"
+       << "sp " << field.SettlementPrice << " ,"
+       << "ulp " << field.UpperLimitPrice << " ,"
+       << "llp " << field.LowerLimitPrice << " ,"
+       << "pd " << field.PreDelta << " ,"
+       << "cd " << field.CurrDelta << " ,"
+       << "ut " << field.UpdateTime << " ,"
+       << "um " << field.UpdateMillisec << " ,"
+       << "bbp1 " << field.BidPrice1 << " ,"
+       << "bbs1 " << field.BidVolume1 << " ,"
+       << "bbp2 " << field.BidPrice2 << " ,"
+       << "bbs2 " << field.BidVolume2 << " ,"
+       << "bbp3 " << field.BidPrice3 << " ,"
+       << "bbs3 " << field.BidVolume3 << " ,"
+       << "bbp4 " << field.BidPrice4 << " ,"
+       << "bbs4 " << field.BidVolume4 << " ,"
+       << "bbp5 " << field.BidPrice5 << " ,"
+       << "bbs5 " << field.BidVolume5 << " ,"
+       << "bap1 " << field.AskPrice1 << " ,"
+       << "bas1 " << field.AskVolume1 << " ,"
+       << "bap2 " << field.AskPrice2 << " ,"
+       << "bas2 " << field.AskVolume2 << " ,"
+       << "bap3 " << field.AskPrice3 << " ,"
+       << "bas3 " << field.AskVolume3 << " ,"
+       << "bap4 " << field.AskPrice4 << " ,"
+       << "bas4 " << field.AskVolume4 << " ,"
+       << "bap5 " << field.AskPrice5 << " ,"
+       << "bas5 " << field.AskVolume5 << " ,"
+       << "avgp " << field.AveragePrice << " ,"
+       << "ad " << field.ActionDay << " ,;";
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const CThostFtdcForQuoteRspField& field) {
+    os << "TradingDay: " << field.TradingDay << "InstrumentID: " << field.InstrumentID
+       << "ForQuoteSysID: " << field.ForQuoteSysID << "ForQuoteTime: " << field.ForQuoteTime
+       << "ActionDay: " << field.ActionDay << "ExchangeID: " << field.ExchangeID;
+    return os;
+}
+
 inline string ctp_result(int iResult) { return (iResult == 0) ? "success" : "failed"; }
 
 #endif

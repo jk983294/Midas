@@ -1,30 +1,26 @@
-#ifndef MIDAS_MDSPI_H
-#define MIDAS_MDSPI_H
+#ifndef MIDAS_MD_SPI_H
+#define MIDAS_MD_SPI_H
 
 #include <ctp/ThostFtdcMdApi.h>
-#include <ctp/ThostFtdcTraderApi.h>
-#include <ctp/ThostFtdcUserApiDataType.h>
-#include <ctp/ThostFtdcUserApiStruct.h>
-#include <cstdio>
-#include <cstring>
-#include <iostream>
 #include <string>
-#include <vector>
+#include "TradeManager.h"
 
 using namespace std;
 
-class CMdSpi : public CThostFtdcMdSpi {
+class CtpMdSpi : public CThostFtdcMdSpi {
 public:
-    CThostFtdcMdApi *mdApi;
-    string brokerId;        // 经纪公司代码
-    string investorId;      // 投资者代码
-    string password;        // 用户密码
-    char **ppInstrumentID;  // 行情订阅列表
-    int iInstrumentID;      // 行情订阅数量
-    int iRequestID{0};      // 请求编号
+    typedef std::shared_ptr<CtpMdSpi> SharedPtr;
+    typedef std::function<size_t(const CThostFtdcDepthMarketDataField &, uint64_t /*rcvt*/, int64_t /*id*/)> TCallback;
 
-    void init(CThostFtdcMdApi *mdApi_, string brokerId_, string investorId_, string password_,
-              vector<string> instruments);
+    shared_ptr<TradeManager> manager;
+    shared_ptr<CtpData> data;
+    TCallback dataCallback;
+
+public:
+    CtpMdSpi(shared_ptr<TradeManager> manager_, shared_ptr<CtpData> d) : manager(manager_), data(d) {}
+    virtual ~CtpMdSpi() {}
+
+    void register_data_callback(const TCallback &cb) { dataCallback = cb; }
 
 public:
     ///错误应答
@@ -73,9 +69,7 @@ public:
     virtual void OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp);
 
 private:
-    void SubscribeMarketData();
-    void SubscribeForQuoteRsp();
     bool IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo);
 };
 
-#endif  // MIDAS_MDSPI_H
+#endif

@@ -1,5 +1,5 @@
 ; midas configure
-copyright kun                       ; Another comment
+copyright kun                       ; copyright reserved
 ctp
 {
     dataDirectory "/home/kun/Data/ctp"
@@ -10,5 +10,12 @@ ctp
     brokerId "9999"
     investorId "073985"
     password "123456"
+
+    mktdata_disruptor
+    {
+        max_msg_size 256
+        ring_size_exponent 10
+        wait_strategy block
+    }
 
 }

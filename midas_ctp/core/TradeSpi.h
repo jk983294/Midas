@@ -9,11 +9,11 @@ using namespace std;
 
 class TradeSpi : public CThostFtdcTraderSpi {
 public:
-    TradeManager *manager;
-    CtpData *data;
+    shared_ptr<TradeManager> manager;
+    shared_ptr<CtpData> data;
 
 public:
-    TradeSpi(TradeManager *manager_, CtpData *d);
+    TradeSpi(shared_ptr<TradeManager> manager_, shared_ptr<CtpData> d);
 
 public:
     virtual ~TradeSpi() {}

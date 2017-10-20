@@ -9,7 +9,7 @@ void CtpProcess::init_admin() {
                                       "request (instrument|product|exchange|account|position)",
                                       "request data from ctp server");
     admin_handler().register_callback("query", boost::bind(&CtpProcess::admin_query, this, _1, _2),
-                                      "query (instrument|product|exchange|account|position)",
+                                      "query (book|image|instrument|product|exchange|account|position)",
                                       "query data in local memory");
     admin_handler().register_callback("dump", boost::bind(&CtpProcess::admin_dump, this, _1, _2),
                                       "dump (instrument|product|exchange|account|position)", "dump data");
@@ -41,7 +41,7 @@ string CtpProcess::admin_request(const string& cmd, const TAdminCallbackArgs& ar
     } else if (param1 == "account") {
         manager->query_trading_account();
     } else if (param1 == "position") {
-        data.positions.clear();
+        data->positions.clear();
         manager->query_position(param2);
     } else if (param1 == "") {
         return "unknown parameter";
@@ -54,16 +54,20 @@ string CtpProcess::admin_query(const string& cmd, const TAdminCallbackArgs& args
     if (args.size() > 0) param1 = args[0];
     if (args.size() > 1) param2 = args[1];
     ostringstream oss;
-    if (param1 == "instrument") {
-        dump2stream(oss, data.instruments, param2);
+    if (param1 == "book") {
+        data->books.stream(oss, param2, false);
+    } else if (param1 == "image") {
+        data->books.stream(oss, param2, true);
+    } else if (param1 == "instrument") {
+        dump2stream(oss, data->instruments, param2);
     } else if (param1 == "product") {
-        dump2stream(oss, data.products, param2);
+        dump2stream(oss, data->products, param2);
     } else if (param1 == "exchange") {
-        dump2stream(oss, data.exchanges, param2);
+        dump2stream(oss, data->exchanges, param2);
     } else if (param1 == "account") {
-        dump2stream(oss, data.accounts, param2);
+        dump2stream(oss, data->accounts, param2);
     } else if (param1 == "position") {
-        oss << data.positions << endl;
+        oss << data->positions << endl;
     } else if (param1 == "") {
         oss << "unknown parameter";
     }
@@ -76,15 +80,15 @@ string CtpProcess::admin_dump(const string& cmd, const TAdminCallbackArgs& args)
     if (args.size() > 1) param2 = args[1];
 
     if (param1 == "instrument" || param1 == "" || param1 == "all")
-        dump2file(data.instruments, data.dataDirectory + "/instrument.dump");
+        dump2file(data->instruments, data->dataDirectory + "/instrument.dump");
     if (param1 == "product" || param1 == "" || param1 == "all")
-        dump2file(data.products, data.dataDirectory + "/product.dump");
+        dump2file(data->products, data->dataDirectory + "/product.dump");
     if (param1 == "exchange" || param1 == "" || param1 == "all")
-        dump2file(data.exchanges, data.dataDirectory + "/exchange.dump");
+        dump2file(data->exchanges, data->dataDirectory + "/exchange.dump");
     if (param1 == "account" || param1 == "" || param1 == "all")
-        dump2file(data.accounts, data.dataDirectory + "/account.dump");
+        dump2file(data->accounts, data->dataDirectory + "/account.dump");
     if (param1 == "position" || param1 == "" || param1 == "all")
-        dump2file(data.positions, data.dataDirectory + "/position.dump");
+        dump2file(data->positions, data->dataDirectory + "/position.dump");
     return "dump finished";
 }
 
@@ -97,10 +101,10 @@ string CtpProcess::admin_get_async_result(const string& cmd, const TAdminCallbac
         string content = args[0];
         oss << "user: " << userId << "parameter: " << content;
     }
-    ChMapSS::accessor a;
-    if (data.user2asyncData.find(a, userId)) {
+    CtpData::TMapSS::accessor a;
+    if (data->user2asyncData.find(a, userId)) {
         oss << a->second << endl;
-        data.user2asyncData.erase(a);
+        data->user2asyncData.erase(a);
     } else {
         oss << "no async result for user " << userId;
     }
@@ -110,9 +114,9 @@ string CtpProcess::admin_get_async_result(const string& cmd, const TAdminCallbac
 string CtpProcess::admin_clear_async_result(const string& cmd, const TAdminCallbackArgs& args,
                                             const std::string& userId) {
     ostringstream oss;
-    ChMapSS::accessor a;
-    if (data.user2asyncData.find(a, userId)) {
-        data.user2asyncData.erase(a);
+    CtpData::TMapSS::accessor a;
+    if (data->user2asyncData.find(a, userId)) {
+        data->user2asyncData.erase(a);
         oss << "clear async result for user " << userId;
     } else {
         oss << "no async result for user " << userId;
@@ -171,21 +175,7 @@ string CtpProcess::admin_close(const string& cmd, const TAdminCallbackArgs& args
 
 string CtpProcess::admin_meters(const string& cmd, const TAdminCallbackArgs& args) const {
     ostringstream oss;
-    oss << "clients:\n";
-    {
-        string sep, tmp = oss.str(), delimiter{"\n"};
-        string::size_type pos = 0;
-        delimiter.append(96, '_');
-        auto beg = tmp.rfind(delimiter);
-        if (string::npos != beg) {
-            pos = beg + 1;
-            auto lf = tmp.find('\n', pos);
-            sep = tmp.substr(pos, string::npos == lf ? lf : lf - beg);
-            if (lf + 1 >= tmp.length()) {
-                oss << "no connections\n";
-            }
-        }
-        oss << sep;
-    }
+    if (disruptorPtr) disruptorPtr->stats(oss);
+    if (consumerPtr) consumerPtr->stats(oss);
     return oss.str();
 }

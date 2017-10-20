@@ -1,0 +1,23 @@
+#ifndef MIDAS_CTP_DATA_CONSUMER_H
+#define MIDAS_CTP_DATA_CONSUMER_H
+
+#include <ctp/ThostFtdcUserApiStruct.h>
+#include "../model/CtpData.h"
+
+class CtpDataConsumer {
+public:
+    typedef std::shared_ptr<CtpDataConsumer> SharedPtr;
+
+    long receivedMsgCount{0};
+
+    std::shared_ptr<CtpData> data;
+
+public:
+    CtpDataConsumer(std::shared_ptr<CtpData> data);
+
+    void data_callback1(MktDataPayload& payload);
+
+    void stats(ostream& os);
+};
+
+#endif

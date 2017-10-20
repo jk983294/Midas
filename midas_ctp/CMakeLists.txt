@@ -8,6 +8,8 @@ set(MidasCtpSrc
         core/CtpAdmin.cpp
         core/CtpConfig.cpp
         core/TradeManager.cpp
+        core/CtpDataConsumer.cpp
+        model/CtpOrderBook.cpp
         )
 
 add_executable(midas ${MidasCtpSrc})

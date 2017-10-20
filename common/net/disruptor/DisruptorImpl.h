@@ -25,6 +25,7 @@ public:
     virtual std::string name() const = 0;
     virtual void post(const typename ConsumerStrategy::TPostCallback& cb) = 0;
     virtual void stop() = 0;
+    virtual void stats(ostream& os) = 0;
 };
 
 template <class Producer, class Consumer, class Payload, ConsumerStages Stages, class ClaimStrategy, class WaitStrategy,
@@ -45,6 +46,7 @@ private:
     typename TStageConsumer::SharedPtr consumerStagesPtr;
     typename TRingBuffer::TProducerBarrier::SharedPtr producerBarrierPtr;
     TPostQueue postQueue;
+    long receivedMsgCount{0};
 
 public:
     DisruptorImpl(std::string disruptorName_, const uint32_t maxMsgSize_, const uint32_t ringSizeExponent_,
@@ -72,6 +74,7 @@ public:
         for_each(producers.begin(), producers.end(), [this](typename Producer::SharedPtr producerPtr) {
             producerPtr->register_data_callback(
                 [this](const char* data, size_t size, uint64_t rcvt, int64_t id) -> std::size_t {
+                    ++receivedMsgCount;
                     Payload& entry = producerBarrierPtr->get_next_entry();
                     bool isValid = entry.set_value(data, size, rcvt, id);
                     producerBarrierPtr->publish_entry(entry, isValid);
@@ -90,6 +93,7 @@ public:
         for_each(producers.begin(), producers.end(), [this](typename Producer::SharedPtr producerPtr) {
             producerPtr->register_data_callback(
                 [this](const typename Payload::ElementType& data, uint64_t rcvt, int64_t id) -> std::size_t {
+                    ++receivedMsgCount;
                     Payload& entry = producerBarrierPtr->get_next_entry();
                     bool isValid = entry.set_value(data, rcvt, id);
                     producerBarrierPtr->publish_entry(entry, isValid);
@@ -106,6 +110,8 @@ public:
     }
 
     void stop() override { consumerStagesPtr->stop(); }
+
+    void stats(ostream& os) { os << "Disruptor stats:" << endl << "msgs recv        = " << receivedMsgCount << endl; }
 };
 }
 

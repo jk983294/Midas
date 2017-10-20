@@ -84,6 +84,8 @@ public:
 
     std::string wait_strategy() { return waitStrategy; }
 
+    void stats(ostream& os) { disruptorPtr->stats(os); }
+
     static const std::string BusySpinTag;
     static const std::string YieldTag;
     static const std::string BlockTag;

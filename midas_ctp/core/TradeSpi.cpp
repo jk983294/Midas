@@ -5,14 +5,14 @@
 using namespace std;
 
 void TradeSpi::OnFrontConnected() {
-    MIDAS_LOG_INFO("OnFrontConnected OK");
-    manager->request_login();
+    MIDAS_LOG_INFO("TradeSpi OnFrontConnected OK");
+    manager->request_login(true);
 }
 
 void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo,
                               int nRequestID, bool bIsLast) {
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspUserLogin: " << *pRspUserLogin);
+        MIDAS_LOG_INFO("TradeSpi request ID " << nRequestID << " OnRspUserLogin: " << *pRspUserLogin);
 
         // save session parameters to test if my own order
         data->frontId = pRspUserLogin->FrontID;
@@ -24,7 +24,7 @@ void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
         sprintf(data->forQuoteRef, "%d", 1);
         sprintf(data->quoteRef, "%d", 1);
 
-        MIDAS_LOG_INFO("current trading day = " << manager->api->GetTradingDay());
+        MIDAS_LOG_INFO("current trading day = " << (manager->traderApi->GetTradingDay()));
         ///投资者结算结果确认
         manager->request_confirm_settlement();
     }
@@ -33,7 +33,8 @@ void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
 void TradeSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm,
                                           CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
-        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspSettlementInfoConfirm " << *pSettlementInfoConfirm);
+        MIDAS_LOG_INFO("TradeSpi request ID " << nRequestID << " OnRspSettlementInfoConfirm "
+                                              << *pSettlementInfoConfirm);
     }
 }
 
@@ -106,7 +107,12 @@ void TradeSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query position success.");
         if (data->state == TradeInit) {
-            data->state = MarketInit;
+            std::lock_guard<std::mutex> lk(data->ctpMutex);
+            data->state = TradeInitFinished;
+            data->ctpCv.notify_one();
+
+            // manager->init_market_data_subscription();
+            // manager->init_market_data_quote_subscription();
         }
         // 报单录入请求
         // request_insert_order();
@@ -259,4 +265,4 @@ bool TradeSpi::IsTradingExecOrder(CThostFtdcExecOrderField *pExecOrder) {
 
 bool TradeSpi::IsTradingQuote(CThostFtdcQuoteField *pQuote) { return (pQuote->QuoteStatus != THOST_FTDC_OST_Canceled); }
 
-TradeSpi::TradeSpi(TradeManager *manager_, CtpData *d) : manager(manager_), data(d) {}
+TradeSpi::TradeSpi(shared_ptr<TradeManager> manager_, shared_ptr<CtpData> d) : manager(manager_), data(d) {}

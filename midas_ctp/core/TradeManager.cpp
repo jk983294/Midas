@@ -1,6 +1,5 @@
 #include "../helper/CtpVisualHelper.h"
 #include "TradeManager.h"
-#include "utils/log/Log.h"
 
 /**
  * 0 send success
@@ -11,13 +10,18 @@
  */
 bool IsFlowControl(int iResult) { return ((iResult == -2) || (iResult == -3)); }
 
-void TradeManager::request_login() {
+void TradeManager::request_login(bool isTradeLogin) {
     CThostFtdcReqUserLoginField req;
     memset(&req, 0, sizeof(req));
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.UserID, data->investorId.c_str());
     strcpy(req.Password, data->password.c_str());
-    int iResult = api->ReqUserLogin(&req, ++requestId);
+    int iResult = 0;
+    if (isTradeLogin)
+        iResult = traderApi->ReqUserLogin(&req, ++tradeRequestId);
+    else
+        iResult = mdApi->ReqUserLogin(&req, ++marketRequestId);
+
     MIDAS_LOG_INFO("send user login request: " << ctp_result(iResult));
 }
 
@@ -26,7 +30,7 @@ void TradeManager::request_confirm_settlement() {
     memset(&req, 0, sizeof(req));
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.InvestorID, data->investorId.c_str());
-    int iResult = api->ReqSettlementInfoConfirm(&req, ++requestId);
+    int iResult = traderApi->ReqSettlementInfoConfirm(&req, ++tradeRequestId);
     if (iResult == 0) {
         MIDAS_LOG_INFO("settlement info confirm OK");
     } else {
@@ -39,7 +43,7 @@ void TradeManager::query_trading_account() {
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.InvestorID, data->investorId.c_str());
     while (true) {
-        int iResult = api->ReqQryTradingAccount(&req, ++requestId);
+        int iResult = traderApi->ReqQryTradingAccount(&req, ++tradeRequestId);
         if (!IsFlowControl(iResult)) {
             break;
         } else {
@@ -55,7 +59,7 @@ void TradeManager::query_position(string instrument) {
     strcpy(req.InvestorID, data->investorId.c_str());
     strcpy(req.InstrumentID, instrument.c_str());
     while (true) {
-        int iResult = api->ReqQryInvestorPosition(&req, ++requestId);
+        int iResult = traderApi->ReqQryInvestorPosition(&req, ++tradeRequestId);
         if (!IsFlowControl(iResult)) {
             break;
         } else {
@@ -98,7 +102,7 @@ void TradeManager::request_insert_order(string instrument) {
     ///用户强评标志: 否
     req.UserForceClose = 0;
 
-    int iResult = api->ReqOrderInsert(&req, ++requestId);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request order insert: " << iResult << ", " << ctp_result(iResult));
 }
 
@@ -125,7 +129,7 @@ void TradeManager::request_insert_execute_order(string instrument) {
     ///期权行权后生成的头寸是否自动平仓
     req.CloseFlag = THOST_FTDC_EOCF_AutoClose;  //这是中金所的填法，大商所郑商所填THOST_FTDC_EOCF_NotToClose
 
-    int iResult = api->ReqExecOrderInsert(&req, ++requestId);
+    int iResult = traderApi->ReqExecOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request execute order insert: " << iResult << ", " << ctp_result(iResult));
 }
 
@@ -138,7 +142,7 @@ void TradeManager::ReqForQuoteInsert(string instrument) {
     strcpy(req.InstrumentID, instrument.c_str());
     strcpy(req.ForQuoteRef, data->execOrderRef);
 
-    int iResult = api->ReqForQuoteInsert(&req, ++requestId);
+    int iResult = traderApi->ReqForQuoteInsert(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request for quote insert: " << iResult << ", " << ctp_result(iResult));
 }
 
@@ -163,7 +167,7 @@ void TradeManager::ReqQuoteInsert(string instrument) {
     ///买投机套保标志
     req.BidHedgeFlag = THOST_FTDC_HF_Speculation;
 
-    int iResult = api->ReqQuoteInsert(&req, ++requestId);
+    int iResult = traderApi->ReqQuoteInsert(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request quote insert: " << iResult << ", " << ctp_result(iResult));
 }
 
@@ -193,7 +197,7 @@ void TradeManager::ReqOrderAction(CThostFtdcOrderField *pOrder) {
     ///合约代码
     strcpy(req.InstrumentID, pOrder->InstrumentID);
 
-    int iResult = api->ReqOrderAction(&req, ++requestId);
+    int iResult = traderApi->ReqOrderAction(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request order action: " << iResult << ", " << ctp_result(iResult));
     ORDER_ACTION_SENT = true;
 }
@@ -230,7 +234,7 @@ void TradeManager::ReqExecOrderAction(CThostFtdcExecOrderField *pExecOrder) {
     ///合约代码
     strcpy(req.InstrumentID, pExecOrder->InstrumentID);
 
-    int iResult = api->ReqExecOrderAction(&req, ++requestId);
+    int iResult = traderApi->ReqExecOrderAction(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request execute order action: " << iResult << ", " << ctp_result(iResult));
     EXECORDER_ACTION_SENT = true;
 }
@@ -266,7 +270,7 @@ void TradeManager::ReqQuoteAction(CThostFtdcQuoteField *pQuote) {
     ///合约代码
     strcpy(req.InstrumentID, pQuote->InstrumentID);
 
-    int iResult = api->ReqQuoteAction(&req, ++requestId);
+    int iResult = traderApi->ReqQuoteAction(&req, ++tradeRequestId);
     MIDAS_LOG_DEBUG("request quote action: " << iResult << ", " << ctp_result(iResult));
     QUOTE_ACTION_SENT = true;
 }
@@ -292,7 +296,7 @@ void TradeManager::query_instrument(const string &name) {
     // memset(&req, 0, sizeof(req));
     strcpy(req.InstrumentID, name.c_str());
     while (true) {
-        int iResult = api->ReqQryInstrument(&req, ++requestId);
+        int iResult = traderApi->ReqQryInstrument(&req, ++tradeRequestId);
         if (!IsFlowControl(iResult)) {
             break;
         } else {
@@ -310,7 +314,7 @@ void TradeManager::query_product(const string &name) {
     CThostFtdcQryProductField req = {0};
     strcpy(req.ProductID, name.c_str());
     while (true) {
-        int iResult = api->ReqQryProduct(&req, ++requestId);
+        int iResult = traderApi->ReqQryProduct(&req, ++tradeRequestId);
         if (!IsFlowControl(iResult)) {
             break;
         } else {
@@ -333,7 +337,7 @@ void TradeManager::query_exchange(const string &name) {
     CThostFtdcQryExchangeField req = {0};
     strcpy(req.ExchangeID, name.c_str());
     while (true) {
-        int iResult = api->ReqQryExchange(&req, ++requestId);
+        int iResult = traderApi->ReqQryExchange(&req, ++tradeRequestId);
         if (!IsFlowControl(iResult)) {
             break;
         } else {
@@ -343,9 +347,10 @@ void TradeManager::query_exchange(const string &name) {
     }
 }
 
-TradeManager::TradeManager(CThostFtdcTraderApi *a, CtpData *d) : api(a), data(d) {}
+TradeManager::TradeManager(shared_ptr<CtpData> d) : data(d) {}
 
 void TradeManager::init_ctp() {
+    MIDAS_LOG_INFO("trade manager start to init ctp...");
     data->state = TradeInit;
     query_exchange("");
 }
@@ -375,5 +380,53 @@ int TradeManager::request_open_position(string instrument, double limitPrice, in
     req.IsAutoSuspend = 0;                                //自动挂起标志: 否
     req.UserForceClose = 0;                               //用户强评标志: 否
 
-    return api->ReqOrderInsert(&req, ++requestId);
+    return traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+}
+
+void TradeManager::subscribe_market_data(const vector<string> &instruments) {
+    int instrumentCount = (int)instruments.size();
+    if (instrumentCount <= 0) return;
+
+    char **ppInstrumentID = new char *[instrumentCount];
+    for (int i = 0; i < instrumentCount; ++i) {
+        ppInstrumentID[i] = new char[instruments[i].size() + 1];
+        strcpy(ppInstrumentID[i], instruments[i].c_str());
+        ppInstrumentID[i][instruments[i].size()] = '\0';
+    }
+
+    int iResult = mdApi->SubscribeMarketData(ppInstrumentID, instrumentCount);
+    if (iResult == 0) {
+        MIDAS_LOG_INFO("send subscribe market data request OK! " << instrumentCount << " instruments get subscribed.");
+    } else {
+        MIDAS_LOG_ERROR("send subscribe market data request failed!")
+    }
+
+    for (int i = 0; i < instrumentCount; ++i) {
+        delete[] ppInstrumentID[i];
+    }
+    delete[] ppInstrumentID;
+}
+
+void TradeManager::subscribe_quote_czce(const vector<string> &instruments) {
+    int instrumentCount = (int)instruments.size();
+    if (instrumentCount <= 0) return;
+
+    char **ppInstrumentID = new char *[instrumentCount];
+    for (int i = 0; i < instrumentCount; ++i) {
+        ppInstrumentID[i] = new char[instruments[i].size() + 1];
+        strcpy(ppInstrumentID[i], instruments[i].c_str());
+        ppInstrumentID[i][instruments[i].size()] = '\0';
+    }
+
+    int iResult = mdApi->SubscribeForQuoteRsp(ppInstrumentID, instrumentCount);
+    if (iResult == 0) {
+        MIDAS_LOG_INFO("send subscribe market quote request OK");
+    } else {
+        MIDAS_LOG_ERROR("send subscribe market quote request failed!")
+    }
+
+    for (int i = 0; i < instrumentCount; ++i) {
+        delete[] ppInstrumentID[i];
+    }
+    delete[] ppInstrumentID;
 }

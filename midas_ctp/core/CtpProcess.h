@@ -1,8 +1,13 @@
 #ifndef NODE1_PROCESS_H
 #define NODE1_PROCESS_H
 
+#include <ctp/ThostFtdcMdApi.h>
 #include <ctp/ThostFtdcTraderApi.h>
+#include <net/disruptor/Disruptor.h>
+#include <memory>
 #include "../model/CtpData.h"
+#include "CtpDataConsumer.h"
+#include "MdSpi.h"
 #include "TradeManager.h"
 #include "TradeSpi.h"
 #include "net/channel/Channel.h"
@@ -14,19 +19,20 @@ using namespace midas;
 
 class CtpProcess : public MidasProcessBase {
 public:
-    CtpData data;
+    typedef midas::Disruptor<CtpMdSpi, CtpDataConsumer, MktDataPayload, midas::OneStage> TMktDataDisruptor;
+
+    std::shared_ptr<CtpData> data;
 
     CThostFtdcTraderApi* traderApi{nullptr};
-    TradeSpi* traderSpi{nullptr};
-    TradeManager* manager;
+    std::shared_ptr<TradeSpi> traderSpi;
+    CThostFtdcMdApi* mdApi{nullptr};
+    std::shared_ptr<CtpMdSpi> mdSpi;
+    std::shared_ptr<TradeManager> manager;
 
     std::thread marketDataThread;
     std::thread tradeDataThread;
-
-    bool cancelAdmin{false};
-    std::mutex mutexAdmin;
-    std::condition_variable cvAdmin;
-    std::map<uint64_t, string> outAdmin;
+    typename CtpDataConsumer::SharedPtr consumerPtr;
+    typename TMktDataDisruptor::SharedPtr disruptorPtr;
 
 public:
     CtpProcess() = delete;
@@ -44,6 +50,8 @@ private:
     // ctp section
     void trade_thread();
     void market_thread();
+
+    void subscribe_all_instruments();
 
 private:
     // admin section

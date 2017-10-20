@@ -71,7 +71,7 @@ public:
         return true;
     }
 
-    T get_data() const { return data_; }
+    const T& get_data() const { return data_; }
 
     bool is_valid() { return isValid; }
 

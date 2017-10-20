@@ -49,6 +49,7 @@ lsp             # Previous settlement price
 lap             # previous day's ask price
 lbp             # previous day's bid price
 lccp            # previous day's closing price or settlement price
+lois            # previous day's open interest
 ex              # number of options contracts exercised during the trading day
 bbp1            # best bid price
 bap1            # best ask price
