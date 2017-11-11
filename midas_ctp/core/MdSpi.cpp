@@ -3,13 +3,11 @@
 
 using namespace std;
 
-void CtpMdSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    MIDAS_LOG_DEBUG("CtpMdSpi OnRspError requestId: " << nRequestID << " isLast:" << bIsLast);
-    IsErrorRspInfo(pRspInfo);
-}
+void CtpMdSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) { IsErrorRspInfo(pRspInfo); }
 
 void CtpMdSpi::OnFrontDisconnected(int nReason) {
-    MIDAS_LOG_INFO("--->>> CtpMdSpi OnFrontDisconnected Reason = " << nReason);
+    data->mdLogOutTime = ntime();
+    MIDAS_LOG_ERROR("--->>> CtpMdSpi OnFrontDisconnected Reason = " << ctp_disconnect_reason(nReason));
 }
 
 void CtpMdSpi::OnHeartBeatWarning(int nTimeLapse) {
@@ -17,6 +15,7 @@ void CtpMdSpi::OnHeartBeatWarning(int nTimeLapse) {
 }
 
 void CtpMdSpi::OnFrontConnected() {
+    data->mdLogInTime = ntime();
     MIDAS_LOG_INFO("CtpMdSpi OnFrontConnected OK");
     manager->request_login(false);
 }
@@ -25,6 +24,10 @@ void CtpMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
                               int nRequestID, bool bIsLast) {
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("CtpMdSpi request ID " << nRequestID << " OnRspUserLogin: " << *pRspUserLogin);
+        // in case ctp reconnect event, subscribe again
+        if (data->state == Running) {
+            manager->subscribe_all_instruments();
+        }
     }
 }
 
@@ -34,19 +37,8 @@ void CtpMdSpi::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificIn
         MIDAS_LOG_ERROR("request ID " << nRequestID << " OnRspSubMarketData failed on " << *pSpecificInstrument);
         return;
     }
-    if (pSpecificInstrument) {
-        MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspSubMarketData success on " << *pSpecificInstrument)
-    }
-}
-
-void CtpMdSpi::OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
-                                   CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (IsErrorRspInfo(pRspInfo)) {
-        MIDAS_LOG_ERROR("request ID " << nRequestID << " OnRspSubForQuoteRsp failed on " << *pSpecificInstrument);
-        return;
-    }
-    if (pSpecificInstrument) {
-        MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspSubForQuoteRsp success on " << *pSpecificInstrument)
+    if (bIsLast && pSpecificInstrument) {
+        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspSubMarketData success on " << *pSpecificInstrument)
     }
 }
 
@@ -57,32 +49,17 @@ void CtpMdSpi::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecific
         return;
     }
     if (pSpecificInstrument) {
-        MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspUnSubMarketData success on " << *pSpecificInstrument)
-    }
-}
-
-void CtpMdSpi::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
-                                     CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (IsErrorRspInfo(pRspInfo)) {
-        MIDAS_LOG_ERROR("request ID " << nRequestID << " OnRspUnSubForQuoteRsp failed on " << *pSpecificInstrument);
-        return;
-    }
-    if (pSpecificInstrument) {
-        MIDAS_LOG_DEBUG("request ID " << nRequestID << " OnRspUnSubForQuoteRsp success on " << *pSpecificInstrument)
+        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspUnSubMarketData success on " << *pSpecificInstrument)
     }
 }
 
 void CtpMdSpi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
-    //    MIDAS_LOG_DEBUG("OnRtnDepthMarketData " << *pDepthMarketData);
-    dataCallback(*pDepthMarketData, 0, 1);
-}
-
-void CtpMdSpi::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp) {
-    MIDAS_LOG_DEBUG("OnRtnForQuoteRsp " << *pForQuoteRsp);
+    dataCallback(*pDepthMarketData, ntime(), 1);
 }
 
 bool CtpMdSpi::IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo) {
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
-    if (bResult) cerr << "ErrorID=" << pRspInfo->ErrorID << ", ErrorMsg=" << gbk2utf8(pRspInfo->ErrorMsg) << endl;
+    if (bResult)
+        MIDAS_LOG_ERROR("MdSpi ErrorID=" << pRspInfo->ErrorID << ", ErrorMsg=" << gbk2utf8(pRspInfo->ErrorMsg));
     return bResult;
 }

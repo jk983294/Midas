@@ -174,4 +174,36 @@ inline string ctp_business_type(TThostFtdcBizTypeType bizTypeType) {
         return "NA";
 }
 
+inline string ctp_action_flag_type(TThostFtdcActionFlagType actionFlagType) {
+    if (actionFlagType == THOST_FTDC_AF_Delete)
+        return "delete";
+    else if (actionFlagType == THOST_FTDC_AF_Modify)
+        return "modify";
+    else
+        return "NA";
+}
+
+inline const string& ctp_order_status_type(TThostFtdcOrderActionStatusType orderActionStatusType) {
+    // 已经提交 / 已经接受 / 已经被拒绝
+    const static string desc[]{"submitted", "accepted", "rejected"};
+    return desc[orderActionStatusType - THOST_FTDC_OAS_Submitted];
+}
+
+inline const string ctp_disconnect_reason(int reason) {
+    switch (reason) {
+        case 0x1001:
+            return "network read failed";
+        case 0x1002:
+            return "network write failed";
+        case 0x2001:
+            return "heartbeat timeout";
+        case 0x2002:
+            return "send heartbeat failed";
+        case 0x2003:
+            return "recv error msg";
+        default:
+            return "unknown";
+    }
+}
+
 #endif

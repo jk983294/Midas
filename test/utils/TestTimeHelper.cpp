@@ -29,6 +29,10 @@ TEST_CASE("convert time to string", "[time]") {
     tv.tv_sec = 1496325586;
     tv.tv_usec = 999061;
     REQUIRE(timeval2string(tv) == std::string("2017-06-01 21:59:46.999"));
+
+    REQUIRE(ntime_from_double(20171101.233625) == 1509550584000000000);
+
+    REQUIRE(intraday_time_from_separator_string("21:59:46") == 215946);
 }
 
 TEST_CASE("intraday", "[intraday]") {

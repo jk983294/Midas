@@ -1,0 +1,10 @@
+; backtest configure
+copyright kun                       ; copyright reserved
+backtest
+{
+    dataDirectory "/home/kun/Data/ctp/backtest"
+
+    ; 1     1 minute candle data
+    fileType 1
+
+}

@@ -1,6 +1,8 @@
 #ifndef MIDAS_STRINGHELPER_H
 #define MIDAS_STRINGHELPER_H
 
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -76,6 +78,16 @@ inline string string_join(const vector<T>& v, char delimiter = ' ') {
     return os.str();
 }
 
+inline vector<string> string_split(const string& data, const string& delimiter = ",") {
+    boost::tokenizer<boost::char_separator<char>> token(data, boost::char_separator<char>(delimiter.c_str()));
+    boost::tokenizer<boost::char_separator<char>>::iterator it = token.begin();
+    vector<string> lets;
+    while (it != token.end()) {
+        lets.push_back(boost::trim_copy(*it++));
+    }
+    return lets;
+}
+
 inline string get_bool_string(bool value) {
     if (value)
         return "true";
@@ -93,7 +105,7 @@ inline string get_bool_string(int value) {
 inline bool is_localhost(const std::string& host) { return "localhost" == host || "127.0.0.1" == host; }
 
 template <typename Object>
-inline string object2str(Object& o) {
+inline string object2str(const Object& o) {
     ostringstream oss;
     oss << o;
     return oss.str();

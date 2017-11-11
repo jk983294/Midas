@@ -11,6 +11,15 @@ using namespace std;
 
 namespace midas {
 
+inline bool check_file_exists(const char* path) {
+    fstream ifs(path, ios::in);
+    if (ifs) {
+        ifs.close();
+        return true;
+    }
+    return false;
+}
+
 template <typename T1, typename T2>
 void dump2file(const map<T1, T2>& m, string filePrefix) {
     ofstream ofs(filePrefix + "." + now_string(), ofstream::out | ofstream::trunc);

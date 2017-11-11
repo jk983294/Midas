@@ -1,5 +1,5 @@
-#ifndef MIDAS_UITLS_MIDASUTILS_INL
-#define MIDAS_UITLS_MIDASUTILS_INL
+#ifndef MIDAS_UTILS_MIDAS_UTILS_INL
+#define MIDAS_UTILS_MIDAS_UTILS_INL
 
 #include <linux/unistd.h>
 #include <pwd.h>
@@ -13,15 +13,6 @@
 #include "utils/log/Log.h"
 
 namespace midas {
-
-inline bool check_file_exists(const char* path) {
-    fstream ifs(path, ios::in);
-    if (ifs) {
-        ifs.close();
-        return true;
-    }
-    return false;
-}
 
 inline long get_tid() { return syscall(__NR_gettid); }
 

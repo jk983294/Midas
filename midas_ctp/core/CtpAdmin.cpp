@@ -25,6 +25,8 @@ void CtpProcess::init_admin() {
                                       "sell instrument price size", "sell in limit order manner");
     admin_handler().register_callback("close", boost::bind(&CtpProcess::admin_close, this, _1, _2),
                                       "close instrument size", "close instrument size");
+    admin_handler().register_callback("flush", boost::bind(&CtpProcess::flush, this, _1, _2), "flush",
+                                      "flush log to disk");
 }
 
 string CtpProcess::admin_request(const string& cmd, const TAdminCallbackArgs& args) {
@@ -133,7 +135,7 @@ string CtpProcess::admin_buy(const string& cmd, const TAdminCallbackArgs& args) 
         double price = boost::lexical_cast<double>(args[1]);
         int size = boost::lexical_cast<int>(args[2]);
         oss << "parameter: " << instrument << " " << price << " " << size << endl;
-        int ret = manager->request_buy(instrument, price, size);
+        int ret = manager->request_buy_limit(instrument, price, size);
         if (ret == 0) {
             oss << "buy order sent success for " << instrument << " " << price << " " << size << endl;
         } else {
@@ -152,7 +154,7 @@ string CtpProcess::admin_sell(const string& cmd, const TAdminCallbackArgs& args)
         double price = boost::lexical_cast<double>(args[1]);
         int size = boost::lexical_cast<int>(args[2]);
         oss << "parameter: " << instrument << " " << price << " " << size << endl;
-        int ret = manager->request_sell(instrument, price, size);
+        int ret = manager->request_sell_limit(instrument, price, size);
         if (ret == 0) {
             oss << "sell order sent success for " << instrument << " " << price << " " << size << endl;
         } else {
@@ -175,7 +177,17 @@ string CtpProcess::admin_close(const string& cmd, const TAdminCallbackArgs& args
 
 string CtpProcess::admin_meters(const string& cmd, const TAdminCallbackArgs& args) const {
     ostringstream oss;
+    oss << setw(24) << "MD login time" << setw(24) << "MD logout time" << setw(24) << "Trade login time" << setw(24)
+        << "Trade logout time\n"
+        << setw(24) << ntime2string(data->mdLogInTime) << setw(24) << ntime2string(data->mdLogOutTime) << setw(24)
+        << ntime2string(data->tradeLogInTime) << setw(24) << ntime2string(data->tradeLogOutTime) << "\n";
     if (disruptorPtr) disruptorPtr->stats(oss);
     if (consumerPtr) consumerPtr->stats(oss);
     return oss.str();
+}
+
+string CtpProcess::flush(const string& cmd, const TAdminCallbackArgs& args) {
+    consumerPtr->flush();
+    MIDAS_LOG_FLUSH();
+    return "flush command issued";
 }

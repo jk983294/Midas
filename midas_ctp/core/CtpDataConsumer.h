@@ -18,6 +18,8 @@ public:
     void data_callback1(MktDataPayload& payload);
 
     void stats(ostream& os);
+
+    void flush() {}
 };
 
 #endif

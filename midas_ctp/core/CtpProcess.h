@@ -7,6 +7,7 @@
 #include <memory>
 #include "../model/CtpData.h"
 #include "CtpDataConsumer.h"
+#include "CtpDataLogConsumer.h"
 #include "MdSpi.h"
 #include "TradeManager.h"
 #include "TradeSpi.h"
@@ -19,7 +20,9 @@ using namespace midas;
 
 class CtpProcess : public MidasProcessBase {
 public:
-    typedef midas::Disruptor<CtpMdSpi, CtpDataConsumer, MktDataPayload, midas::OneStage> TMktDataDisruptor;
+    //    typedef CtpDataConsumer DataConsumer;
+    typedef CtpDataLogConsumer DataConsumer;
+    typedef midas::Disruptor<CtpMdSpi, DataConsumer, MktDataPayload, midas::OneStage> TMktDataDisruptor;
 
     std::shared_ptr<CtpData> data;
 
@@ -31,7 +34,7 @@ public:
 
     std::thread marketDataThread;
     std::thread tradeDataThread;
-    typename CtpDataConsumer::SharedPtr consumerPtr;
+    typename DataConsumer::SharedPtr consumerPtr;
     typename TMktDataDisruptor::SharedPtr disruptorPtr;
 
 public:
@@ -51,8 +54,6 @@ private:
     void trade_thread();
     void market_thread();
 
-    void subscribe_all_instruments();
-
 private:
     // admin section
     string admin_meters(const string& cmd, const TAdminCallbackArgs& args) const;
@@ -71,6 +72,8 @@ private:
     string admin_buy(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_sell(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_close(const string& cmd, const TAdminCallbackArgs& args) const;
+
+    string flush(const string& cmd, const TAdminCallbackArgs& args);
 };
 
 #endif

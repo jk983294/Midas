@@ -94,10 +94,31 @@ inline std::string time_t2string(const time_t ct) {
     if (!ct) return "N/A";
     struct tm tm;
     localtime_r(&ct, &tm);
-    char buffer[24];
-    std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u %02u:%02u:%02u.%03u", tm.tm_year + 1900, tm.tm_mon + 1,
-                  tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, 0);
+    char buffer[21];
+    std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u %02u:%02u:%02u", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                  tm.tm_hour, tm.tm_min, tm.tm_sec);
     return buffer;
+}
+inline std::string ntime2string(uint64_t nano) {
+    time_t epoch = nano / oneSecondNano;
+    return time_t2string(epoch);
+}
+inline time_t time_t_from_ymdhms(int ymd, int hms) {
+    struct tm tm;
+    tm.tm_mday = ymd % 100;
+    ymd /= 100;
+    tm.tm_mon = ymd % 100 - 1;
+    tm.tm_year = ymd / 100 - 1900;
+    tm.tm_sec = hms % 100;
+    hms /= 100;
+    tm.tm_min = hms % 100;
+    tm.tm_hour = hms / 100;
+    return mktime(&tm);
+}
+inline uint64_t ntime_from_double(double ymdhms) {
+    int date = static_cast<int>(ymdhms);
+    int hms = static_cast<int>((ymdhms - date) * 1000000);
+    return oneSecondNano * time_t_from_ymdhms(date, hms);
 }
 
 inline std::string timeval2string(const struct timeval& tv) {
@@ -204,13 +225,25 @@ inline timeval now_timeval() {
 }
 
 inline std::string now_string() {
-    time_t tNow =time(NULL);
+    time_t tNow = time(NULL);
     struct tm tm;
     localtime_r(&tNow, &tm);
     char buffer[16];
-    std::snprintf(buffer, sizeof buffer, "%4u%02u%02u.%02u%02u%02u", tm.tm_year + 1900, tm.tm_mon + 1,
-                  tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    std::snprintf(buffer, sizeof buffer, "%4u%02u%02u.%02u%02u%02u", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                  tm.tm_hour, tm.tm_min, tm.tm_sec);
     return buffer;
+}
+/**
+ * like 2017-11-03 23:59:59
+ * @param str
+ * @return
+ */
+inline int intraday_time_from_separator_string(const char* str) {
+    return (str[0] - '0') * 100000 + (str[1] - '0') * 10000 + (str[3] - '0') * 1000 + (str[4] - '0') * 100 +
+           (str[6] - '0') * 10 + (str[7] - '0');
+}
+inline int intraday_time_from_separator_string(const string& str) {
+    return intraday_time_from_separator_string(str.c_str());
 }
 }
 

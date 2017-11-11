@@ -7,8 +7,6 @@ using namespace std;
 
 namespace midas {
 
-inline bool check_file_exists(const char* path);
-
 // example "1:3:7-11:13"
 inline void set_cpu_affinity(pid_t pid, const std::string& affinityString);
 

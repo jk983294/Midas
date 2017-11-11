@@ -8,6 +8,8 @@
 
 using namespace std;
 
+enum CtpOrderType { MarketOrder, LimitOrder, ConditionOrder };
+
 class TradeManager {
 public:
     CThostFtdcTraderApi* traderApi;
@@ -29,20 +31,22 @@ public:
     void request_insert_order(string instrument);
     ///执行宣告录入请求
     void request_insert_execute_order(string instrument);
-    ///询价录入请求
-    void ReqForQuoteInsert(string instrument);
-    ///报价录入请求
-    void ReqQuoteInsert(string instrument);
     ///报单操作请求
     void ReqOrderAction(CThostFtdcOrderField* pOrder);
     ///执行宣告操作请求
     void ReqExecOrderAction(CThostFtdcExecOrderField* pExecOrder);
-    ///报价操作请求
-    void ReqQuoteAction(CThostFtdcQuoteField* pQuote);
 
-    int request_buy(string instrument, double limitPrice, int volume);
+    int request_buy_limit(string instrument, int volume, double limitPrice);
+    int request_buy_market(string instrument, int volume);
+    int request_buy_if_above(string instrument, int volume, double conditionPrice, double limitPrice);
+    int request_buy_if_below(string instrument, int volume, double conditionPrice, double limitPrice);
 
-    int request_sell(string instrument, double limitPrice, int volume);
+    int request_sell_limit(string instrument, int volume, double limitPrice);
+    int request_sell_market(string instrument, int volume);
+    int request_sell_if_above(string instrument, int volume, double conditionPrice, double limitPrice);
+    int request_sell_if_below(string instrument, int volume, double conditionPrice, double limitPrice);
+
+    int request_withdraw_order(const CThostFtdcOrderField& order);
 
     void query_instrument(const string& name);
 
@@ -62,16 +66,20 @@ public:
      */
     void init_ctp();
 
+    void subscribe_all_instruments();
     void subscribe_market_data(const vector<string>& instruments);
 
-    /**
-     * 请求订阅询价,只能订阅郑商所的询价，其他交易所通过traderapi相应接口返回
-     * @param instruments
-     */
-    void subscribe_quote_czce(const vector<string>& instruments);
-
 private:
-    int request_open_position(string instrument, double limitPrice, int volume, bool isBuy);
+    //    int request_open_position(string instrument, CtpOrderType type, bool isBuy, int volume,
+    //                              double limitPrice, double conditionPrice,
+    //                              TThostFtdcContingentConditionType conditionType);
+
+    void fill_common_order(CThostFtdcInputOrderField& order, const string& instrument, CtpOrderType type, bool isBuy,
+                           int volume);
+    void fill_limit_order(CThostFtdcInputOrderField& order, double price);
+    void fill_market_order(CThostFtdcInputOrderField& order);
+    void fill_condition_order(CThostFtdcInputOrderField& order, TThostFtdcContingentConditionType conditionType,
+                              double conditionPrice, double limitPrice);
 };
 
 #endif

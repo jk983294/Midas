@@ -49,25 +49,15 @@ public:
     virtual void OnRspExecOrderInsert(CThostFtdcInputExecOrderField *pInputExecOrder, CThostFtdcRspInfoField *pRspInfo,
                                       int nRequestID, bool bIsLast);
 
-    ///询价录入请求响应
-    virtual void OnRspForQuoteInsert(CThostFtdcInputForQuoteField *pInputForQuote, CThostFtdcRspInfoField *pRspInfo,
-                                     int nRequestID, bool bIsLast);
-
-    ///报价录入请求响应
-    virtual void OnRspQuoteInsert(CThostFtdcInputQuoteField *pInputQuote, CThostFtdcRspInfoField *pRspInfo,
-                                  int nRequestID, bool bIsLast);
-
     ///报单操作请求响应
     virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo,
                                   int nRequestID, bool bIsLast);
 
+    virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo);
+
     ///执行宣告操作请求响应
     virtual void OnRspExecOrderAction(CThostFtdcInputExecOrderActionField *pInputExecOrderAction,
                                       CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-
-    ///报价操作请求响应
-    virtual void OnRspQuoteAction(CThostFtdcInputQuoteActionField *pInputQuoteAction, CThostFtdcRspInfoField *pRspInfo,
-                                  int nRequestID, bool bIsLast);
 
     ///错误应答
     virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
@@ -83,12 +73,6 @@ public:
 
     ///执行宣告通知
     virtual void OnRtnExecOrder(CThostFtdcExecOrderField *pExecOrder);
-
-    ///询价通知
-    virtual void OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp);
-
-    ///报价通知
-    virtual void OnRtnQuote(CThostFtdcQuoteField *pQuote);
 
     ///成交通知
     virtual void OnRtnTrade(CThostFtdcTradeField *pTrade);
@@ -108,14 +92,10 @@ private:
     bool IsMyOrder(CThostFtdcOrderField *pOrder);
     // 是否我的执行宣告回报
     bool IsMyExecOrder(CThostFtdcExecOrderField *pExecOrder);
-    // 是否我的报价
-    bool IsMyQuote(CThostFtdcQuoteField *pQuote);
     // 是否正在交易的报单
     bool IsTradingOrder(CThostFtdcOrderField *pOrder);
     // 是否未撤销的执行宣告
     bool IsTradingExecOrder(CThostFtdcExecOrderField *pExecOrder);
-    // 是否未撤销的报价
-    bool IsTradingQuote(CThostFtdcQuoteField *pQuote);
 };
 
 #endif

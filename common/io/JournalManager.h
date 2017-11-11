@@ -12,10 +12,10 @@ class JournalManager {
 public:
     bool isZip{true};
     string journalDirectory;
-    size_t maxBytesBehind{20000000}, maxJournalSize{20000000}, maxMsgLen{80000};
+    size_t maxBytesBehind{100000000}, maxJournalSize{100000000}, maxMsgLen{80000};
     long maxJournalSecs{86400};
     int freeBytes{0};
-    const int MinBytesFree{20000000};
+    const int MinBytesFree{100000000};
     size_t bufLen{maxBytesBehind + MinBytesFree};
     char *bufPtr;
     long long totalBytes{0};  // bytes received
@@ -65,6 +65,7 @@ public:
 
     /**
      * force to flush, just delete the journal file and create new one
+     * TODO this is not thread safe, if want to thread safe, then need mutex for flush and record function
      */
     void flush() {
         long long bytes = journal->totalBytes;

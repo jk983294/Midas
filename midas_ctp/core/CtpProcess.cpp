@@ -54,7 +54,7 @@ void CtpProcess::app_start() {
 
     std::vector<CtpMdSpi::SharedPtr> producerStore;
     producerStore.push_back(mdSpi);
-    consumerPtr = std::make_shared<CtpDataConsumer>(data);
+    consumerPtr = std::make_shared<DataConsumer>(data);
     disruptorPtr = boost::make_shared<TMktDataDisruptor>("mktdata_disruptor", "ctp.mktdata_disruptor", producerStore,
                                                          boost::ref(*consumerPtr));
 
@@ -69,27 +69,9 @@ void CtpProcess::app_start() {
     data->state = MarketInit;
 
     data->books.init_all_instruments(data->instruments);
-    subscribe_all_instruments();
+    manager->subscribe_all_instruments();
+    sleep(1);
     data->state = Running;
-}
-
-void CtpProcess::subscribe_all_instruments() {
-    MIDAS_LOG_INFO("going to init market data subscription.");
-
-    vector<string> instruments;
-    vector<string> czceInstruments;
-
-    for (auto itr = data->instruments.begin(); itr != data->instruments.end(); ++itr) {
-        if (strcmp(itr->second.ExchangeID, "CZCE") == 0) {
-            czceInstruments.push_back(itr->first);
-        }
-        instruments.push_back(itr->first);
-    }
-
-    manager->subscribe_market_data(instruments);
-    sleep(1);
-    manager->subscribe_quote_czce(czceInstruments);
-    sleep(1);
 }
 
 void CtpProcess::app_stop() {

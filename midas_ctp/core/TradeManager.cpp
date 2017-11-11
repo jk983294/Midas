@@ -1,6 +1,9 @@
 #include "../helper/CtpVisualHelper.h"
 #include "TradeManager.h"
 
+const static bool BuyFlag = true;
+const static bool SellFlag = false;
+
 /**
  * 0 send success
  * -1 failed due to network issue
@@ -133,44 +136,6 @@ void TradeManager::request_insert_execute_order(string instrument) {
     MIDAS_LOG_DEBUG("request execute order insert: " << iResult << ", " << ctp_result(iResult));
 }
 
-//询价录入请求
-void TradeManager::ReqForQuoteInsert(string instrument) {
-    CThostFtdcInputForQuoteField req;
-    memset(&req, 0, sizeof(req));
-    strcpy(req.BrokerID, data->brokerId.c_str());
-    strcpy(req.InvestorID, data->investorId.c_str());
-    strcpy(req.InstrumentID, instrument.c_str());
-    strcpy(req.ForQuoteRef, data->execOrderRef);
-
-    int iResult = traderApi->ReqForQuoteInsert(&req, ++tradeRequestId);
-    MIDAS_LOG_DEBUG("request for quote insert: " << iResult << ", " << ctp_result(iResult));
-}
-
-//报价录入请求
-void TradeManager::ReqQuoteInsert(string instrument) {
-    CThostFtdcInputQuoteField req;
-    memset(&req, 0, sizeof(req));
-    strcpy(req.BrokerID, data->brokerId.c_str());
-    strcpy(req.InvestorID, data->investorId.c_str());
-    strcpy(req.InstrumentID, instrument.c_str());
-    strcpy(req.QuoteRef, data->quoteRef);
-    req.AskPrice = 60000;
-    req.BidPrice = 60000 - 1.0;
-    req.AskVolume = 1;
-    req.BidVolume = 1;
-    ///卖开平标志
-    req.AskOffsetFlag = THOST_FTDC_OF_Open;
-    ///买开平标志
-    req.BidOffsetFlag = THOST_FTDC_OF_Open;
-    ///卖投机套保标志
-    req.AskHedgeFlag = THOST_FTDC_HF_Speculation;
-    ///买投机套保标志
-    req.BidHedgeFlag = THOST_FTDC_HF_Speculation;
-
-    int iResult = traderApi->ReqQuoteInsert(&req, ++tradeRequestId);
-    MIDAS_LOG_DEBUG("request quote insert: " << iResult << ", " << ctp_result(iResult));
-}
-
 void TradeManager::ReqOrderAction(CThostFtdcOrderField *pOrder) {
     static bool ORDER_ACTION_SENT = false;  //是否发送了报单
     if (ORDER_ACTION_SENT) return;
@@ -239,51 +204,95 @@ void TradeManager::ReqExecOrderAction(CThostFtdcExecOrderField *pExecOrder) {
     EXECORDER_ACTION_SENT = true;
 }
 
-void TradeManager::ReqQuoteAction(CThostFtdcQuoteField *pQuote) {
-    static bool QUOTE_ACTION_SENT = false;  //是否发送了报单
-    if (QUOTE_ACTION_SENT) return;
-
-    CThostFtdcInputQuoteActionField req;
-    memset(&req, 0, sizeof(req));
-    ///经纪公司代码
-    strcpy(req.BrokerID, pQuote->BrokerID);
-    ///投资者代码
-    strcpy(req.InvestorID, pQuote->InvestorID);
-    ///报价操作引用
-    // TThostFtdcOrderActionRefType	QuoteActionRef;
-    ///报价引用
-    strcpy(req.QuoteRef, pQuote->QuoteRef);
-    ///请求编号
-    // TThostFtdcRequestIDType	RequestID;
-    ///前置编号
-    req.FrontID = data->frontId;
-    ///会话编号
-    req.SessionID = data->sessionId;
-    ///交易所代码
-    // TThostFtdcExchangeIDType	ExchangeID;
-    ///报价操作编号
-    // TThostFtdcOrderSysIDType	QuoteSysID;
-    ///操作标志
-    req.ActionFlag = THOST_FTDC_AF_Delete;
-    ///用户代码
-    // TThostFtdcUserIDType	UserID;
-    ///合约代码
-    strcpy(req.InstrumentID, pQuote->InstrumentID);
-
-    int iResult = traderApi->ReqQuoteAction(&req, ++tradeRequestId);
-    MIDAS_LOG_DEBUG("request quote action: " << iResult << ", " << ctp_result(iResult));
-    QUOTE_ACTION_SENT = true;
-}
-
-int TradeManager::request_buy(string instrument, double limitPrice, int volume) {
-    int iResult = request_open_position(instrument, limitPrice, volume, true);
-    MIDAS_LOG_INFO("request buy order insert: " << iResult);
+int TradeManager::request_buy_limit(string instrument, int volume, double price) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, LimitOrder, BuyFlag, volume);
+    fill_limit_order(req, price);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("buy limit order [[ volume: " << volume << " price:" << price << "]] result: " << iResult);
     return iResult;
 }
 
-int TradeManager::request_sell(string instrument, double limitPrice, int volume) {
-    int iResult = request_open_position(instrument, limitPrice, volume, false);
-    MIDAS_LOG_INFO("request sell order insert: " << iResult);
+int TradeManager::request_buy_market(string instrument, int volume) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, MarketOrder, BuyFlag, volume);
+    fill_market_order(req);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("buy market order [[ volume: " << volume << "]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_buy_if_above(string instrument, int volume, double conditionPrice, double limitPrice) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, ConditionOrder, BuyFlag, volume);
+    fill_condition_order(req, THOST_FTDC_CC_LastPriceGreaterThanStopPrice, conditionPrice, limitPrice);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("buy if above order [[ volume: " << volume << " price:" << conditionPrice
+                                                    << " limitPrice: " << limitPrice << " ]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_buy_if_below(string instrument, int volume, double conditionPrice, double limitPrice) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, ConditionOrder, BuyFlag, volume);
+    fill_condition_order(req, THOST_FTDC_CC_LastPriceLesserThanStopPrice, conditionPrice, limitPrice);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("buy if above order [[ volume: " << volume << " price:" << conditionPrice
+                                                    << " limitPrice: " << limitPrice << " ]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_sell_limit(string instrument, int volume, double price) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, LimitOrder, SellFlag, volume);
+    fill_limit_order(req, price);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("sell limit order [[ volume: " << volume << " price:" << price << "]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_sell_market(string instrument, int volume) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, MarketOrder, SellFlag, volume);
+    fill_market_order(req);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("sell market order [[ volume: " << volume << "]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_sell_if_above(string instrument, int volume, double conditionPrice, double limitPrice) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, ConditionOrder, SellFlag, volume);
+    fill_condition_order(req, THOST_FTDC_CC_LastPriceGreaterThanStopPrice, conditionPrice, limitPrice);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("sell if above order [[ volume: " << volume << " price:" << conditionPrice
+                                                     << " limitPrice: " << limitPrice << " ]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_sell_if_below(string instrument, int volume, double conditionPrice, double limitPrice) {
+    CThostFtdcInputOrderField req{0};
+    fill_common_order(req, instrument, ConditionOrder, SellFlag, volume);
+    fill_condition_order(req, THOST_FTDC_CC_LastPriceLesserThanStopPrice, conditionPrice, limitPrice);
+    int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("sell if above order [[ volume: " << volume << " price:" << conditionPrice
+                                                     << " limitPrice: " << limitPrice << " ]] result: " << iResult);
+    return iResult;
+}
+
+int TradeManager::request_withdraw_order(const CThostFtdcOrderField &order) {
+    CThostFtdcInputOrderActionField req;
+    memset(&req, 0, sizeof(req));
+    strcpy(req.BrokerID, order.BrokerID);
+    strcpy(req.InvestorID, order.InvestorID);
+    strcpy(req.OrderRef, order.OrderRef);
+    req.FrontID = data->frontId;
+    req.SessionID = data->sessionId;
+    req.ActionFlag = THOST_FTDC_AF_Delete;
+    strcpy(req.InstrumentID, order.InstrumentID);
+
+    int iResult = traderApi->ReqOrderAction(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("request withdraw order: " << iResult << ", " << ctp_result(iResult));
     return iResult;
 }
 
@@ -350,39 +359,60 @@ void TradeManager::query_exchange(const string &name) {
 TradeManager::TradeManager(shared_ptr<CtpData> d) : data(d) {}
 
 void TradeManager::init_ctp() {
+    MIDAS_LOG_INFO("trade manager wait for trade logged...");
+    std::unique_lock<std::mutex> lk(data->ctpMutex);
+    data->ctpCv.wait(lk, [this] { return data->state == TradeLogged; });
+
     MIDAS_LOG_INFO("trade manager start to init ctp...");
     data->state = TradeInit;
     query_exchange("");
 }
 
-int TradeManager::request_open_position(string instrument, double limitPrice, int volume, bool isBuy) {
-    CThostFtdcInputOrderField req{0};
+void TradeManager::fill_common_order(CThostFtdcInputOrderField &req, const string &instrument, CtpOrderType type,
+                                     bool isBuy, int volume) {
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.InvestorID, data->investorId.c_str());
     strcpy(req.InstrumentID, instrument.c_str());
     strcpy(req.OrderRef, data->orderRef);
-    req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
-
-    if (isBuy)
-        req.Direction = THOST_FTDC_D_Buy;
-    else
-        req.Direction = THOST_FTDC_D_Sell;
-
+    req.Direction = (isBuy ? THOST_FTDC_D_Buy : THOST_FTDC_D_Sell);
     req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
     req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;
-    req.LimitPrice = limitPrice;
     req.VolumeTotalOriginal = volume;
-    req.TimeCondition = THOST_FTDC_TC_GFD;                // 当日有效
     req.VolumeCondition = THOST_FTDC_VC_AV;               // 任何数量
     req.MinVolume = 1;                                    // 最小成交量
-    req.ContingentCondition = THOST_FTDC_CC_Immediately;  //触发条件: 立即
     req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;  //强平原因: 非强平
     req.IsAutoSuspend = 0;                                //自动挂起标志: 否
     req.UserForceClose = 0;                               //用户强评标志: 否
-
-    return traderApi->ReqOrderInsert(&req, ++tradeRequestId);
 }
 
+void TradeManager::fill_limit_order(CThostFtdcInputOrderField &order, double limitPrice) {
+    order.LimitPrice = limitPrice;
+    order.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
+    order.TimeCondition = THOST_FTDC_TC_GFD;                // 当日有效
+    order.ContingentCondition = THOST_FTDC_CC_Immediately;  //触发条件: 立即
+}
+void TradeManager::fill_market_order(CThostFtdcInputOrderField &req) {
+    req.OrderPriceType = THOST_FTDC_OPT_AnyPrice;
+    req.LimitPrice = 0;                                   // place 0 here for market order
+    req.TimeCondition = THOST_FTDC_TC_IOC;                // 立即成交否则撤销
+    req.ContingentCondition = THOST_FTDC_CC_Immediately;  //触发条件: 立即
+}
+void TradeManager::fill_condition_order(CThostFtdcInputOrderField &req, TThostFtdcContingentConditionType conditionType,
+                                        double conditionPrice, double limitPrice) {
+    req.ContingentCondition = conditionType;
+    req.StopPrice = conditionPrice;
+    req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
+    req.LimitPrice = limitPrice;
+    req.TimeCondition = THOST_FTDC_TC_GFD;
+}
+
+void TradeManager::subscribe_all_instruments() {
+    vector<string> instruments;
+    for (auto itr = data->instruments.begin(); itr != data->instruments.end(); ++itr) {
+        instruments.push_back(itr->first);
+    }
+    subscribe_market_data(instruments);
+}
 void TradeManager::subscribe_market_data(const vector<string> &instruments) {
     int instrumentCount = (int)instruments.size();
     if (instrumentCount <= 0) return;
@@ -399,30 +429,6 @@ void TradeManager::subscribe_market_data(const vector<string> &instruments) {
         MIDAS_LOG_INFO("send subscribe market data request OK! " << instrumentCount << " instruments get subscribed.");
     } else {
         MIDAS_LOG_ERROR("send subscribe market data request failed!")
-    }
-
-    for (int i = 0; i < instrumentCount; ++i) {
-        delete[] ppInstrumentID[i];
-    }
-    delete[] ppInstrumentID;
-}
-
-void TradeManager::subscribe_quote_czce(const vector<string> &instruments) {
-    int instrumentCount = (int)instruments.size();
-    if (instrumentCount <= 0) return;
-
-    char **ppInstrumentID = new char *[instrumentCount];
-    for (int i = 0; i < instrumentCount; ++i) {
-        ppInstrumentID[i] = new char[instruments[i].size() + 1];
-        strcpy(ppInstrumentID[i], instruments[i].c_str());
-        ppInstrumentID[i][instruments[i].size()] = '\0';
-    }
-
-    int iResult = mdApi->SubscribeForQuoteRsp(ppInstrumentID, instrumentCount);
-    if (iResult == 0) {
-        MIDAS_LOG_INFO("send subscribe market quote request OK");
-    } else {
-        MIDAS_LOG_ERROR("send subscribe market quote request failed!")
     }
 
     for (int i = 0; i < instrumentCount; ++i) {

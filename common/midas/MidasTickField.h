@@ -52,8 +52,8 @@ struct CompareValue<string> {
     }
 };
 
-const char DefaultTickString[] = ";";
-const char* DefaultTickStringEnd = DefaultTickString + strlen(DefaultTickString);
+static const char DefaultTickString[] = ";";
+static const char* DefaultTickStringEnd = DefaultTickString + strlen(DefaultTickString);
 
 template <typename T = boost::iterator_range<const char*>>
 class TickField {

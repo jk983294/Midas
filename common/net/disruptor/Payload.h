@@ -85,7 +85,16 @@ public:
     void set_has_more_data(bool hasMoreData_) { hasMoreData = hasMoreData_; }
 
     bool has_more_data() { return hasMoreData; }
+
+    template <class U>
+    friend ostream& operator<<(ostream& s, const PayloadObject<U>);
 };
+
+template <class T>
+ostream& operator<<(ostream& s, const PayloadObject<T> payload) {
+    s << "id_ " << payload.get_id() << " ,rcvt " << payload.get_rcvt() << " ," << payload.get_data();
+    return s;
+}
 
 /**
  * string based msg

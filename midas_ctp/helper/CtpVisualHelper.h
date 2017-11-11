@@ -133,28 +133,6 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInputExecOrder
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInputForQuoteField& field) {
-    os << "BrokerID: " << field.BrokerID << " InvestorID: " << field.InvestorID
-       << " InstrumentID: " << field.InstrumentID << " ForQuoteRef: " << field.ForQuoteRef
-       << " UserID: " << field.UserID << " ExchangeID: " << field.ExchangeID << " InvestUnitID: " << field.InvestUnitID
-       << " IPAddress: " << field.IPAddress << " MacAddress: " << field.MacAddress;
-    return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInputQuoteField& field) {
-    os << "BrokerID: " << field.BrokerID << " InvestorID: " << field.InvestorID
-       << " InstrumentID: " << field.InstrumentID << " QuoteRef: " << field.QuoteRef << " UserID: " << field.UserID
-       << " AskPrice: " << field.AskPrice << " BidPrice: " << field.BidPrice << " AskVolume: " << field.AskVolume
-       << " BidVolume: " << field.BidVolume << " RequestID: " << field.RequestID
-       << " BidOrderRef: " << field.BidOrderRef << " AskOffsetFlag: " << field.AskOffsetFlag
-       << " BusinessUnit: " << field.BusinessUnit << " AskHedgeFlag: " << field.AskHedgeFlag
-       << " BidHedgeFlag: " << field.BidHedgeFlag << " AskOrderRef: " << field.AskOrderRef
-       << " BidOrderRef: " << field.BidOrderRef << " ForQuoteSysID: " << field.ForQuoteSysID
-       << " ExchangeID: " << field.ExchangeID << " InvestUnitID: " << field.InvestUnitID
-       << " ClientID: " << field.ClientID << " IPAddress: " << field.IPAddress << " MacAddress: " << field.MacAddress;
-    return os;
-}
-
 inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInputOrderActionField& field) {
     os << "BrokerID: " << field.BrokerID << " InvestorID: " << field.InvestorID
        << " OrderActionRef: " << field.OrderActionRef << " OrderRef: " << field.OrderRef
@@ -172,19 +150,8 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInputExecOrder
        << " ExecOrderActionRef: " << field.ExecOrderActionRef << " ExecOrderRef: " << field.ExecOrderRef
        << " RequestID: " << field.RequestID << " FrontID: " << field.FrontID << " SessionID: " << field.SessionID
        << " ExchangeID: " << field.ExchangeID << " ExecOrderSysID: " << field.ExecOrderSysID
-       << " ActionFlag: " << field.ActionFlag << " UserID: " << field.UserID << " InstrumentID: " << field.InstrumentID
-       << " InvestUnitID: " << field.InvestUnitID << " IPAddress: " << field.IPAddress
-       << " MacAddress: " << field.MacAddress;
-    return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const CThostFtdcInputQuoteActionField& field) {
-    os << "BrokerID: " << field.BrokerID << " InvestorID: " << field.InvestorID
-       << " QuoteActionRef: " << field.QuoteActionRef << " QuoteRef: " << field.QuoteRef
-       << " RequestID: " << field.RequestID << " FrontID: " << field.FrontID << " SessionID: " << field.SessionID
-       << " ExchangeID: " << field.ExchangeID << " QuoteSysID: " << field.QuoteSysID
-       << " ActionFlag: " << field.ActionFlag << " UserID: " << field.UserID << " InstrumentID: " << field.InstrumentID
-       << " InvestUnitID: " << field.InvestUnitID << " ClientID: " << field.ClientID
+       << " ActionFlag: " << ctp_action_flag_type(field.ActionFlag) << " UserID: " << field.UserID
+       << " InstrumentID: " << field.InstrumentID << " InvestUnitID: " << field.InvestUnitID
        << " IPAddress: " << field.IPAddress << " MacAddress: " << field.MacAddress;
     return os;
 }
@@ -209,7 +176,7 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcOrderField& fi
        << " SettlementID: " << field.SettlementID << " OrderSysID: " << field.OrderSysID
        << " OrderSource: " << field.OrderSource << " OrderStatus: " << ctp_order_status(field.OrderStatus)
        << " OrderType: " << ctp_order_type(field.OrderType) << " VolumeTraded: " << field.VolumeTraded
-       << " VolumeTotal: " << field.VolumeTotal << " InsertDate: " << field.InsertDate
+       << " VolumeLeft: " << field.VolumeTotal << " InsertDate: " << field.InsertDate
        << " InsertTime: " << field.InsertTime << " ActiveTime: " << field.ActiveTime
        << " SuspendTime: " << field.SuspendTime << " UpdateTime: " << field.UpdateTime
        << " CancelTime: " << field.CancelTime << " ActiveTraderID: " << field.ActiveTraderID
@@ -338,14 +305,20 @@ inline std::ostream& operator<<(std::ostream& os, const CThostFtdcDepthMarketDat
        << "bap5 " << field.AskPrice5 << " ,"
        << "bas5 " << field.AskVolume5 << " ,"
        << "avgp " << field.AveragePrice << " ,"
+       << "tpd " << field.TradingDay << " ,"
        << "ad " << field.ActionDay << " ,;";
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const CThostFtdcForQuoteRspField& field) {
-    os << "TradingDay: " << field.TradingDay << "InstrumentID: " << field.InstrumentID
-       << "ForQuoteSysID: " << field.ForQuoteSysID << "ForQuoteTime: " << field.ForQuoteTime
-       << "ActionDay: " << field.ActionDay << "ExchangeID: " << field.ExchangeID;
+inline std::ostream& operator<<(std::ostream& os, const CThostFtdcOrderActionField& field) {
+    os << " BrokerID: " << field.BrokerID << " InvestorID: " << field.InvestorID
+       << " OrderActionRef: " << field.OrderActionRef << " OrderRef: " << field.OrderRef
+       << " RequestID: " << field.RequestID << " ExchangeID: " << field.ExchangeID
+       << " OrderSysID: " << field.OrderSysID << " ActionFlag: " << ctp_action_flag_type(field.ActionFlag)
+       << " LimitPrice: " << field.LimitPrice << " VolumeChange: " << field.VolumeChange
+       << " ActionDate: " << field.ActionDate << " ActionTime: " << field.ActionTime
+       << " OrderActionStatus: " << ctp_order_status_type(field.OrderActionStatus) << " UserID: " << field.UserID
+       << " StatusMsg: " << field.StatusMsg << " InstrumentID: " << field.InstrumentID;
     return os;
 }
 

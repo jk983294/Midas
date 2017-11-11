@@ -50,23 +50,12 @@ public:
     virtual void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
                                     CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
-    ///订阅询价应答
-    virtual void OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
-                                     CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-
     ///取消订阅行情应答
     virtual void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
                                       CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
-    ///取消订阅询价应答
-    virtual void OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
-                                       CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-
     ///深度行情通知
     virtual void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData);
-
-    ///询价通知
-    virtual void OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp);
 
 private:
     bool IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo);

@@ -5,6 +5,7 @@
 #include <utils/convert/StringHelper.h>
 #include <atomic>
 #include <condition_variable>
+#include <cstdint>
 #include <map>
 #include <mutex>
 #include <string>
@@ -15,13 +16,14 @@
 using namespace std;
 using namespace midas;
 
-enum CtpState { TradeInit, TradeInitFinished, MarketInit, Running, Closing };
+enum CtpState { TradeLogging, TradeLogged, TradeInit, TradeInitFinished, MarketInit, Running, Closing };
 
 class CtpData {
 public:
     typedef tbb::concurrent_hash_map<string, string, MidasStringHashCompare> TMapSS;
 
-    std::atomic<CtpState> state{TradeInit};
+    uint64_t mdLogInTime, mdLogOutTime, tradeLogInTime, tradeLogOutTime;
+    std::atomic<CtpState> state{TradeLogging};
     std::mutex ctpMutex;
     std::condition_variable ctpCv;
 
@@ -37,8 +39,6 @@ public:
     TThostFtdcSessionIDType sessionId;    //会话编号
     TThostFtdcOrderRefType orderRef;      //报单引用
     TThostFtdcOrderRefType execOrderRef;  //执行宣告引用
-    TThostFtdcOrderRefType forQuoteRef;   //询价引用
-    TThostFtdcOrderRefType quoteRef;      //报价引用
 
     map<string, CThostFtdcInstrumentField> instruments;
     map<string, CThostFtdcExchangeField> exchanges;

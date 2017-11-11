@@ -6,6 +6,7 @@ using namespace std;
 
 void TradeSpi::OnFrontConnected() {
     MIDAS_LOG_INFO("TradeSpi OnFrontConnected OK");
+    data->tradeLogInTime = ntime();
     manager->request_login(true);
 }
 
@@ -21,12 +22,17 @@ void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
         iNextOrderRef++;
         sprintf(data->orderRef, "%d", iNextOrderRef);
         sprintf(data->execOrderRef, "%d", 1);
-        sprintf(data->forQuoteRef, "%d", 1);
-        sprintf(data->quoteRef, "%d", 1);
 
         MIDAS_LOG_INFO("current trading day = " << (manager->traderApi->GetTradingDay()));
         ///投资者结算结果确认
         manager->request_confirm_settlement();
+
+        if (data->state == TradeLogging) {
+            std::lock_guard<std::mutex> lk(data->ctpMutex);
+            MIDAS_LOG_INFO("TradeSpi trade logged");
+            data->state = TradeLogged;
+            data->ctpCv.notify_one();
+        }
     }
 }
 
@@ -110,18 +116,11 @@ void TradeSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
             std::lock_guard<std::mutex> lk(data->ctpMutex);
             data->state = TradeInitFinished;
             data->ctpCv.notify_one();
-
-            // manager->init_market_data_subscription();
-            // manager->init_market_data_quote_subscription();
         }
         // 报单录入请求
         // request_insert_order();
         // 执行宣告录入请求
         // request_insert_execute_order();
-        // 询价录入
-        // ReqForQuoteInsert();
-        // 做市商报价录入
-        // ReqQuoteInsert();
     }
 }
 
@@ -139,25 +138,22 @@ void TradeSpi::OnRspExecOrderInsert(CThostFtdcInputExecOrderField *pInputExecOrd
     IsErrorRspInfo(pRspInfo);
 }
 
-void TradeSpi::OnRspForQuoteInsert(CThostFtdcInputForQuoteField *pInputForQuote, CThostFtdcRspInfoField *pRspInfo,
-                                   int nRequestID, bool bIsLast) {
-    //如果询价正确，则不会进入该回调
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " bIsLast " << bIsLast << " OnRspForQuoteInsert "
-                                  << *pInputForQuote);
-    IsErrorRspInfo(pRspInfo);
-}
-
-void TradeSpi::OnRspQuoteInsert(CThostFtdcInputQuoteField *pInputQuote, CThostFtdcRspInfoField *pRspInfo,
-                                int nRequestID, bool bIsLast) {
-    //如果报价正确，则不会进入该回调
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " bIsLast " << bIsLast << " OnRspQuoteInsert " << *pInputQuote);
-    IsErrorRspInfo(pRspInfo);
-}
-
+/**
+ * 撤单响应。交易核心返回的含有错误信息的撤单响应
+ */
 void TradeSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo,
                                 int nRequestID, bool bIsLast) {
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " bIsLast " << bIsLast << " OnRspOrderAction "
+    MIDAS_LOG_DEBUG("request ID " << nRequestID << " bIsLast " << bIsLast << " withdraw OnRspOrderAction "
                                   << *pInputOrderAction);
+    IsErrorRspInfo(pRspInfo);
+}
+
+/**
+ * 交易所会再次验证撤单指令的合法性,如果交易所认为该指令不合法,交易核心通过此函数转发交易所给出的错误。
+ * 如果交易所认为该指令合法,同样会返回对应报单的新状态(OnRtnOrder)
+ */
+void TradeSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo) {
+    MIDAS_LOG_ERROR("withdraw order error: " << *pOrderAction);
     IsErrorRspInfo(pRspInfo);
 }
 
@@ -166,13 +162,6 @@ void TradeSpi::OnRspExecOrderAction(CThostFtdcInputExecOrderActionField *pInpuEx
     //正确的撤单操作，不会进入该回调
     MIDAS_LOG_DEBUG("request ID " << nRequestID << " bIsLast " << bIsLast << " OnRspExecOrderAction "
                                   << *pInpuExectOrderAction);
-    IsErrorRspInfo(pRspInfo);
-}
-
-void TradeSpi::OnRspQuoteAction(CThostFtdcInputQuoteActionField *pInpuQuoteAction, CThostFtdcRspInfoField *pRspInfo,
-                                int nRequestID, bool bIsLast) {
-    //正确的撤单操作，不会进入该回调
-    MIDAS_LOG_DEBUG("request ID " << nRequestID << " bIsLast " << bIsLast << " OnRspQuoteAction " << *pInpuQuoteAction);
     IsErrorRspInfo(pRspInfo);
 }
 
@@ -198,44 +187,28 @@ void TradeSpi::OnRtnExecOrder(CThostFtdcExecOrderField *pExecOrder) {
     }
 }
 
-//询价通知
-void TradeSpi::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp) {
-    //上期所中金所询价通知通过该接口返回；只有做市商客户可以收到该通知
-    MIDAS_LOG_DEBUG("OnRtnForQuoteRsp");
-}
-
-//报价通知
-void TradeSpi::OnRtnQuote(CThostFtdcQuoteField *pQuote) {
-    MIDAS_LOG_DEBUG("OnRtnQuote");
-    if (IsMyQuote(pQuote)) {
-        if (IsTradingQuote(pQuote))
-            manager->ReqQuoteAction(pQuote);
-        else if (pQuote->QuoteStatus == THOST_FTDC_OST_Canceled)
-            MIDAS_LOG_DEBUG("quote cancel success");
-    }
-}
-
-///成交通知
+/**
+ * 建议客户端以成交通知为准判断报单是否成交,以及成交数量和价格
+ * 若以报单回报(状态为“部分成交或全不成交”)为准,由于报单回报与成交回报之间存在理论上的时间差,有可能导致平仓不成功
+ * @param pTrade
+ */
 void TradeSpi::OnRtnTrade(CThostFtdcTradeField *pTrade) { MIDAS_LOG_DEBUG("OnRtnTrade " << *pTrade); }
 
 void TradeSpi::OnFrontDisconnected(int nReason) {
-    MIDAS_LOG_DEBUG("OnFrontDisconnected");
-    MIDAS_LOG_DEBUG("Reason = " << nReason);
+    data->tradeLogOutTime = ntime();
+    MIDAS_LOG_ERROR("--->>> TradeSpi OnFrontDisconnected Reason = " << ctp_disconnect_reason(nReason));
 }
 
 void TradeSpi::OnHeartBeatWarning(int nTimeLapse) {
-    MIDAS_LOG_DEBUG("OnHeartBeatWarning");
-    MIDAS_LOG_DEBUG("nTimerLapse = " << nTimeLapse);
+    MIDAS_LOG_ERROR("--->>> should not see this since decommissioned, OnHeartBeatWarning nTimerLapse = " << nTimeLapse);
 }
 
-void TradeSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    MIDAS_LOG_DEBUG("OnRspError requestId: " << nRequestID << " isLast:" << bIsLast);
-    IsErrorRspInfo(pRspInfo);
-}
+void TradeSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) { IsErrorRspInfo(pRspInfo); }
 
 bool TradeSpi::IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo) {
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
-    if (bResult) cerr << "ErrorID=" << pRspInfo->ErrorID << ", ErrorMsg=" << gbk2utf8(pRspInfo->ErrorMsg) << endl;
+    if (bResult)
+        MIDAS_LOG_ERROR("TradeSpi ErrorID=" << pRspInfo->ErrorID << ", ErrorMsg=" << gbk2utf8(pRspInfo->ErrorMsg));
     return bResult;
 }
 
@@ -249,11 +222,6 @@ bool TradeSpi::IsMyExecOrder(CThostFtdcExecOrderField *pExecOrder) {
             (strcmp(pExecOrder->ExecOrderRef, data->execOrderRef) == 0));
 }
 
-bool TradeSpi::IsMyQuote(CThostFtdcQuoteField *pQuote) {
-    return ((pQuote->FrontID == data->frontId) && (pQuote->SessionID == data->sessionId) &&
-            (strcmp(pQuote->QuoteRef, data->quoteRef) == 0));
-}
-
 bool TradeSpi::IsTradingOrder(CThostFtdcOrderField *pOrder) {
     return ((pOrder->OrderStatus != THOST_FTDC_OST_PartTradedNotQueueing) &&
             (pOrder->OrderStatus != THOST_FTDC_OST_Canceled) && (pOrder->OrderStatus != THOST_FTDC_OST_AllTraded));
@@ -262,7 +230,5 @@ bool TradeSpi::IsTradingOrder(CThostFtdcOrderField *pOrder) {
 bool TradeSpi::IsTradingExecOrder(CThostFtdcExecOrderField *pExecOrder) {
     return (pExecOrder->ExecResult != THOST_FTDC_OER_Canceled);
 }
-
-bool TradeSpi::IsTradingQuote(CThostFtdcQuoteField *pQuote) { return (pQuote->QuoteStatus != THOST_FTDC_OST_Canceled); }
 
 TradeSpi::TradeSpi(shared_ptr<TradeManager> manager_, shared_ptr<CtpData> d) : manager(manager_), data(d) {}
