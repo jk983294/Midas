@@ -199,28 +199,28 @@ public:
 
     void stats(ostream& os) {
         Member::stats(os);
-        os << "interface  " << (!address.interface.empty() ? address.interface : string("default")) << endl
-           << "direction  outbound" << endl
-           << "buffer size  " << BufferSize << endl;
+        os << "interface  " << (!address.interface.empty() ? address.interface : string("default")) << '\n'
+           << "direction  outbound" << '\n'
+           << "buffer size  " << BufferSize << '\n';
 
         if (skt.is_open()) {
             try {
-                os << "local  " << skt.local_endpoint() << endl;
+                os << "local  " << skt.local_endpoint() << '\n';
 
                 {
                     boost::asio::socket_base::receive_buffer_size option;
                     skt.get_option(option);
-                    os << "receive_buffer_size " << option.value() << endl;
+                    os << "receive_buffer_size " << option.value() << '\n';
                 }
                 {
                     boost::asio::socket_base::send_buffer_size option;
                     skt.get_option(option);
-                    os << "send_buffer_size " << option.value() << endl;
+                    os << "send_buffer_size " << option.value() << '\n';
                 }
-                os << "non-blocking socket " << get_bool_string(skt.non_blocking()) << endl;
+                os << "non-blocking socket " << get_bool_string(skt.non_blocking()) << '\n';
                 if (skt.non_blocking()) {
-                    os << "polling time " << pollingTime / 1000 << " usec" << endl;
-                    os << "receive timeout " << receiveTimeout / 1000 << " usec" << endl;
+                    os << "polling time " << pollingTime / 1000 << " usec" << '\n';
+                    os << "receive timeout " << receiveTimeout / 1000 << " usec" << '\n';
                 }
             } catch (boost::system::system_error& e) {
                 MIDAS_LOG_ERROR("error get socket statistics for " << get_name() << " : " << e.what());

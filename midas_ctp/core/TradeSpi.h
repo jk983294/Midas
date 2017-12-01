@@ -21,6 +21,9 @@ public:
     ///当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
     virtual void OnFrontConnected();
 
+    ///当客户端与交易后台通信连接断开时，该方法被调用。当发生这个情况后，API会自动重新连接，客户端可不做处理。
+    virtual void OnFrontDisconnected(int nReason);
+
     ///登录请求响应
     virtual void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo,
                                 int nRequestID, bool bIsLast);
@@ -61,12 +64,6 @@ public:
 
     ///错误应答
     virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-
-    ///当客户端与交易后台通信连接断开时，该方法被调用。当发生这个情况后，API会自动重新连接，客户端可不做处理。
-    virtual void OnFrontDisconnected(int nReason);
-
-    ///心跳超时警告。当长时间未收到报文时，该方法被调用。
-    virtual void OnHeartBeatWarning(int nTimeLapse);
 
     ///报单通知
     virtual void OnRtnOrder(CThostFtdcOrderField *pOrder);

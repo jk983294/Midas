@@ -43,7 +43,7 @@ TEST_CASE("get set in file", "[config]") {
            "      \"a key with special characters in it {};#\\n\\t\\\"\\0\" \"\"\n"
            "   }\n"
            "}"
-        << endl;
+        << '\n';
     ofs.close();
 
     Config::instance().read_config(file);

@@ -16,12 +16,12 @@ static void shutdown(int signalNumber) {
 
 int main(int argc, char* argv[]) {
     po::options_description desc("Program options");
-    desc.add_options()("help,h", "print help")("directory,d", po::value<string>()->default_value("."),
-                                               "journaling directory")(
-        "address,i", po::value<string>()->default_value("localhost"), "source address")(
-        "port,n", po::value<string>()->default_value(""), "source port")(
-        "no_journaling,x", po::value<bool>()->implicit_value(false), "no journaling")(
-        "zip,z", po::value<string>()->default_value("on"), "zip on or off");
+    desc.add_options()("help,h", "print_trading_hour help")
+            ("directory,d", po::value<string>()->default_value("."), "journaling directory")
+            ("address,i", po::value<string>()->default_value("localhost"), "source address")
+            ("port,n", po::value<string>()->default_value(""), "source port")
+            ("no_journaling,x", po::value<bool>()->implicit_value(false), "no journaling")
+            ("zip,z", po::value<string>()->default_value("on"), "zip on or off");
 
     po::variables_map vm;
     auto parsed = po::parse_command_line(argc, argv, desc);
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     po::notify(vm);
 
     if (vm.count("help")) {
-        cout << desc << endl;
+        cout << desc << '\n';
         return 1;
     }
 
@@ -38,11 +38,11 @@ int main(int argc, char* argv[]) {
     string port = vm["port"].as<string>();
     bool isJournal = vm["no_journaling"].empty();
     bool isZip = (vm["zip"].as<string>() == "on");
-    cout << "journal directory: " << journalDirectory << endl
-         << "address: " << address << endl
-         << "port: " << port << endl
-         << "is journal: " << isJournal << endl
-         << "is zip: " << isZip << endl;
+    cout << "journal directory: " << journalDirectory << '\n'
+         << "address: " << address << '\n'
+         << "port: " << port << '\n'
+         << "is journal: " << isJournal << '\n'
+         << "is zip: " << isZip << '\n';
 
     if (signal(SIGINT, shutdown) == SIG_ERR) {
         cerr << "cannot catch SIGINT\n";

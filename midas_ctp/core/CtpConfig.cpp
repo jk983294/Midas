@@ -34,6 +34,14 @@ bool CtpProcess::configure() {
     data->dataDirectory = get_cfg_value<string>(root, "dataDirectory");
     data->tradeFlowPath = data->dataDirectory + "/tradeFlowPath/";
     data->marketFlowPath = data->dataDirectory + "/marketFlowPath/";
+    string tradingHourCfgPath = get_cfg_value<string>(root, "tradingHourCfgPath");
+
+    if (!check_file_exists(tradingHourCfgPath.c_str())) {
+        MIDAS_LOG_ERROR(tradingHourCfgPath << " Trading Hour Cfg not exist!");
+        return false;
+    } else {
+        data->tradeStatusManager.load_trade_session(tradingHourCfgPath);
+    }
 
     if (!check_file_exists(data->tradeFlowPath.c_str())) {
         MIDAS_LOG_ERROR(data->tradeFlowPath << " trade flow path not exist!");
@@ -66,10 +74,10 @@ bool CtpProcess::configure() {
         return false;
     }
 
-    MIDAS_LOG_INFO("using config" << endl
-                                  << "brokerId: " << data->brokerId << endl
-                                  << "investorId: " << data->investorId << endl
-                                  << "tradeFront: " << data->tradeFront << endl
-                                  << "marketFront: " << data->marketFront << endl);
+    MIDAS_LOG_INFO("using config" << '\n'
+                                  << "brokerId: " << data->brokerId << '\n'
+                                  << "investorId: " << data->investorId << '\n'
+                                  << "tradeFront: " << data->tradeFront << '\n'
+                                  << "marketFront: " << data->marketFront << '\n');
     return true;
 }

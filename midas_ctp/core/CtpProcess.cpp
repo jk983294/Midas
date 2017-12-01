@@ -1,8 +1,8 @@
 #include "CtpProcess.h"
 
 CtpProcess::CtpProcess(int argc, char** argv) : MidasProcessBase(argc, argv) {
-    data = shared_ptr<CtpData>(new CtpData());
-    manager = shared_ptr<TradeManager>(new TradeManager(data));
+    data = make_shared<CtpData>();
+    manager = make_shared<TradeManager>(data);
     init_admin();
 }
 
@@ -24,7 +24,7 @@ void CtpProcess::trade_thread() {
     MIDAS_LOG_INFO("start trade data thread " << data->tradeFlowPath);
     traderApi = CThostFtdcTraderApi::CreateFtdcTraderApi(data->tradeFlowPath.c_str());
     manager->register_trader_api(traderApi);
-    traderSpi = shared_ptr<TradeSpi>(new TradeSpi(manager, data));
+    traderSpi = make_shared<TradeSpi>(manager, data);
     traderApi->RegisterSpi(traderSpi.get());                      // 注册事件类
     traderApi->SubscribePublicTopic(THOST_TERT_QUICK);            // 注册公有流
     traderApi->SubscribePrivateTopic(THOST_TERT_QUICK);           // 注册私有流
@@ -50,7 +50,7 @@ void CtpProcess::app_start() {
         throw MidasException();
     }
 
-    mdSpi = shared_ptr<CtpMdSpi>(new CtpMdSpi(manager, data));
+    mdSpi = make_shared<CtpMdSpi>(manager, data);
 
     std::vector<CtpMdSpi::SharedPtr> producerStore;
     producerStore.push_back(mdSpi);
@@ -65,13 +65,13 @@ void CtpProcess::app_start() {
     manager->init_ctp();
 
     std::unique_lock<std::mutex> lk(data->ctpMutex);
-    data->ctpCv.wait(lk, [this] { return data->state == TradeInitFinished; });
-    data->state = MarketInit;
+    data->ctpCv.wait(lk, [this] { return data->state == CtpState::TradeInitFinished; });
+    data->state = CtpState::MarketInit;
 
-    data->books.init_all_instruments(data->instruments);
+    data->init_all_instruments();
     manager->subscribe_all_instruments();
     sleep(1);
-    data->state = Running;
+    data->state = CtpState::Running;
 }
 
 void CtpProcess::app_stop() {

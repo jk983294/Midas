@@ -32,7 +32,11 @@ TEST_CASE("convert time to string", "[time]") {
 
     REQUIRE(ntime_from_double(20171101.233625) == 1509550584000000000);
 
-    REQUIRE(intraday_time_from_separator_string("21:59:46") == 215946);
+    REQUIRE(intraday_time_HMS("21:59:46") == 215946);
+
+    REQUIRE(cob("20171112") == 20171112);
+
+    REQUIRE(intraday_time_HM("21:59") == 2159);
 }
 
 TEST_CASE("intraday", "[intraday]") {

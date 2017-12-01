@@ -38,7 +38,7 @@ public:
           path(dir + "/" + date_time(birth.tv_sec) + suffix) {
         remove(link.c_str());
         if (symlink(path.c_str(), link.c_str()) < 0) {
-            err << "Journal symlink error " << path << " " << link << strerror(errno) << endl;
+            err << "Journal symlink error " << path << " " << link << strerror(errno) << '\n';
             return;
         }
     }
@@ -94,10 +94,10 @@ public:
     static bool create_directory(const string& dir, ostream& err) {
         struct stat d;
         if (stat(dir.c_str(), &d) < 0) {
-            if (errno != ENOENT) err << "stat() fails " << strerror(errno) << endl;
+            if (errno != ENOENT) err << "stat() fails " << strerror(errno) << '\n';
 
             if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) < 0) {
-                err << "mkdir() fails " << strerror(errno) << endl;
+                err << "mkdir() fails " << strerror(errno) << '\n';
                 return false;
             } else {
                 return true;
@@ -105,7 +105,7 @@ public:
         }
 
         if (S_ISDIR(d.st_mode)) return true;
-        err << dir << " is not directory!" << endl;
+        err << dir << " is not directory!" << '\n';
         return false;
     }
 
@@ -127,7 +127,7 @@ public:
     FJournal(const string& dir, const string& suffix, long long totalBytesNew, ostream& err)
         : Journal(dir, suffix, totalBytesNew, err) {
         f = fopen(path.c_str(), "w");
-        if (!f) err << "fopen() failed " << strerror(errno) << endl;
+        if (!f) err << "fopen() failed " << strerror(errno) << '\n';
     }
     ~FJournal() {
         if (f) fclose(f);
@@ -137,7 +137,7 @@ public:
 private:
     virtual bool put(char* p, int n, ostream& err) {
         if (fwrite(p, n, 1, f) == size_t(1)) return true;
-        err << "fwrite() failed " << strerror(errno) << endl;
+        err << "fwrite() failed " << strerror(errno) << '\n';
         return false;
     }
 
@@ -157,9 +157,9 @@ public:
         f = gzopen(path.c_str(), "wb");
         if (!f) {
             if (errno)
-                err << "gzopen() failed " << strerror(errno) << endl;
+                err << "gzopen() failed " << strerror(errno) << '\n';
             else
-                err << "gzopen() failed no enough memory" << endl;
+                err << "gzopen() failed no enough memory" << '\n';
         }
     }
     ~GzJournal() {
@@ -171,9 +171,9 @@ private:
     virtual bool put(char* p, int n, ostream& err) {
         if (gzwrite(f, p, n) == n) return true;
         if (errno)
-            err << "gzwrite() failed " << strerror(errno) << endl;
+            err << "gzwrite() failed " << strerror(errno) << '\n';
         else
-            err << "gzwrite() failed" << endl;
+            err << "gzwrite() failed" << '\n';
         return false;
     }
 

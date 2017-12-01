@@ -10,8 +10,9 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include "CtpOrderBook.h"
+#include "CtpInstrument.h"
 #include "tbb/concurrent_hash_map.h"
+#include "trade/TradeStatusManager.h"
 
 using namespace std;
 using namespace midas;
@@ -23,7 +24,7 @@ public:
     typedef tbb::concurrent_hash_map<string, string, MidasStringHashCompare> TMapSS;
 
     uint64_t mdLogInTime, mdLogOutTime, tradeLogInTime, tradeLogOutTime;
-    std::atomic<CtpState> state{TradeLogging};
+    std::atomic<CtpState> state{CtpState::TradeLogging};
     std::mutex ctpMutex;
     std::condition_variable ctpCv;
 
@@ -40,15 +41,23 @@ public:
     TThostFtdcOrderRefType orderRef;      //报单引用
     TThostFtdcOrderRefType execOrderRef;  //执行宣告引用
 
-    map<string, CThostFtdcInstrumentField> instruments;
+    map<string, CThostFtdcInstrumentField> instrumentInfo;
     map<string, CThostFtdcExchangeField> exchanges;
     map<string, CThostFtdcProductField> products;
     map<string, CThostFtdcTradingAccountField> accounts;
     vector<CThostFtdcInvestorPositionField> positions;
 
-    CtpBooks books;
+    map<string, CtpInstrument> instruments;
+    TradeStatusManager tradeStatusManager;
 
     TMapSS user2asyncData;
+
+public:
+    void init_all_instruments();
+
+    void stream(ostream& os, const string& instrument, bool isImage);
+
+    bool update(const MktDataPayload& payload);
 };
 
 #endif

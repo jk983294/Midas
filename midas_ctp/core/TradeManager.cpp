@@ -1,5 +1,5 @@
-#include "../helper/CtpVisualHelper.h"
 #include "TradeManager.h"
+#include "helper/CtpVisualHelper.h"
 
 const static bool BuyFlag = true;
 const static bool SellFlag = false;
@@ -206,7 +206,7 @@ void TradeManager::ReqExecOrderAction(CThostFtdcExecOrderField *pExecOrder) {
 
 int TradeManager::request_buy_limit(string instrument, int volume, double price) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, LimitOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::LimitOrder, BuyFlag, volume);
     fill_limit_order(req, price);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy limit order [[ volume: " << volume << " price:" << price << "]] result: " << iResult);
@@ -215,7 +215,7 @@ int TradeManager::request_buy_limit(string instrument, int volume, double price)
 
 int TradeManager::request_buy_market(string instrument, int volume) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, MarketOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::MarketOrder, BuyFlag, volume);
     fill_market_order(req);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy market order [[ volume: " << volume << "]] result: " << iResult);
@@ -224,7 +224,7 @@ int TradeManager::request_buy_market(string instrument, int volume) {
 
 int TradeManager::request_buy_if_above(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, ConditionOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, BuyFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceGreaterThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -234,7 +234,7 @@ int TradeManager::request_buy_if_above(string instrument, int volume, double con
 
 int TradeManager::request_buy_if_below(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, ConditionOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, BuyFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceLesserThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -244,7 +244,7 @@ int TradeManager::request_buy_if_below(string instrument, int volume, double con
 
 int TradeManager::request_sell_limit(string instrument, int volume, double price) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, LimitOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::LimitOrder, SellFlag, volume);
     fill_limit_order(req, price);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell limit order [[ volume: " << volume << " price:" << price << "]] result: " << iResult);
@@ -253,7 +253,7 @@ int TradeManager::request_sell_limit(string instrument, int volume, double price
 
 int TradeManager::request_sell_market(string instrument, int volume) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, MarketOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::MarketOrder, SellFlag, volume);
     fill_market_order(req);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell market order [[ volume: " << volume << "]] result: " << iResult);
@@ -262,7 +262,7 @@ int TradeManager::request_sell_market(string instrument, int volume) {
 
 int TradeManager::request_sell_if_above(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, ConditionOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, SellFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceGreaterThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -272,7 +272,7 @@ int TradeManager::request_sell_if_above(string instrument, int volume, double co
 
 int TradeManager::request_sell_if_below(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, ConditionOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, SellFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceLesserThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -361,10 +361,10 @@ TradeManager::TradeManager(shared_ptr<CtpData> d) : data(d) {}
 void TradeManager::init_ctp() {
     MIDAS_LOG_INFO("trade manager wait for trade logged...");
     std::unique_lock<std::mutex> lk(data->ctpMutex);
-    data->ctpCv.wait(lk, [this] { return data->state == TradeLogged; });
+    data->ctpCv.wait(lk, [this] { return data->state == CtpState::TradeLogged; });
 
     MIDAS_LOG_INFO("trade manager start to init ctp...");
-    data->state = TradeInit;
+    data->state = CtpState::TradeInit;
     query_exchange("");
 }
 
@@ -408,7 +408,7 @@ void TradeManager::fill_condition_order(CThostFtdcInputOrderField &req, TThostFt
 
 void TradeManager::subscribe_all_instruments() {
     vector<string> instruments;
-    for (auto itr = data->instruments.begin(); itr != data->instruments.end(); ++itr) {
+    for (auto itr = data->instrumentInfo.begin(); itr != data->instrumentInfo.end(); ++itr) {
         instruments.push_back(itr->first);
     }
     subscribe_market_data(instruments);

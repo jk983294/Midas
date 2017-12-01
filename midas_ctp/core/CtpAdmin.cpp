@@ -1,6 +1,6 @@
 #include <utils/FileUtils.h>
-#include "../helper/CtpVisualHelper.h"
 #include "CtpProcess.h"
+#include "helper/CtpVisualHelper.h"
 
 void CtpProcess::init_admin() {
     admin_handler().register_callback("meters", boost::bind(&CtpProcess::admin_meters, this, _1, _2),
@@ -57,11 +57,11 @@ string CtpProcess::admin_query(const string& cmd, const TAdminCallbackArgs& args
     if (args.size() > 1) param2 = args[1];
     ostringstream oss;
     if (param1 == "book") {
-        data->books.stream(oss, param2, false);
+        data->stream(oss, param2, false);
     } else if (param1 == "image") {
-        data->books.stream(oss, param2, true);
+        data->stream(oss, param2, true);
     } else if (param1 == "instrument") {
-        dump2stream(oss, data->instruments, param2);
+        dump2stream(oss, data->instrumentInfo, param2);
     } else if (param1 == "product") {
         dump2stream(oss, data->products, param2);
     } else if (param1 == "exchange") {
@@ -69,7 +69,7 @@ string CtpProcess::admin_query(const string& cmd, const TAdminCallbackArgs& args
     } else if (param1 == "account") {
         dump2stream(oss, data->accounts, param2);
     } else if (param1 == "position") {
-        oss << data->positions << endl;
+        oss << data->positions << '\n';
     } else if (param1 == "") {
         oss << "unknown parameter";
     }
@@ -82,7 +82,7 @@ string CtpProcess::admin_dump(const string& cmd, const TAdminCallbackArgs& args)
     if (args.size() > 1) param2 = args[1];
 
     if (param1 == "instrument" || param1 == "" || param1 == "all")
-        dump2file(data->instruments, data->dataDirectory + "/instrument.dump");
+        dump2file(data->instrumentInfo, data->dataDirectory + "/instrument.dump");
     if (param1 == "product" || param1 == "" || param1 == "all")
         dump2file(data->products, data->dataDirectory + "/product.dump");
     if (param1 == "exchange" || param1 == "" || param1 == "all")
@@ -105,7 +105,7 @@ string CtpProcess::admin_get_async_result(const string& cmd, const TAdminCallbac
     }
     CtpData::TMapSS::accessor a;
     if (data->user2asyncData.find(a, userId)) {
-        oss << a->second << endl;
+        oss << a->second << '\n';
         data->user2asyncData.erase(a);
     } else {
         oss << "no async result for user " << userId;
@@ -134,12 +134,12 @@ string CtpProcess::admin_buy(const string& cmd, const TAdminCallbackArgs& args) 
         string instrument = args[0];
         double price = boost::lexical_cast<double>(args[1]);
         int size = boost::lexical_cast<int>(args[2]);
-        oss << "parameter: " << instrument << " " << price << " " << size << endl;
+        oss << "parameter: " << instrument << " " << price << " " << size << '\n';
         int ret = manager->request_buy_limit(instrument, price, size);
         if (ret == 0) {
-            oss << "buy order sent success for " << instrument << " " << price << " " << size << endl;
+            oss << "buy order sent success for " << instrument << " " << price << " " << size << '\n';
         } else {
-            oss << "buy order sent failed with error code " << ret << endl;
+            oss << "buy order sent failed with error code " << ret << '\n';
         }
     }
     return oss.str();
@@ -153,12 +153,12 @@ string CtpProcess::admin_sell(const string& cmd, const TAdminCallbackArgs& args)
         string instrument = args[0];
         double price = boost::lexical_cast<double>(args[1]);
         int size = boost::lexical_cast<int>(args[2]);
-        oss << "parameter: " << instrument << " " << price << " " << size << endl;
+        oss << "parameter: " << instrument << " " << price << " " << size << '\n';
         int ret = manager->request_sell_limit(instrument, price, size);
         if (ret == 0) {
-            oss << "sell order sent success for " << instrument << " " << price << " " << size << endl;
+            oss << "sell order sent success for " << instrument << " " << price << " " << size << '\n';
         } else {
-            oss << "sell order sent failed with error code " << ret << endl;
+            oss << "sell order sent failed with error code " << ret << '\n';
         }
     }
     return oss.str();
@@ -170,7 +170,7 @@ string CtpProcess::admin_close(const string& cmd, const TAdminCallbackArgs& args
         oss << "missing parameter\n";
     else {
         string content = args[0];
-        oss << "parameter: " << content << endl;
+        oss << "parameter: " << content << '\n';
     }
     return oss.str();
 }

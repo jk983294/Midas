@@ -543,7 +543,7 @@ public:
             os << std::left << std::setw(25) << "tcp connection" << std::setw(25) << "description" << std::setw(25)
                << "connect/accept" << std::setw(25) << "local endpoint" << std::setw(25) << "remote endpoint"
                << std::setw(25) << "connected time" << std::right << std::setw(25) << "msg sent" << std::setw(25)
-               << "bytes sent" << std::setw(25) << "msg recv" << std::setw(25) << "bytes recv" << endl;
+               << "bytes sent" << std::setw(25) << "msg recv" << std::setw(25) << "bytes recv" << '\n';
             my_stats(os);
         }
 
@@ -563,7 +563,7 @@ public:
                    << std::setw(25) << localEndpointStr.substr(0, 24) << std::setw(25)
                    << remoteEndpointStr.substr(0, 24) << std::setw(25) << connectTimeStr.substr(0, 24) << std::right
                    << std::setw(25) << Member::msgsSent << std::setw(25) << Member::bytesSent << std::setw(25)
-                   << Member::msgsRecv << std::setw(25) << Member::bytesRecv << endl;
+                   << Member::msgsRecv << std::setw(25) << Member::bytesRecv << '\n';
             }
         }
 
@@ -582,7 +582,7 @@ public:
                 os << std::left << std::setw(25) << Member::get_name().substr(0, 24) << std::setw(25)
                    << Member::get_description().substr(0, 24) << std::setw(25) << get_bool_string(isConnectable)
                    << std::setw(25) << localEndpointStr.substr(0, 24) << std::setw(25)
-                   << remoteEndpointStr.substr(0, 24) << std::setw(25) << connectTimeStr.substr(0, 24) << endl;
+                   << remoteEndpointStr.substr(0, 24) << std::setw(25) << connectTimeStr.substr(0, 24) << '\n';
             }
         }
 
@@ -954,27 +954,27 @@ public:
     virtual void stats(std::ostream& os) {
         os << std::left << std::setw(25) << "tcp group" << std::setw(25) << "description" << std::setw(25) << "enabled"
            << std::setw(25) << "endpoint" << std::setw(25) << "status" << std::right << std::setw(25) << "msg sent"
-           << std::setw(25) << "bytes sent" << std::setw(25) << "msg recv" << std::setw(25) << "bytes recv" << endl;
+           << std::setw(25) << "bytes sent" << std::setw(25) << "msg recv" << std::setw(25) << "bytes recv" << '\n';
 
         os << std::left << std::setw(25) << Member::get_name().substr(0, 24) << std::setw(25)
            << Member::get_description().substr(0, 24) << std::setw(25) << get_bool_string(enabled) << std::setw(25)
            << object2str(endpoint_).substr(0, 24) << std::setw(25) << (running ? "started" : "stopped") << std::right
            << std::setw(25) << Member::msgsSent << std::setw(25) << Member::bytesSent << std::setw(25)
-           << Member::msgsRecv << std::setw(25) << Member::bytesRecv << endl;
+           << Member::msgsRecv << std::setw(25) << Member::bytesRecv << '\n';
 
         os << std::left << std::setw(25) << "tcp connection" << std::setw(25) << "description" << std::setw(25)
            << "connect/accept" << std::setw(25) << "local endpoint" << std::setw(25) << "remote endpoint"
            << std::setw(25) << "connected time" << std::right << std::setw(25) << "msg sent" << std::setw(25)
-           << "bytes sent" << std::setw(25) << "msg recv" << std::setw(25) << "bytes recv" << endl;
+           << "bytes sent" << std::setw(25) << "msg recv" << std::setw(25) << "bytes recv" << '\n';
 
         std::for_each(tcpRecvVec1.begin(), tcpRecvVec1.end(), boost::bind(&TcpRecv::my_stats, _1, boost::ref(os)));
-        os << endl;
+        os << '\n';
     }
 
     void list(std::ostream& os) const {
         os << std::left << std::setw(25) << "tcp group" << std::setw(25) << "description" << std::setw(25) << "enabled"
            << std::setw(25) << "endpoint" << std::setw(25) << "status" << std::setw(25) << "config" << std::right
-           << std::setw(25) << "max retry count" << std::setw(25) << "max retry time" << endl;
+           << std::setw(25) << "max retry count" << std::setw(25) << "max retry time" << '\n';
 
         size_t maxRetryCount = Config::instance().get<size_t>(cfg + ".max_retry", std::numeric_limits<size_t>::max());
         boost::posix_time::time_duration maxRetryTime = Config::instance().get<boost::posix_time::time_duration>(
@@ -984,15 +984,15 @@ public:
            << Member::get_description().substr(0, 24) << std::setw(25) << get_bool_string(enabled) << std::setw(25)
            << object2str(endpoint_).substr(0, 24) << std::setw(25) << (running ? "started" : "stopped") << std::setw(25)
            << cfg.substr(0, 24) << std::right << std::setw(25) << maxRetryCount << std::setw(25)
-           << object2str(maxRetryTime).substr(0, 24) << endl
-           << endl;
+           << object2str(maxRetryTime).substr(0, 24) << '\n'
+           << '\n';
 
         os << std::left << std::setw(25) << "tcp connection" << std::setw(25) << "description" << std::setw(25)
            << "connect/accept" << std::setw(25) << "local endpoint" << std::setw(25) << "remote endpoint"
-           << std::setw(25) << "connected time" << endl;
+           << std::setw(25) << "connected time" << '\n';
         std::for_each(tcpRecvVec1.begin(), tcpRecvVec1.end(), boost::bind(&TcpRecv::list, _1, boost::ref(os)));
         std::for_each(tcpRecvVec2.begin(), tcpRecvVec2.end(), boost::bind(&TcpRecv::list, _1, boost::ref(os)));
-        os << endl;
+        os << '\n';
     }
 
     static bool default_accept_callback() { return true; }

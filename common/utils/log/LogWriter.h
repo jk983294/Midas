@@ -110,7 +110,7 @@ public:
 
     void keep_alive(const boost::system::error_code& error) {
         if (error) {
-            std::clog << "LogWriterT keep alive timer error " << error << std::endl;
+            std::clog << "LogWriterT keep alive timer error " << error << '\n';
         }
     }
     void on_batch_timeout(const boost::system::error_code& error);

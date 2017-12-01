@@ -309,9 +309,9 @@ public:
         Member::stats(os);
 
         if (skt.is_open()) {
-            os << "address  " << skt.remote_endpoint() << endl << "local  " << skt.local_endpoint() << endl;
+            os << "address  " << skt.remote_endpoint() << '\n' << "local  " << skt.local_endpoint() << '\n';
         }
-        os << "peek in  " << peekBytesRecv << endl << "peek out  " << peekBytesSent << endl;
+        os << "peek in  " << peekBytesRecv << '\n' << "peek out  " << peekBytesSent << '\n';
     }
 
 public:

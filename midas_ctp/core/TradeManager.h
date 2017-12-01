@@ -4,7 +4,7 @@
 #include <ctp/ThostFtdcMdApi.h>
 #include <ctp/ThostFtdcTraderApi.h>
 #include <string>
-#include "../model/CtpData.h"
+#include "model/CtpData.h"
 
 using namespace std;
 

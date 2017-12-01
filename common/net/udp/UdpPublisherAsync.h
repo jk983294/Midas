@@ -62,8 +62,8 @@ public:
     void stats(ostream& os) {
         PublisherBase::stats(os);
 
-        os << "polling time " << (pollingTime / 1000) << " usec" << endl
-           << "bytes wait " << outputBuffer.pending_bytes() << endl;
+        os << "polling time " << (pollingTime / 1000) << " usec" << '\n'
+           << "bytes wait " << outputBuffer.pending_bytes() << '\n';
     }
 
 private:

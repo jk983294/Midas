@@ -12,10 +12,10 @@ namespace po = boost::program_options;
 int main(int argc, char** argv) {
     double start, end;
     po::options_description desc("Program options");
-    desc.add_options()("help,h", "print help")("directory,d", po::value<string>()->default_value("."),
-                                               "directory to play")(
-        "start,s", po::value<double>(&start)->default_value(-1), "start time to play")(
-        "end,e", po::value<double>(&end)->default_value(-1), "end time to play");
+    desc.add_options()("help,h", "print_trading_hour help")
+            ("directory,d", po::value<string>()->default_value("."), "directory to play")
+            ("start,s", po::value<double>(&start)->default_value(-1), "start time to play")
+            ("end,e", po::value<double>(&end)->default_value(-1), "end time to play");
 
     po::variables_map vm;
     auto parsed = po::parse_command_line(argc, argv, desc);
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     po::notify(vm);
 
     if (vm.count("help")) {
-        cout << desc << endl;
+        cout << desc << '\n';
         return 0;
     }
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
     path dir(directory);
     if (!is_directory(dir)) {
-        cerr << "invalid directory: " << directory << endl;
+        cerr << "invalid directory: " << directory << '\n';
         return -1;
     }
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     const int GZ_BUF_SIZE = READ_SIZE + 1;
     char buf[GZ_BUF_SIZE];
     for (long i = si; i < ei; ++i) {
-        //        cout << files[i] << endl;     // keep here for trouble shooting
+        //        cout << files[i] << '\n';     // keep here for trouble shooting
         bool isFirstFile = (i == si);
         bool isLastFile = (i == (ei - 1));
 
@@ -98,10 +98,10 @@ int main(int argc, char** argv) {
                 auto itr1 = line.find_first_of("rcvt") + 5;
                 auto itr2 = line.find_first_of(',', itr1) - 1;
                 uint64_t rcvt = boost::lexical_cast<uint64_t>(line.substr(itr1, itr2 - itr1));
-                if ((snTime == 0 || rcvt >= snTime) && (enTime == 0 || rcvt <= enTime)) cout << line << endl;
+                if ((snTime == 0 || rcvt >= snTime) && (enTime == 0 || rcvt <= enTime)) cout << line << '\n';
             }
         } else {
-            cout << endl;
+            cout << '\n';
         }
 
         gzclose(gzfp);

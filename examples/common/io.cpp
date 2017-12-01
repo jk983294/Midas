@@ -45,9 +45,9 @@ string admin_test(const string& cmd, const TAdminCallbackArgs& args) {
 
 string admin_meters(const string& cmd, const TAdminCallbackArgs& args, CChannel* c1, CChannel* c2) {
     ostringstream oss;
-    oss << "server: " << endl;
+    oss << "server: " << '\n';
     c1->meters(oss, true);
-    oss << endl << "clients: " << endl;
+    oss << '\n' << "clients: " << '\n';
     c2->meters(oss);
     return oss.str();
 }

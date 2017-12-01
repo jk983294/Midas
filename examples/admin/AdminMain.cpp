@@ -14,7 +14,7 @@ using namespace midas;
  */
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cout << "usage: admin host:port[:interface] cmd [parameter]" << endl;
+        cout << "usage: admin host:port[:interface] cmd [parameter]" << '\n';
         return -1;
     }
 
@@ -90,10 +90,10 @@ int main(int argc, char* argv[]) {
         string userId = pt.get<string>("userId");
         int requestId = pt.get<int>("requestId");
         string response = pt.get<string>("response");
-        std::cout << response << endl;
+        std::cout << response << '\n';
     } catch (std::exception& e) {
-        std::cerr << "error connect to server " << host << ":" << port << " with parameter: " << arguments << endl
-                  << "reason: " << e.what() << std::endl;
+        std::cerr << "error connect to server " << host << ":" << port << " with parameter: " << arguments << '\n'
+                  << "reason: " << e.what() << '\n';
     }
     return 0;
 }

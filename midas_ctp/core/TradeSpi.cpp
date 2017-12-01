@@ -1,5 +1,5 @@
-#include "../helper/CtpVisualHelper.h"
 #include "TradeSpi.h"
+#include "helper/CtpVisualHelper.h"
 #include "utils/log/Log.h"
 
 using namespace std;
@@ -27,10 +27,10 @@ void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
         ///投资者结算结果确认
         manager->request_confirm_settlement();
 
-        if (data->state == TradeLogging) {
+        if (data->state == CtpState::TradeLogging) {
             std::lock_guard<std::mutex> lk(data->ctpMutex);
             MIDAS_LOG_INFO("TradeSpi trade logged");
-            data->state = TradeLogged;
+            data->state = CtpState::TradeLogged;
             data->ctpCv.notify_one();
         }
     }
@@ -46,11 +46,11 @@ void TradeSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *
 
 void TradeSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo,
                                   int nRequestID, bool bIsLast) {
-    if (pInstrument) data->instruments.insert(make_pair(string(pInstrument->InstrumentID), *pInstrument));
+    if (pInstrument) data->instrumentInfo.insert(make_pair(string(pInstrument->InstrumentID), *pInstrument));
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query instrument success.");
-        if (data->state == TradeInit) {
+        if (data->state == CtpState::TradeInit) {
             sleep(1);
             manager->query_trading_account();
         }
@@ -69,7 +69,7 @@ void TradeSpi::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRs
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query exchange success.");
-        if (data->state == TradeInit) {
+        if (data->state == CtpState::TradeInit) {
             sleep(1);
             manager->query_product("");
         }
@@ -83,7 +83,7 @@ void TradeSpi::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspIn
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query product success.");
-        if (data->state == TradeInit) {
+        if (data->state == CtpState::TradeInit) {
             sleep(1);
             manager->query_instrument("");
         }
@@ -96,7 +96,7 @@ void TradeSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAcc
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query account success.");
-        if (data->state == TradeInit) {
+        if (data->state == CtpState::TradeInit) {
             sleep(1);
             manager->query_position("");
         }
@@ -112,9 +112,9 @@ void TradeSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query position success.");
-        if (data->state == TradeInit) {
+        if (data->state == CtpState::TradeInit) {
             std::lock_guard<std::mutex> lk(data->ctpMutex);
-            data->state = TradeInitFinished;
+            data->state = CtpState::TradeInitFinished;
             data->ctpCv.notify_one();
         }
         // 报单录入请求
@@ -197,10 +197,6 @@ void TradeSpi::OnRtnTrade(CThostFtdcTradeField *pTrade) { MIDAS_LOG_DEBUG("OnRtn
 void TradeSpi::OnFrontDisconnected(int nReason) {
     data->tradeLogOutTime = ntime();
     MIDAS_LOG_ERROR("--->>> TradeSpi OnFrontDisconnected Reason = " << ctp_disconnect_reason(nReason));
-}
-
-void TradeSpi::OnHeartBeatWarning(int nTimeLapse) {
-    MIDAS_LOG_ERROR("--->>> should not see this since decommissioned, OnHeartBeatWarning nTimerLapse = " << nTimeLapse);
 }
 
 void TradeSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) { IsErrorRspInfo(pRspInfo); }

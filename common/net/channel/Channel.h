@@ -364,20 +364,20 @@ public:
     void enable(ostream& os, const TAdminCallbackArgs& args) {
         string memberStr = (args.empty() ? string() : args[0]);
         if (memberStr.empty() || memberStr == label) {
-            os << "enable all members on channel: " << label << endl;
+            os << "enable all members on channel: " << label << '\n';
             enable();
         } else if (!memberStr.empty() && enable(memberStr)) {
-            os << "member : " << memberStr << " enabled." << endl;
+            os << "member : " << memberStr << " enabled." << '\n';
         }
     }
 
     void disable(ostream& os, const TAdminCallbackArgs& args) {
         string memberStr = (args.empty() ? string() : args[0]);
         if (memberStr.empty() || memberStr == label) {
-            os << "disable all members on channel: " << label << endl;
+            os << "disable all members on channel: " << label << '\n';
             disable();
         } else if (!memberStr.empty() && disable(memberStr)) {
-            os << "member : " << memberStr << " disable." << endl;
+            os << "member : " << memberStr << " disable." << '\n';
         }
     }
 
@@ -431,12 +431,12 @@ public:
             os << std::left << std::setw(nameWidth) << "Connection" << setw(15) << "Protocol" << setw(15) << "Channel"
                << setw(15) << "Connect Time" << setw(15) << std::right << "Msgs Sent" << setw(15) << "Bytes Sent"
                << setw(15) << "Msgs Recv" << setw(15) << "Bytes Recv"
-               << " " << std::left << "Desc" << endl;
+               << " " << std::left << "Desc" << '\n';
 
             char delimiter[256];
             memset(delimiter, 0, sizeof(delimiter));
             memset(delimiter, '_', nameWidth + descWidth + 96);
-            os << delimiter << endl;
+            os << delimiter << '\n';
         }
 
         for (auto itr = name2member.begin(); itr != name2member.end(); ++itr) {
@@ -452,20 +452,20 @@ public:
                << member->get_protocol_as_string() << setw(15) << label << setw(15) << timeLocal << setw(15)
                << std::right << member->msgsSent << setw(15) << member->bytesSent << setw(15) << member->msgsRecv
                << setw(15) << member->bytesRecv << " " << std::left
-               << member->get_description().substr(0, descWidth - 1) << endl;
+               << member->get_description().substr(0, descWidth - 1) << '\n';
         }
     }
 
     void stats(ostream& os) const {
-        os << "channel          = " << label << endl
-           << "config           = " << configPath << endl
-           << "enabled          = " << get_bool_string(enabled) << endl
-           << "worker limit     = " << workerLimit << endl
-           << "worker number    = " << workerCount << endl
-           << "affinity         = " << affinity << endl
-           << "member number    = " << memberCount << endl
-           << "slot number      = " << slotCount << endl
-           << "exit when done   = " << get_bool_string(!work2do) << endl;
+        os << "channel          = " << label << '\n'
+           << "config           = " << configPath << '\n'
+           << "enabled          = " << get_bool_string(enabled) << '\n'
+           << "worker limit     = " << workerLimit << '\n'
+           << "worker number    = " << workerCount << '\n'
+           << "affinity         = " << affinity << '\n'
+           << "member number    = " << memberCount << '\n'
+           << "slot number      = " << slotCount << '\n'
+           << "exit when done   = " << get_bool_string(!work2do) << '\n';
     }
 
     bool stats(ostream& os, const string& member) const {

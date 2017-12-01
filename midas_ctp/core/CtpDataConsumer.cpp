@@ -1,14 +1,13 @@
-#include "../helper/CtpVisualHelper.h"
 #include "CtpDataConsumer.h"
+#include "helper/CtpVisualHelper.h"
 
 CtpDataConsumer::CtpDataConsumer(std::shared_ptr<CtpData> data) : data(data) {}
 
 void CtpDataConsumer::data_callback1(MktDataPayload& payload) {
-    //    MIDAS_LOG_DEBUG("OnRtnDepthMarketData " << payload.get_data());
     ++receivedMsgCount;
-    data->books.update(payload);
+    data->update(payload);
 }
 
 void CtpDataConsumer::stats(ostream& os) {
-    os << "CtpDataConsumer stats:" << endl << "msgs recv        = " << receivedMsgCount << endl;
+    os << "CtpDataConsumer stats:" << '\n' << "msgs recv        = " << receivedMsgCount << '\n';
 }

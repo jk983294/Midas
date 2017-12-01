@@ -109,7 +109,7 @@ inline void LogWriterT<Output, Format, ASYNC>::service() {
             iosvc_m.run();
         }
     } catch (...) {
-        std::clog << "LogWriterT unhandled exception in service loop " << std::endl;
+        std::clog << "LogWriterT unhandled exception in service loop " << '\n';
     }
 }
 }

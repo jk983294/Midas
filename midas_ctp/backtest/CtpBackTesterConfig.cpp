@@ -34,8 +34,8 @@ bool CtpBackTester::configure() {
         return false;
     }
 
-    MIDAS_LOG_INFO("using config" << endl
-                                  << "dataDirectory: " << dataDirectory << endl
-                                  << "fileType: " << fileType << endl);
+    MIDAS_LOG_INFO("using config" << '\n'
+                                  << "dataDirectory: " << dataDirectory << '\n'
+                                  << "fileType: " << fileType << '\n');
     return true;
 }

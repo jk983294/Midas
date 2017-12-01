@@ -111,7 +111,7 @@ public:
 
     void stop() override { consumerStagesPtr->stop(); }
 
-    void stats(ostream& os) { os << "Disruptor stats:" << endl << "msgs recv        = " << receivedMsgCount << endl; }
+    void stats(ostream& os) { os << "Disruptor stats:" << '\n' << "msgs recv        = " << receivedMsgCount << '\n'; }
 };
 }
 

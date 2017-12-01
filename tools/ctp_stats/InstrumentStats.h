@@ -1,9 +1,11 @@
 #ifndef MIDAS_TOOLS_INSTRUMENTS_TATS_H
 #define MIDAS_TOOLS_INSTRUMENTS_TATS_H
 
+#include <ctp/ThostFtdcUserApiStruct.h>
+#include <utils/convert/TimeHelper.h>
+#include <string>
 #include <utility>
 #include <vector>
-#include "midas/MidasTick.h"
 
 using namespace std;
 using namespace midas;
@@ -30,14 +32,21 @@ public:
     vector<TradingSession> tradingTimes;
     string instrument;
     int updateCount{0};
+    int maxTradeVolume{0};
 
 public:
     InstrumentStats() {}
     InstrumentStats(const string& instrument);
 
-    void update(const MidasTick& tick);
+    void update(const CThostFtdcDepthMarketDataField& tick);
 
-    void print() const;
+    void update_trading_hour(const CThostFtdcDepthMarketDataField& tick);
+
+    void update_candle();
+
+    void print_trading_hour() const;
+
+    void print_candle_data();
 };
 
 #endif

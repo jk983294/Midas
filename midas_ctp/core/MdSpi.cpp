@@ -1,5 +1,5 @@
-#include "../helper/CtpVisualHelper.h"
 #include "MdSpi.h"
+#include "helper/CtpVisualHelper.h"
 
 using namespace std;
 
@@ -8,10 +8,6 @@ void CtpMdSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool
 void CtpMdSpi::OnFrontDisconnected(int nReason) {
     data->mdLogOutTime = ntime();
     MIDAS_LOG_ERROR("--->>> CtpMdSpi OnFrontDisconnected Reason = " << ctp_disconnect_reason(nReason));
-}
-
-void CtpMdSpi::OnHeartBeatWarning(int nTimeLapse) {
-    MIDAS_LOG_ERROR("--->>> should not see this since decommissioned, OnHeartBeatWarning nTimerLapse = " << nTimeLapse);
 }
 
 void CtpMdSpi::OnFrontConnected() {
@@ -25,7 +21,7 @@ void CtpMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("CtpMdSpi request ID " << nRequestID << " OnRspUserLogin: " << *pRspUserLogin);
         // in case ctp reconnect event, subscribe again
-        if (data->state == Running) {
+        if (data->state == CtpState::Running) {
             manager->subscribe_all_instruments();
         }
     }
@@ -39,17 +35,6 @@ void CtpMdSpi::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificIn
     }
     if (bIsLast && pSpecificInstrument) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspSubMarketData success on " << *pSpecificInstrument)
-    }
-}
-
-void CtpMdSpi::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument,
-                                    CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (IsErrorRspInfo(pRspInfo)) {
-        MIDAS_LOG_ERROR("request ID " << nRequestID << " OnRspUnSubMarketData failed on " << *pSpecificInstrument);
-        return;
-    }
-    if (pSpecificInstrument) {
-        MIDAS_LOG_INFO("request ID " << nRequestID << " OnRspUnSubMarketData success on " << *pSpecificInstrument)
     }
 }
 

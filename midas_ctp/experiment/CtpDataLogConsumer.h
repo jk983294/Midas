@@ -3,8 +3,8 @@
 
 #include <ctp/ThostFtdcUserApiStruct.h>
 #include <io/JournalManager.h>
-#include "../helper/CtpVisualHelper.h"
-#include "../model/CtpData.h"
+#include "helper/CtpVisualHelper.h"
+#include "model/CtpData.h"
 
 class CtpDataLogConsumer {
 public:
@@ -29,7 +29,7 @@ public:
     }
 
     void stats(ostream& os) {
-        os << "CtpDataConsumer stats:" << endl << "msgs recv        = " << receivedMsgCount << endl;
+        os << "CtpDataConsumer stats:" << '\n' << "msgs recv        = " << receivedMsgCount << '\n';
     }
 
     void flush() { manager->flush(); }

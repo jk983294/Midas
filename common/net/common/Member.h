@@ -96,18 +96,18 @@ public:
     virtual void enable() { enabled = true; }
     virtual void disable() { enabled = false; }
     virtual void stats(ostream& os) {
-        os << "name             = " << get_name() << endl
-           << "state            = " << get_state_as_string() << endl
-           << "description      = " << get_description() << endl
-           << "protocol         = " << get_protocol_as_string() << endl
-           << "enabled          = " << get_bool_string(enabled) << endl
-           << "config           = " << configPath << endl
-           << "connection time  = " << time_t2string(connectTime) << endl
-           << "joined slot#     = " << slotMap.size() << endl
-           << "bytes recv       = " << bytesRecv << endl
-           << "msgs recv        = " << msgsRecv << endl
-           << "bytes sent       = " << bytesSent << endl
-           << "msgs recv        = " << msgsSent << endl;
+        os << "name             = " << get_name() << '\n'
+           << "state            = " << get_state_as_string() << '\n'
+           << "description      = " << get_description() << '\n'
+           << "protocol         = " << get_protocol_as_string() << '\n'
+           << "enabled          = " << get_bool_string(enabled) << '\n'
+           << "config           = " << configPath << '\n'
+           << "connection time  = " << time_t2string(connectTime) << '\n'
+           << "joined slot#     = " << slotMap.size() << '\n'
+           << "bytes recv       = " << bytesRecv << '\n'
+           << "msgs recv        = " << msgsRecv << '\n'
+           << "bytes sent       = " << bytesSent << '\n'
+           << "msgs recv        = " << msgsSent << '\n';
     }
 
     // return true if receiver was shutdown

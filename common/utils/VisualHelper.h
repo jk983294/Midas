@@ -42,6 +42,11 @@ inline string gbk2utf8(char* src) {
     return string(dest);
 }
 
+template <typename T, typename U>
+std::ostream& operator<<(std::ostream& out, const std::pair<T, U>& p) {
+    out << "[" << p.first << ", " << p.second << "]";
+    return out;
+}
 template <typename Type>
 inline std::ostream& operator<<(std::ostream& os, const set<Type>& _set) {
     for (auto itr = _set.begin(); itr != _set.end(); itr++) os << *itr << " ";
@@ -55,7 +60,19 @@ inline std::ostream& operator<<(std::ostream& os, const vector<Type>& v) {
 }
 template <typename Type>
 inline std::ostream& operator<<(std::ostream& os, const vector<vector<Type> >& v) {
-    for (auto itr = v.begin(); itr != v.end(); itr++) os << *itr << endl;
+    for (auto itr = v.begin(); itr != v.end(); itr++) os << *itr << '\n';
+    return os;
+}
+template <typename T, typename U>
+inline std::ostream& operator<<(std::ostream& os, const map<T, U>& m) {
+    for (auto l_it = m.begin(); l_it != m.end(); ++l_it)  // sort by key
+        os << l_it->first << " -> " << l_it->second << '\n';
+    return os;
+}
+template <typename T, typename U, typename K>
+inline std::ostream& operator<<(std::ostream& os, const map<T, U, K>& m) {
+    for (auto l_it = m.begin(); l_it != m.end(); ++l_it)  // sort by key
+        os << l_it->first << " -> " << l_it->second << '\n';
     return os;
 }
 

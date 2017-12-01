@@ -2,7 +2,7 @@
 #define MIDAS_CTP_DATA_CONSUMER_H
 
 #include <ctp/ThostFtdcUserApiStruct.h>
-#include "../model/CtpData.h"
+#include "model/CtpData.h"
 
 class CtpDataConsumer {
 public:

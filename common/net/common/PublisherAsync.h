@@ -47,9 +47,9 @@ public:
     void stats(ostream& os) {
         TPublisherBase::stats(os);
 
-        os << "threshold        = " << writeThreshold << endl
-           << "poll time        = " << pollTime / 1000 << " usec" << endl
-           << "bytes wait       = " << buffer.pending_bytes() << endl;
+        os << "threshold        = " << writeThreshold << '\n'
+           << "poll time        = " << pollTime / 1000 << " usec" << '\n'
+           << "bytes wait       = " << buffer.pending_bytes() << '\n';
     }
 
     /**

@@ -9,7 +9,10 @@ set(MidasCtpSrc
         core/CtpConfig.cpp
         core/TradeManager.cpp
         core/CtpDataConsumer.cpp
-        model/CtpOrderBook.cpp
+        model/CtpData.cpp
+        model/CandleData.cpp
+        model/CtpInstrument.cpp
+        trade/TradeStatusManager.cpp
         )
 
 add_executable(midas ${MidasCtpSrc})

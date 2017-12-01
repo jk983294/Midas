@@ -25,9 +25,9 @@ void dump2file(const map<T1, T2>& m, string filePrefix) {
     ofstream ofs(filePrefix + "." + now_string(), ofstream::out | ofstream::trunc);
 
     if (!ofs) {
-        cerr << "open file failed" << endl;
+        cerr << "open file failed" << '\n';
     } else {
-        for (auto it = m.begin(); it != m.end(); ++it) ofs << it->second << endl;
+        for (auto it = m.begin(); it != m.end(); ++it) ofs << it->second << '\n';
         ofs.close();
     }
 }
@@ -37,9 +37,9 @@ void dump2file(const vector<T>& v, string filePrefix) {
     ofstream ofs(filePrefix + now_string(), ofstream::out | ofstream::trunc);
 
     if (!ofs) {
-        cerr << "open file failed" << endl;
+        cerr << "open file failed" << '\n';
     } else {
-        for (auto it = v.begin(); it != v.end(); ++it) ofs << *it << endl;
+        for (auto it = v.begin(); it != v.end(); ++it) ofs << *it << '\n';
         ofs.close();
     }
 }
@@ -51,10 +51,10 @@ void dump2file(const vector<T>& v, string filePrefix) {
 template <typename T1, typename T2>
 void dump2stream(ostream& oss, const map<T1, T2>& m, string key) {
     if (key == "" || key == "all") {
-        for (auto it = m.begin(); it != m.end(); ++it) oss << it->second << endl;
+        for (auto it = m.begin(); it != m.end(); ++it) oss << it->second << '\n';
     } else if (m.find(key) != m.end()) {
         auto it = m.find(key);
-        oss << it->second << endl;
+        oss << it->second << '\n';
     } else {
         oss << "can not find entry for " << key;
     }
