@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include "MidasNumberUtils.h"
 
@@ -234,9 +236,7 @@ inline std::string now_string() {
     return buffer;
 }
 /**
- * like 23:59:59
- * @param str
- * @return
+ * "23:59:59" to 235959
  */
 inline int intraday_time_HMS(const char* str) {
     return (str[0] - '0') * 100000 + (str[1] - '0') * 10000 + (str[3] - '0') * 1000 + (str[4] - '0') * 100 +
@@ -244,24 +244,30 @@ inline int intraday_time_HMS(const char* str) {
 }
 inline int intraday_time_HMS(const string& str) { return intraday_time_HMS(str.c_str()); }
 /**
- * like 23:59
- * @param str
- * @return
+ * "23:59" to 2359
  */
 inline int intraday_time_HM(const char* str) {
     return (str[0] - '0') * 1000 + (str[1] - '0') * 100 + (str[3] - '0') * 10 + (str[4] - '0');
 }
 inline int intraday_time_HM(const string& str) { return intraday_time_HM(str.c_str()); }
 /**
- * like 20171112
- * @param str
- * @return
+ * "20171112" to 20171112
  */
 inline int cob(const char* str) {
     return (str[0] - '0') * 10000000 + (str[1] - '0') * 1000000 + (str[2] - '0') * 100000 + (str[3] - '0') * 10000 +
            (str[4] - '0') * 1000 + (str[5] - '0') * 100 + (str[6] - '0') * 10 + (str[7] - '0');
 }
 inline int cob(const string& str) { return cob(str.c_str()); }
+
+/**
+ * "20171112 23:59:59" to time_t
+ */
+inline double time_string2double(const string& str) {
+    std::tm t = {};
+    std::istringstream ss(str);
+    ss >> std::get_time(&t, "%Y%m%d %H:%M:%S");
+    return mktime(&t);
+}
 }
 
 #endif

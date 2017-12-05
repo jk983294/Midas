@@ -11,6 +11,7 @@ set(tests
         net/TestChannel.cpp
         net/TestIpAddress.cpp
         net/TestNetworkHelper.cpp
+        math/TestMathHelper.cpp
 #        net/TestTcp.cpp
 #        net/TestUdp.cpp
         )

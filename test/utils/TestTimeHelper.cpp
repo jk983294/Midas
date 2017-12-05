@@ -37,6 +37,8 @@ TEST_CASE("convert time to string", "[time]") {
     REQUIRE(cob("20171112") == 20171112);
 
     REQUIRE(intraday_time_HM("21:59") == 2159);
+
+    REQUIRE(time_string2double("20171112 23:59:59") == 1510502399.0);
 }
 
 TEST_CASE("intraday", "[intraday]") {

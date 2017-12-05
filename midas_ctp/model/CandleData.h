@@ -2,6 +2,7 @@
 #define MIDAS_CANDLE_DATA_H
 
 #include <ctp/ThostFtdcUserApiStruct.h>
+#include <string>
 #include <vector>
 #include "trade/TradeStatusManager.h"
 
