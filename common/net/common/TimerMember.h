@@ -33,7 +33,7 @@ public:
 
     void start(const boost::posix_time::time_duration& expires, const TExpireCallback callback = expireCallback()) {
         timer.expires_from_now(expires);
-        set_state(Connected, ptime2time_t(timer.expires_at()));
+        set_state(NetState::Connected, ptime2time_t(timer.expires_at()));
 
         // use byte recv as seq number
         add_recv_msg_2_stat(1);
@@ -47,7 +47,7 @@ public:
 
     void stop() {
         timer.cancel();
-        set_state(Closed);
+        set_state(NetState::Closed);
         channel.leave<TimerMember>(this);
     }
 
@@ -60,8 +60,8 @@ public:
 private:
     TimerMember(CChannel& tc, const string& name) : channel(tc), timer(tc.iosvc) {
         set_name(name);
-        netProtocol = p_timer;
-        set_state(Pending);
+        netProtocol = NetProtocol::p_timer;
+        set_state(NetState::Pending);
     }
 
     static TExpireCallback& expireCallback() {
@@ -72,12 +72,12 @@ private:
     // timer expire notify callback
     void time_notify(const boost::system::error_code& e, TExpireCallback callback) {
         if (!e) {
-            set_state(Disconnected);
+            set_state(NetState::Disconnected);
             if (callback) {
                 add_sent_msg_2_stat(1);
                 callback(SharedPtr(this));
             } else {
-                set_state(Closed);
+                set_state(NetState::Closed);
             }
         }
     }

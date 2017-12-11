@@ -31,8 +31,8 @@ inline void LogWriterT<Output, Format, LWP>::write_log(LogPriority priority, con
 
 // specialization async log writer
 template <class Output, class Format>
-inline void LogWriterT<Output, Format, ASYNC>::write_log(LogPriority priority, const char* file, int line,
-                                                         const std::string& msg) {
+inline void LogWriterT<Output, Format, LogWriterPolicy::ASYNC>::write_log(LogPriority priority, const char* file,
+                                                                          int line, const std::string& msg) {
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     int tid = syscall(__NR_gettid);
@@ -55,7 +55,7 @@ inline void LogWriterT<Output, Format, ASYNC>::write_log(LogPriority priority, c
 }
 
 template <class Output, class Format>
-inline void LogWriterT<Output, Format, ASYNC>::flush_log() {
+inline void LogWriterT<Output, Format, LogWriterPolicy::ASYNC>::flush_log() {
     scoped_lock lock(mutex_m);
     std::shared_ptr<std::promise<void>> flushPromise(std::make_shared<std::promise<void>>());
     auto future = flushPromise->get_future();
@@ -64,7 +64,8 @@ inline void LogWriterT<Output, Format, ASYNC>::flush_log() {
 }
 
 template <class Output, class Format>
-inline void LogWriterT<Output, Format, ASYNC>::on_batch_timeout(const boost::system::error_code& error) {
+inline void LogWriterT<Output, Format, LogWriterPolicy::ASYNC>::on_batch_timeout(
+    const boost::system::error_code& error) {
     if (!error) {
         process_queue(batchSize_m);
     } else {
@@ -78,7 +79,7 @@ inline void LogWriterT<Output, Format, ASYNC>::on_batch_timeout(const boost::sys
 }
 
 template <class Output, class Format>
-inline void LogWriterT<Output, Format, ASYNC>::process_queue(size_t size) {
+inline void LogWriterT<Output, Format, LogWriterPolicy::ASYNC>::process_queue(size_t size) {
     for (size_t i = 0; i < size; i++) {
         LogQueueItem item;
         if (q_m.try_pop(item)) {
@@ -97,7 +98,7 @@ inline void LogWriterT<Output, Format, ASYNC>::process_queue(size_t size) {
 }
 
 template <class Output, class Format>
-inline void LogWriterT<Output, Format, ASYNC>::service() {
+inline void LogWriterT<Output, Format, LogWriterPolicy::ASYNC>::service() {
     try {
         keepAliveTimer_m.expires_from_now(boost::posix_time::pos_infin);
         keepAliveTimer_m.async_wait(boost::bind(&LogWriterT::keep_alive, this, boost::asio::placeholders::error));

@@ -47,7 +47,7 @@ public:
                                                 << skt.remote_endpoint().port() << ")");
 
         boost::asio::async_read_until(
-            skt, request, MidasConstants::instance().AdminDelimiter,
+            skt, request, constants::AdminDelimiter,
             boost::bind(&TcpAdmin::on_admin_read, SharedPtr(this), boost::asio::placeholders::error));
     }
 
@@ -85,7 +85,7 @@ public:
             data_callback()(request.data(), SharedPtr(this));
             request.consume(request.size());
             boost::asio::async_read_until(
-                skt, request, MidasConstants::instance().AdminDelimiter,
+                skt, request, constants::AdminDelimiter,
                 boost::bind(&TcpAdmin::on_admin_read, SharedPtr(this), boost::asio::placeholders::error));
         } else {
             close();
@@ -104,7 +104,7 @@ public:
 private:
     TcpAdmin(CChannel& adminChannel, const string& cfg) : channel(adminChannel), skt(adminChannel.iosvc) {
         configPath = cfg;
-        netProtocol = p_tcp_primary;
+        netProtocol = NetProtocol::p_tcp_primary;
     }
 
     static size_t default_data_callback(const ConstBuffer& msg) { return msg.size(); }

@@ -18,13 +18,13 @@ struct IoStatData {
     uint64_t msgsSent{0};
     uint64_t msgsRecv{0};
     string connectionId;
-    NetState state{Created};
+    NetState state{NetState::Created};
     time_t connectTime{0};
 
     IoStatData() {}
 };
 
-const string DefaultChannelCfgPath = "midas.io.channel";
+// const string DefaultChannelCfgPath = "midas.io.channel";
 
 // traits
 struct CustomCallbackTag {};

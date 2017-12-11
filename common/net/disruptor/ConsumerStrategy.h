@@ -164,29 +164,32 @@ template <class Consumer, class Payload, ConsumerStages stage>
 class ConsumerDispatcher;
 
 template <class Consumer, class Payload>
-class ConsumerDispatcher<Consumer, Payload, OneStage> {
+class ConsumerDispatcher<Consumer, Payload, ConsumerStages::OneStage> {
 public:
     void dispatch(Consumer& consumerRef, Payload& payload) { consumerRef.data_callback1(payload); }
 };
 
 template <class Consumer, class Payload>
-class ConsumerDispatcher<Consumer, Payload, TwoStage> {
+class ConsumerDispatcher<Consumer, Payload, ConsumerStages::TwoStage> {
 public:
     void dispatch(Consumer& consumerRef, Payload& payload) { consumerRef.data_callback2(payload); }
 };
 
 /**
-* this is used to define consumer callback stages
-* take TwoStage as an example, it will call data_callback1 and then data_callback2 when a payload is received
-*/
+ * this is used to define consumer callback stages
+ * take ConsumerStages::TwoStage as an example,
+ * it will call data_callback1 and then data_callback2 when a payload is received
+ */
 template <class Consumer, class Payload, class RingBuffer, class ConsumerStrategy, ConsumerStages Stages>
 class NStageConsumer;
 
 template <class Consumer, class Payload, class RingBuffer, class ConsumerStrategy>
-class NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, OneStage> {
+class NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::OneStage> {
 public:
-    typedef boost::shared_ptr<NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, OneStage> > SharedPtr;
-    typedef ConsumerHolder<Consumer, Payload, RingBuffer, ConsumerStrategy, OneStage> TOneStageHolder;
+    typedef boost::shared_ptr<
+        NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::OneStage> >
+        SharedPtr;
+    typedef ConsumerHolder<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::OneStage> TOneStageHolder;
 
     typename TOneStageHolder::SharedPtr consumer1HolderPtr;
 
@@ -213,11 +216,13 @@ public:
 };
 
 template <class Consumer, class Payload, class RingBuffer, class ConsumerStrategy>
-class NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, TwoStage> {
+class NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::TwoStage> {
 public:
-    typedef boost::shared_ptr<NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, TwoStage> > SharedPtr;
-    typedef ConsumerHolder<Consumer, Payload, RingBuffer, ConsumerStrategy, OneStage> TOneStageHolder;
-    typedef ConsumerHolder<Consumer, Payload, RingBuffer, ConsumerStrategy, TwoStage> TTwoStageHolder;
+    typedef boost::shared_ptr<
+        NStageConsumer<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::TwoStage> >
+        SharedPtr;
+    typedef ConsumerHolder<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::OneStage> TOneStageHolder;
+    typedef ConsumerHolder<Consumer, Payload, RingBuffer, ConsumerStrategy, ConsumerStages::TwoStage> TTwoStageHolder;
 
     typename TOneStageHolder::SharedPtr consumer1HolderPtr;
     typename TTwoStageHolder::SharedPtr consumer2HolderPtr;

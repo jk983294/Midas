@@ -1,5 +1,7 @@
 add_subdirectory(common)
 add_subdirectory(node1)
+add_subdirectory(node2)
+add_subdirectory(node3)
 add_subdirectory(admin)
 add_subdirectory(Journal)
 add_subdirectory(disruptor)

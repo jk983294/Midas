@@ -28,6 +28,9 @@ public:
     sigset_t sigWaitSet;
     shared_ptr<boost::thread> signalHandler;
     string processName;
+    string dataPort;
+    string adminPort;
+    string serverPort;
     AdminCallbackManager metersManager;
     shared_ptr<AdminPortal> portal;
     CommandArgs commandArgs;

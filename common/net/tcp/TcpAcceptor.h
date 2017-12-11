@@ -41,7 +41,7 @@ public:
             set_name(name + string(":") + int2str(port));
         }
 
-        netProtocol = p_tcp_primary;
+        netProtocol = NetProtocol::p_tcp_primary;
         displayStat = false;
         MIDAS_LOG_INFO("a tcp acceptor created: " << this->get_name());
     }
@@ -78,7 +78,7 @@ public:
             set_name(name + string(":") + svc);
         }
 
-        netProtocol = p_tcp_primary;
+        netProtocol = NetProtocol::p_tcp_primary;
         displayStat = false;
         MIDAS_LOG_INFO("a tcp acceptor created: " << this->get_name());
     }

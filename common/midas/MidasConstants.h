@@ -7,22 +7,12 @@
 using namespace std;
 
 namespace midas {
-
-class MidasConstants {
-public:
-    const string AdminDelimiter{"}"};
-    const string ConfigNullValue{"null"};
-
-public:
-    ~MidasConstants() {}
-    static MidasConstants& instance() { return Singleton<MidasConstants>::instance(); }
-    friend class midas::Singleton<MidasConstants>;
-
-private:
-    MidasConstants(const MidasConstants&) = delete;
-    MidasConstants& operator=(const MidasConstants&) = delete;
-    MidasConstants() {}
-};
+    namespace constants {
+        const string AdminDelimiter{"}"};
+        const string ConfigNullValue{"null"};
+        const string DefaultChannelCfgPath = "midas.io.channel";
+        const string mfDelimiter{";"};
+    }
 }
 
 #endif  // MIDAS_MIDAS_CONSTANTS_H

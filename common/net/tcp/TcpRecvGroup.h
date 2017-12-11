@@ -114,7 +114,7 @@ public:
             if (!addrVec.empty()) {
                 set_name(false);
             }
-            netProtocol = p_tcp_primary;
+            netProtocol = NetProtocol::p_tcp_primary;
             Member::displayStat = true;
         }
 
@@ -174,7 +174,7 @@ public:
                 assert(skt.is_open());
                 group_.channel.join<TcpRecv>(TcpRecv::SharedPtr(this));
                 if (connectCallback(*this)) {
-                    Member::state = Connected;
+                    set_state(NetState::Connected);
                     deliver(ConstBuffer());
                     skt.async_read_some(mutableBuffer, strand_->wrap(boost::bind(
                                                            &TcpRecv::on_read, this, boost::asio::placeholders::error,
@@ -195,7 +195,7 @@ public:
             mutableBuffer.clear();
             bufferWriter.reset();
 
-            if (Member::state == Connected) {
+            if (Member::state == NetState::Connected) {
                 disconnectCallback(*this);
             }
 
@@ -304,7 +304,7 @@ public:
             }
 
             if (connectCallback(*this)) {
-                Member::state = Connected;
+                set_state(NetState::Connected);
                 retryCount = 0;
                 retryTime = boost::posix_time::time_duration(boost::posix_time::not_a_date_time);
                 set_socket_option();
@@ -321,7 +321,7 @@ public:
             if (!running) return;
             if (e) {
                 MIDAS_LOG_ERROR("failed to read " << e << *this);
-                if (boost::asio::error::operation_aborted == e || Member::state != Connected) return;
+                if (boost::asio::error::operation_aborted == e || Member::state != NetState::Connected) return;
                 reset();
                 localEndpoint = boost::asio::ip::tcp::endpoint();
                 remoteEndpoint = boost::asio::ip::tcp::endpoint();
@@ -373,7 +373,7 @@ public:
 
             if (e) {
                 MIDAS_LOG_ERROR("failed to write " << e << *this);
-                if (boost::asio::error::operation_aborted == e || Member::state != Connected) {
+                if (boost::asio::error::operation_aborted == e || Member::state != NetState::Connected) {
                     bufferWriter.undo_writing();
                     return;
                 }
@@ -510,7 +510,7 @@ public:
             skt.close(e);
             Member::reset_recv_stats();
             Member::reset_sent_stats();
-            Member::state = Closed;
+            Member::set_state(NetState::Closed);
             MIDAS_LOG_INFO("this tcp recv reset " << *this);
         }
 
@@ -681,7 +681,7 @@ public:
           acceptCallback(accept_callback()),
           createTcpRecv(boost::bind(&TcpRecv::create<Allocator>, _1, _2, _3, _4, _5, _6, allocator)),
           bufferSize(bufferSize_) {
-        netProtocol = p_tcp_primary;
+        netProtocol = NetProtocol::p_tcp_primary;
         displayStat = false;
     }
 
@@ -796,7 +796,7 @@ public:
     void async_start(boost::asio::ip::tcp::endpoint ep, string name) {
         if (running) return;
         Member::set_name(":" + name);
-        Member::state = Pending;
+        Member::set_state(NetState::Pending);
         running = true;
         channel.join_slot<TcpRecvGroup>(TcpRecvGroup::SharedPtr(this), slot_);
 

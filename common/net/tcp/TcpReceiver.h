@@ -57,8 +57,8 @@ public:
     typedef boost::function<bool(SharedPtr)> TRetryCallback;
     typedef boost::function<size_t(const ConstBuffer&, SharedPtr)> TDataCallback;
 
-    Address address[static_cast<size_t>(AddressNumber)];
-    Retry retry[static_cast<size_t>(AddressNumber)];
+    Address address[static_cast<size_t>(TcpAddressType::AddressNumber)];
+    Retry retry[static_cast<size_t>(TcpAddressType::AddressNumber)];
     volatile TcpAddressType addressType;
     CChannel& channel;
     boost::asio::io_service::strand& _strand;
@@ -79,25 +79,27 @@ public:
 
 public:
     TcpReceiver(const Address& primary, const Address& secondary, CChannel& input, bool notify = true)
-        : addressType(PrimaryAddress),
+        : addressType(TcpAddressType::PrimaryAddress),
           channel(input),
           _strand(input.mainStrand),
           skt(input.iosvc),
           _resolver(input.iosvc),
           retryTimer(input.iosvc),
           notifyDisconnectAfterStopped(notify) {
-        address[PrimaryAddress] = primary;
-        address[SecondaryAddress] = secondary;
-        retry[PrimaryAddress] = Retry(primary.configPath);
-        retry[SecondaryAddress] = Retry(secondary.configPath);
+        address[TcpAddressType::PrimaryAddress] = primary;
+        address[TcpAddressType::SecondaryAddress] = secondary;
+        retry[TcpAddressType::PrimaryAddress] = Retry(primary.configPath);
+        retry[TcpAddressType::SecondaryAddress] = Retry(secondary.configPath);
 
-        set_name(member_name(primary.host, primary.service), (int)PrimaryAddress);
-        set_name(member_name(secondary.host, secondary.service), (int)SecondaryAddress);
+        set_name(member_name(primary.host, primary.service), (int)TcpAddressType::PrimaryAddress);
+        set_name(member_name(secondary.host, secondary.service), (int)TcpAddressType::SecondaryAddress);
 
-        set_description(string("primary:") + member_name(primary.host, primary.service), (int)PrimaryAddress);
-        set_description(string("secondary:") + member_name(secondary.host, secondary.service), (int)SecondaryAddress);
+        set_description(string("primary:") + member_name(primary.host, primary.service),
+                        (int)TcpAddressType::PrimaryAddress);
+        set_description(string("secondary:") + member_name(secondary.host, secondary.service),
+                        (int)TcpAddressType::SecondaryAddress);
 
-        netProtocol = p_tcp_primary;
+        netProtocol = NetProtocol::p_tcp_primary;
     }
     TcpReceiver(const Address& primary, const Address& secondary, CChannel& input, boost::asio::io_service::strand& s,
                 bool notify = true)
@@ -108,18 +110,20 @@ public:
           _resolver(input.iosvc),
           retryTimer(input.iosvc),
           notifyDisconnectAfterStopped(notify) {
-        address[PrimaryAddress] = primary;
-        address[SecondaryAddress] = secondary;
-        retry[PrimaryAddress] = Retry(primary.configPath);
-        retry[SecondaryAddress] = Retry(secondary.configPath);
+        address[TcpAddressType::PrimaryAddress] = primary;
+        address[TcpAddressType::SecondaryAddress] = secondary;
+        retry[TcpAddressType::PrimaryAddress] = Retry(primary.configPath);
+        retry[TcpAddressType::SecondaryAddress] = Retry(secondary.configPath);
 
-        set_name(member_name(primary.host, primary.service), (int)PrimaryAddress);
-        set_name(member_name(secondary.host, secondary.service), (int)SecondaryAddress);
+        set_name(member_name(primary.host, primary.service), (int)TcpAddressType::PrimaryAddress);
+        set_name(member_name(secondary.host, secondary.service), (int)TcpAddressType::SecondaryAddress);
 
-        set_description(string("primary:") + member_name(primary.host, primary.service), (int)PrimaryAddress);
-        set_description(string("secondary:") + member_name(secondary.host, secondary.service), (int)SecondaryAddress);
+        set_description(string("primary:") + member_name(primary.host, primary.service),
+                        (int)TcpAddressType::PrimaryAddress);
+        set_description(string("secondary:") + member_name(secondary.host, secondary.service),
+                        (int)TcpAddressType::SecondaryAddress);
 
-        netProtocol = p_tcp_primary;
+        netProtocol = NetProtocol::p_tcp_primary;
     }
     ~TcpReceiver() {}
 
@@ -278,7 +282,7 @@ public:
     }
 
     void enable() {
-        if (state == Connected) {
+        if (state == NetState::Connected) {
             MIDAS_LOG_INFO("restart tcp connection to re-enable it");
             restart();
         }
@@ -346,7 +350,7 @@ private:
     }
 
     void starting() {
-        if (state != Created) return;
+        if (state != NetState::Created) return;
         channel.join<TcpReceiver>(this);
         start_connect();
     }
@@ -359,8 +363,8 @@ private:
     }
 
     void stopping() {
-        if (state == Created) return;
-        state = Created;
+        if (state == NetState::Created) return;
+        set_state(NetState::Created);
         try {
             if (skt.is_open()) {
                 skt.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
@@ -462,8 +466,8 @@ private:
     }
 
     void start_connect() {
-        if (state != Created && state != Pending) return;
-        state = Pending;
+        if (state != NetState::Created && state != NetState::Pending) return;
+        set_state(NetState::Pending);
         boost::asio::ip::tcp::resolver::query q(address[static_cast<size_t>(addressType)].host,
                                                 address[static_cast<size_t>(addressType)].service);
         if (!UseStrand) {
@@ -478,7 +482,7 @@ private:
     }
 
     void retry_connect() {
-        state = Pending;
+        set_state(NetState::Pending);
         if (!retryCallback(this)) {
             MIDAS_LOG_INFO("retry callback failed for connection " << get_name());
             stopping();
@@ -486,11 +490,13 @@ private:
         }
         if (skt.is_open()) skt.close();
         if (!disableAddressSwap) {
-            TcpAddressType nextAddress(addressType == PrimaryAddress ? SecondaryAddress : PrimaryAddress);
+            TcpAddressType nextAddress(addressType == TcpAddressType::PrimaryAddress ? TcpAddressType::SecondaryAddress
+                                                                                     : TcpAddressType::PrimaryAddress);
 
             if (address[(int)nextAddress].is_valid() && !retry[(int)nextAddress].expired()) {
                 addressType = nextAddress;
-                netProtocol = addressType == PrimaryAddress ? p_tcp_primary : p_tcp_secondary;
+                netProtocol = addressType == TcpAddressType::PrimaryAddress ? NetProtocol::p_tcp_primary
+                                                                            : NetProtocol::p_tcp_secondary;
                 use_name((int)addressType);
                 use_description((int)addressType);
             }
@@ -514,7 +520,7 @@ private:
     // called when connection establish
     void connected() {
         try {
-            state = Connected;
+            set_state(NetState::Connected);
             int readBufSize =
                 Config::instance().get<int>(address[static_cast<size_t>(addressType)].configPath + ".rcvbuf", 0);
             if (!readBufSize) readBufSize = 2 * BufferSize;
@@ -553,10 +559,10 @@ private:
     }
 
     void disconnected() {
-        if (state == Created) {
+        if (state == NetState::Created) {
             if (notifyDisconnectAfterStopped) disconnectCallback(this);
         } else {
-            state = Disconnected;
+            set_state(NetState::Disconnected);
             if (disconnectCallback(this))
                 retry_connect();
             else
@@ -565,7 +571,7 @@ private:
     }
 
     void on_resolve(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator e_iterator) {
-        if (state != Pending) return;
+        if (state != NetState::Pending) return;
         if (!e) {
             _endpoint = *e_iterator;
             bind_socket();
@@ -576,7 +582,7 @@ private:
     }
 
     void on_connect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator e_iterator) {
-        if (state != Pending) return;
+        if (state != NetState::Pending) return;
         if (!e) {
             connected();
             buffer.clear();
@@ -595,7 +601,7 @@ private:
     }
 
     void on_read(const boost::system::error_code& e, size_t transferred) {
-        if (!e && state == Connected) {
+        if (!e && state == NetState::Connected) {
             if (is_likely_hint(enabled)) {
                 buffer.time(ntime());
                 buffer.source(Member::id);

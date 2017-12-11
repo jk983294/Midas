@@ -76,9 +76,9 @@ public:
     virtual void flush_log() override final {}
 };
 
-typedef LogWriterT<midas::StdioOutput<>, midas::StdProcessFormat, ASYNC> StdProcessLogWriter;
+typedef LogWriterT<midas::StdioOutput<>, midas::StdProcessFormat, LogWriterPolicy::ASYNC> StdProcessLogWriter;
 }
 
 #include "LogWriterConcrete.inl"
 
-#endif  // MIDAS_LOGWRITERCONCRETE_H
+#endif

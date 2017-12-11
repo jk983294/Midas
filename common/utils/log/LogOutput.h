@@ -16,7 +16,7 @@ public:
 
 enum StdioFlag { COUT, CERR, COUT_CERR };
 
-template <StdioFlag = COUT>
+template <StdioFlag = StdioFlag::COUT>
 class StdioOutput {
 public:
     template <class LogData>
@@ -28,7 +28,7 @@ public:
 };
 
 template <>
-class StdioOutput<CERR> {
+class StdioOutput<StdioFlag::CERR> {
 public:
     template <class LogData>
     void write(const LogData& data) {
@@ -39,7 +39,7 @@ public:
 };
 
 template <>
-class StdioOutput<COUT_CERR> {
+class StdioOutput<StdioFlag::COUT_CERR> {
 public:
     template <class LogData>
     void write(const LogData& data) {

@@ -44,13 +44,13 @@ public:
 
             ds.sort();
             for (int i = 50; i <= 90; i += 10) {
-                os << " ,p" << i << " " << ds.get_percentile(i * 0.01);
+                os << " ,p" << i << " " << ds.get_percentile(i);
             }
             for (int i = 91; i <= 99; ++i) {
-                os << " ,p" << i << " " << ds.get_percentile(i * 0.01);
+                os << " ,p" << i << " " << ds.get_percentile(i);
             }
             for (int i = 1; i <= 9; ++i) {
-                os << " ,p99." << i << " " << ds.get_percentile((990.0 + i) * 0.001);
+                os << " ,p99." << i << " " << ds.get_percentile((990.0 + i) * 0.1);
             }
             cout << os.str() << ",;\n";
         }

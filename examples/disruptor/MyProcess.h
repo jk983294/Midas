@@ -23,9 +23,11 @@ public:
         int consumerNumber = Config::instance().get<int>("test.consumer_number", 1);
 
         if (consumerNumber == 1)
-            m_testRunnerPtr = std::make_shared<DisruptorTestRunner<MyConsumer, midas::Payload, midas::OneStage> >();
+            m_testRunnerPtr =
+                std::make_shared<DisruptorTestRunner<MyConsumer, midas::Payload, midas::ConsumerStages::OneStage> >();
         else
-            m_testRunnerPtr = std::make_shared<DisruptorTestRunner<TwoStageMyConsumer, MyPayload, midas::TwoStage> >();
+            m_testRunnerPtr = std::make_shared<
+                DisruptorTestRunner<TwoStageMyConsumer, MyPayload, midas::ConsumerStages::TwoStage> >();
 
         for (int i = 0; i < producerNumber; ++i) {
             m_testRunnerPtr->add_producer(producerName, m_iterations);

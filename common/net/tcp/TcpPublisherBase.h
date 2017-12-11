@@ -16,7 +16,7 @@ template <typename StreamBase>
 class TcpPublisherBase : public StreamBase {
 public:
     TcpPublisherBase(CChannel& output_channel, const string& cfg) : StreamBase(output_channel, cfg) {
-        this->netProtocol = p_tcp_primary;
+        this->netProtocol = NetProtocol::p_tcp_primary;
     }
 
     virtual void start() {
@@ -55,7 +55,7 @@ public:
             StreamBase::start();
         } catch (const boost::system::system_error& e) {
             MIDAS_LOG_ERROR("error init socket" << this->get_name() << " : " << e.what());
-            this->state = Closed;
+            this->set_state(NetState::Closed);
         }
     }
 };

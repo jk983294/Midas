@@ -29,12 +29,18 @@ inline MidasProcessBase::MidasProcessBase(int argc, char* argv[], shared_ptr<Adm
         MIDAS_LOG_INIT(priority, writer);
     }
 
-    register_command_line_args('C', "config", SwitchWithArg, SwitchOptional, "config path", "load config file");
-    register_command_line_args('c', "control_script", SwitchWithArg, SwitchOptional, "control script",
-                               "run control script on the fly");
-    register_command_line_args('a', "admin_port", SwitchWithArg, SwitchOptional, "admin port",
-                               "change listening admin port");
-    register_command_line_args('L', "loglevel", SwitchWithArg, SwitchOptional, "set log level", "set log level");
+    register_command_line_args('C', "config", SwitchArgType::SwitchWithArg, SwitchOptionType::SwitchOptional,
+                               "config path", "load config file");
+    register_command_line_args('c', "control_script", SwitchArgType::SwitchWithArg, SwitchOptionType::SwitchOptional,
+                               "control script", "run control script on the fly");
+    register_command_line_args('a', "admin_port", SwitchArgType::SwitchWithArg, SwitchOptionType::SwitchOptional,
+                               "admin port", "change listening admin port");
+    register_command_line_args('d', "data_port", SwitchArgType::SwitchWithArg, SwitchOptionType::SwitchOptional,
+                               "data port", "listening on data port to wait for client connection");
+    register_command_line_args('s', "server_port", SwitchArgType::SwitchWithArg, SwitchOptionType::SwitchOptional,
+                               "server port", "connect to server port if provided");
+    register_command_line_args('L', "loglevel", SwitchArgType::SwitchWithArg, SwitchOptionType::SwitchOptional,
+                               "set log level", "set log level");
 
     _init_admin();
 }
@@ -42,8 +48,8 @@ inline MidasProcessBase::MidasProcessBase(int argc, char* argv[], shared_ptr<Adm
 inline void MidasProcessBase::register_command_line_args(char shortCmd_, string longCmd_, SwitchArgType switchArgType,
                                                          SwitchOptionType switchOptionType, string argName_,
                                                          string help_) {
-    register_command_line_args(shortCmd_, longCmd_, switchArgType == SwitchWithArg, switchOptionType == SwitchOptional,
-                               argName_, help_);
+    register_command_line_args(shortCmd_, longCmd_, switchArgType == SwitchArgType::SwitchWithArg,
+                               switchOptionType == SwitchOptionType::SwitchOptional, argName_, help_);
 }
 inline void MidasProcessBase::register_command_line_args(char shortCmd_, string longCmd_, bool isWithArg_,
                                                          bool isOptional_, string argName_, string help_) {
@@ -171,8 +177,8 @@ inline void MidasProcessBase::init_config(int argc, char* argv[]) {
 
     // read config if provided
     string configKey{config_key_from_cmd_arg_switch("config")};
-    string configFiles = tmpConfig.get<string>(configKey, MidasConstants::instance().ConfigNullValue);
-    if (configFiles != MidasConstants::instance().ConfigNullValue) {
+    string configFiles = tmpConfig.get<string>(configKey, constants::ConfigNullValue);
+    if (configFiles != constants::ConfigNullValue) {
         boost::char_separator<char> sep(",");
         boost::tokenizer<boost::char_separator<char>> token(configFiles, sep);
 
@@ -194,8 +200,7 @@ inline void MidasProcessBase::init_config(int argc, char* argv[]) {
     for (auto itr = commandArgs.begin(); itr != commandArgs.end(); ++itr) {
         string configKey{config_key_from_cmd_arg_switch((*itr).second->longCmd)};
         if (!(*itr).second->isOptional &&
-            Config::instance().get<string>(configKey, MidasConstants::instance().ConfigNullValue) ==
-                MidasConstants::instance().ConfigNullValue) {
+            Config::instance().get<string>(configKey, constants::ConfigNullValue) == constants::ConfigNullValue) {
             std::ostringstream os;
             os << "missing mandatory option -" << (*itr).second->shortCmd;
             usage(os.str());
@@ -220,20 +225,24 @@ inline void MidasProcessBase::init_config(int argc, char* argv[]) {
     }
 
     set_log_level(argc, argv);
+
+    dataPort = Config::instance().get<string>("cmdline.data_port", "");
+    adminPort = Config::instance().get<string>("cmdline.admin_port", "");
+    serverPort = Config::instance().get<string>("cmdline.server_port", "");
 }
 
 inline void MidasProcessBase::_init_admin() {
     if (portal) {
-        portal->register_admin("set log level", boost::bind(&MidasProcessBase::admin_set_log_level, this, _1, _2),
+        portal->register_admin("set_log_level", boost::bind(&MidasProcessBase::admin_set_log_level, this, _1, _2),
                                "get/set current log level", "option: ERROR WARNING INFO DEBUG");
 
-        portal->register_admin("show config", boost::bind(&MidasProcessBase::admin_show_config, this, _1, _2),
+        portal->register_admin("show_config", boost::bind(&MidasProcessBase::admin_show_config, this, _1, _2),
                                "show config item", "show_config ALL | path");
 
-        portal->register_admin("load config", boost::bind(&MidasProcessBase::admin_load_config, this, _1, _2),
+        portal->register_admin("load_config", boost::bind(&MidasProcessBase::admin_load_config, this, _1, _2),
                                "load config file and merge into global config", "load_config path");
 
-        portal->register_admin("set config", boost::bind(&MidasProcessBase::admin_set_config, this, _1, _2),
+        portal->register_admin("set_config", boost::bind(&MidasProcessBase::admin_set_config, this, _1, _2),
                                "set value of a config item", "set_config key value");
 
         portal->register_admin("meters", boost::bind(&AdminCallbackManager::call, &metersManager, _1, _2),
@@ -242,7 +251,7 @@ inline void MidasProcessBase::_init_admin() {
         portal->register_admin("shutdown", boost::bind(&MidasProcessBase::admin_shutdown, this, _1, _2),
                                "shutdown process", "shutdown");
 
-        portal->register_admin("get env", boost::bind(&MidasProcessBase::admin_get_env, this, _1, _2),
+        portal->register_admin("get_env", boost::bind(&MidasProcessBase::admin_get_env, this, _1, _2),
                                "get/set environment variables", "getenv all|variable");
     }
 }

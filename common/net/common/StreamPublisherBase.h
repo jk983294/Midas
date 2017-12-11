@@ -83,7 +83,7 @@ public:
             _strand.post(boost::bind(&StreamPublisherBase::init, SharedPtr((Derived*)this)));
         } catch (const boost::system::system_error& e) {
             MIDAS_LOG_ERROR("error init socket" << get_name() << " : " << e.what());
-            state = Closed;
+            set_state(NetState::Closed);
         }
     }
     typename ProtocolType::socket& socket() { return skt; }
@@ -153,8 +153,8 @@ protected:
     }
     ~StreamPublisherBase() {}
     virtual void init() {
-        if (state == Created) {
-            state = Connected;
+        if (state == NetState::Created) {
+            set_state(NetState::Connected);
             channel.join<Derived>(SharedPtr((Derived*)this));
             MIDAS_LOG_INFO("new client connection " << get_name() << " created (" << skt.local_endpoint() << " #" << id
                                                     << " <-- " << skt.remote_endpoint() << ")");
@@ -164,7 +164,7 @@ protected:
         MIDAS_LOG_INFO("close connection " << get_name());
         disconnectCallback((Derived*)this);
         channel.leave<Derived>(SharedPtr((Derived*)this));
-        state = Closed;
+        set_state(NetState::Closed);
     }
 
     // callback when some data recv from downstream connection

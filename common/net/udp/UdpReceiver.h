@@ -64,7 +64,7 @@ public:
                   .total_nanoseconds()) {
         configPath = cfg;
         set_name(member_name(ip, port));
-        netProtocol = p_udp;
+        netProtocol = NetProtocol::p_udp;
         address = UdpAddress(
             ip, port, !interface.empty() ? interface : Config::instance().get<string>(cfg + ".bind_address", ""));
         resolve(address);
@@ -230,7 +230,7 @@ public:
 
 private:
     void async_start() {
-        if (state == Created || state == Closed) {
+        if (state == NetState::Created || state == NetState::Closed) {
             if (connect()) {
                 channel.join<UdpReceiver>(this);
             }
@@ -242,7 +242,7 @@ private:
     void async_stop() {
         if (is_closed()) return;
 
-        state = Closed;
+        set_state(NetState::Closed);
         disconnect();
         channel.leave<UdpReceiver>(this);
     }
@@ -373,7 +373,7 @@ private:
             MIDAS_LOG_INFO("join multicast group: " << address.host << " on default interface");
         }
 
-        state = Connected;
+        set_state(NetState::Connected);
     }
 
     void join_unicast() {
@@ -387,7 +387,7 @@ private:
 
         MIDAS_LOG_INFO("successfully open unicast connection to " << endpoint << ". local endpoint "
                                                                   << skt.local_endpoint());
-        state = Connected;
+        set_state(NetState::Connected);
     }
 
     bool connect() {

@@ -22,7 +22,7 @@ class CtpProcess : public MidasProcessBase {
 public:
     //    typedef CtpDataConsumer DataConsumer;
     typedef CtpDataLogConsumer DataConsumer;
-    typedef midas::Disruptor<CtpMdSpi, DataConsumer, MktDataPayload, midas::OneStage> TMktDataDisruptor;
+    typedef midas::Disruptor<CtpMdSpi, DataConsumer, MktDataPayload, midas::ConsumerStages::OneStage> TMktDataDisruptor;
 
     std::shared_ptr<CtpData> data;
 

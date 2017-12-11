@@ -36,7 +36,7 @@ public:
                      const string& cfg)
         : channel(output_channel), skt(output_channel.iosvc, boost::asio::ip::udp::v4()) {
         this->configPath = cfg;
-        this->netProtocol = p_udp;
+        this->netProtocol = NetProtocol::p_udp;
         set_name(ip + ":" + port);
         address = UdpAddress(ip, port, !itf.empty() ? itf : Config::instance().get<string>(cfg + ".bind_address", ""));
         resolve(address);
@@ -68,17 +68,17 @@ public:
         try {
             set_socket_options();
             connect();
-            state = Connected;
+            set_state(NetState::Connected);
             channel.join<Derived>(SharedPtr((Derived*)this));
             channel.work(1);  // at least one service thread to run
         } catch (const boost::system::system_error& e) {
             MIDAS_LOG_ERROR("error init socket" << this->get_name() << " : " << e.what());
-            this->state = Closed;
+            this->set_state(NetState::Closed);
         }
     }
 
     virtual void stop() {
-        state = Closed;
+        set_state(NetState::Closed);
         close();
         channel.leave<Derived>(SharedPtr((Derived*)this));
     }

@@ -32,7 +32,7 @@ public:
 
 typedef std::shared_ptr<LogWriter> LogWriterPtr;
 
-template <class Output, class Format, LogWriterPolicy = SYNC>
+template <class Output, class Format, LogWriterPolicy = LogWriterPolicy::SYNC>
 class LogWriterT : public LogWriter, public Output, public Format {
 public:
     typedef midas::LockType::mutex mutex;
@@ -55,7 +55,7 @@ public:
 
 // specialization async log writer
 template <class Output, class Format>
-class LogWriterT<Output, Format, ASYNC> : public LogWriter, public Output, public Format {
+class LogWriterT<Output, Format, LogWriterPolicy::ASYNC> : public LogWriter, public Output, public Format {
 public:
     typedef midas::LockType::mutex mutex;
     typedef midas::LockType::scoped_lock scoped_lock;

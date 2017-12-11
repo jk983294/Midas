@@ -27,13 +27,13 @@ enum LogWriterPolicy { SYNC, ASYNC };
 
 static inline const char* to_string(LogPriority priority) {
     switch (priority) {
-        case DEBUG:
+        case LogPriority::DEBUG:
             return MIDAS_LOG_PRIORITY_STRING_DEBUG;
-        case INFO:
+        case LogPriority::INFO:
             return MIDAS_LOG_PRIORITY_STRING_INFO;
-        case WARNING:
+        case LogPriority::WARNING:
             return MIDAS_LOG_PRIORITY_STRING_WARNING;
-        case ERROR:
+        case LogPriority::ERROR:
             return MIDAS_LOG_PRIORITY_STRING_ERROR;
         default:
             return "unknown";
@@ -42,7 +42,7 @@ static inline const char* to_string(LogPriority priority) {
 
 // if not found, return default INFO
 static inline LogPriority from_string_log_priority(const char* str) {
-    for (int i = DEBUG; i <= ERROR; i++) {
+    for (int i = LogPriority::DEBUG; i <= LogPriority::ERROR; i++) {
         if (strcmp(str, to_string(static_cast<LogPriority>(i))) == 0) return static_cast<LogPriority>(i);
     }
     return INFO;

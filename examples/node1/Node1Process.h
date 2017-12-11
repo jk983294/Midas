@@ -3,6 +3,7 @@
 
 #include "TimerThread.h"
 #include "net/channel/Channel.h"
+#include "net/tcp/TcpPublisherAsync.h"
 #include "net/tcp/TcpReceiver.h"
 #include "process/MidasProcessBase.h"
 
@@ -11,14 +12,8 @@ using namespace midas;
 
 class Node1Process : public MidasProcessBase {
 public:
-    CChannel channelIn;
     CChannel channelOut;
-
     TimerThread timer;
-    bool cancelAdmin{false};
-    std::mutex mutexAdmin;
-    std::condition_variable cvAdmin;
-    std::map<uint64_t, string> outAdmin;
 
 public:
     Node1Process() = delete;
@@ -30,12 +25,14 @@ protected:
     void app_stop() override;
 
 private:
-    struct TcpInput {};
-    typedef midas::TcpReceiver<TcpInput> TTcpReceiver;
+    struct TcpOutput {};
+    typedef TcpAcceptor<TcpPublisherAsync<TcpOutput>> TTcpOutputAcceptor;
 
     bool configure();
+
     void init_admin();
-    uint32_t configure_heart_beats(bool lock = true);
+
+    uint32_t configure_heart_beats();
 
     string admin_meters(const string& cmd, const TAdminCallbackArgs& args) const;
 

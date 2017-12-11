@@ -14,6 +14,7 @@
 #include "MemberEntry.h"
 #include "SlotEntry.h"
 #include "midas/Lock.h"
+#include "midas/MidasConstants.h"
 #include "net/buffer/ConstBuffer.h"
 #include "process/admin/MidasAdminBase.h"
 #include "utils/ConvertHelper.h"
@@ -67,7 +68,8 @@ public:
 public:
     Channel(const string& label_, const string& cfg) : Channel(label_, cfg, std::thread::hardware_concurrency()) {}
 
-    Channel(const string& label_) : Channel(label_, DefaultChannelCfgPath, std::thread::hardware_concurrency()) {}
+    Channel(const string& label_)
+        : Channel(label_, constants::DefaultChannelCfgPath, std::thread::hardware_concurrency()) {}
 
     Channel(const string& label_, const string& cfg, int threadMax)
         : label(label_),
@@ -428,8 +430,8 @@ public:
         descWidth = std::min(descWidth, maxDescWidth);
 
         if (isFirst) {
-            os << std::left << std::setw(nameWidth) << "Connection" << setw(15) << "Protocol" << setw(15) << "Channel"
-               << setw(15) << "Connect Time" << setw(15) << std::right << "Msgs Sent" << setw(15) << "Bytes Sent"
+            os << std::left << std::setw(nameWidth) << "Connection" << setw(10) << "Protocol" << setw(10) << "Channel"
+               << setw(20) << "Connect Time" << setw(15) << std::right << "Msgs Sent" << setw(15) << "Bytes Sent"
                << setw(15) << "Msgs Recv" << setw(15) << "Bytes Recv"
                << " " << std::left << "Desc" << '\n';
 
@@ -442,14 +444,14 @@ public:
         for (auto itr = name2member.begin(); itr != name2member.end(); ++itr) {
             MemberPtr member = itr->second;
             string timeLocal{"N/A"};
-            if (member->enabled && member->state == Connected) {
+            if (member->enabled && member->state == NetState::Connected) {
                 timeLocal = time_t2string(member->connectTime);
             } else {
                 timeLocal = member->get_state_as_string();
             }
 
-            os << std::left << member->get_name().substr(0, nameWidth - 1) << setw(15)
-               << member->get_protocol_as_string() << setw(15) << label << setw(15) << timeLocal << setw(15)
+            os << std::left << std::setw(nameWidth) << member->get_name().substr(0, nameWidth - 1) << setw(10)
+               << member->get_protocol_as_string() << setw(10) << label << setw(20) << timeLocal << setw(15)
                << std::right << member->msgsSent << setw(15) << member->bytesSent << setw(15) << member->msgsRecv
                << setw(15) << member->bytesRecv << " " << std::left
                << member->get_description().substr(0, descWidth - 1) << '\n';

@@ -24,11 +24,19 @@ T get_cfg_value(const char* root, const char* key, const T& defaultValue = T()) 
 
 bool Node1Process::configure() {
     static const char root[] = "node1";
-    bool ret = true;
 
     {
         auto str = get_cfg_value<string>(root, "test");
         MIDAS_LOG_INFO("get cfg value for test " << str);
     }
-    return ret;
+
+    if (adminPort.empty()) {
+        MIDAS_LOG_INFO("must provide admin port!");
+        return false;
+    }
+    if (dataPort.empty()) {
+        MIDAS_LOG_INFO("must provide data port!");
+        return false;
+    }
+    return true;
 }

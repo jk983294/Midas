@@ -23,7 +23,7 @@ public:
     tbb::atomic<bool> statsCacheUpdating;
     tbb::atomic<bool> statsCacheReading;
     volatile uint64_t bytesSent{0}, bytesRecv{0}, msgsSent{0}, msgsRecv{0};
-    volatile NetProtocol netProtocol{p_any};
+    volatile NetProtocol netProtocol{NetProtocol::p_any};
     volatile time_t connectTime{0};
 
     string name[MaxNameNumber];
@@ -31,7 +31,7 @@ public:
     size_t nameIndex{0}, descIndex{0};
 
     string configPath;
-    NetState state{Created};
+    NetState state{NetState::Created};
     volatile bool enabled{true};
     ssize_t id{-1};
     SlotMap slotMap;
@@ -63,8 +63,7 @@ public:
             return stateStrings[state];
     }
     const char* get_protocol_as_string() {
-        static const char protocolStrings[][64] = {"N/A",     "p_tcp_primary", "p_tcp_secondary", "p_udp",
-                                                   "p_timer", "p_file",        "p_local"};
+        static const char protocolStrings[][64] = {"N/A", "tcp", "tcp_secondary", "udp", "timer", "file", "local"};
         if ((size_t)netProtocol >= sizeof((protocolStrings)) / sizeof((protocolStrings)[0]))
             return "N/A";
         else
@@ -72,7 +71,7 @@ public:
     }
     void set_state(const NetState& st, time_t ct = 0) {
         state = st;
-        connectTime = (ct != 0) ? ct : ((state == Connected) ? time(NULL) : 0);
+        connectTime = (ct != 0) ? ct : ((state == NetState::Connected) ? time(NULL) : 0);
     }
     // record how many bytes and msgs been processed
     void add_sent_msg_2_stat(const uint64_t& bytes) {
@@ -111,7 +110,7 @@ public:
     }
 
     // return true if receiver was shutdown
-    bool is_closed() const { return state == Closed; }
+    bool is_closed() const { return state == NetState::Closed; }
 
     // let member join the same slots as caller
     template <typename ChannelType, typename MemberType>

@@ -258,7 +258,8 @@ TEST_CASE("MfBuffer", "[MfBuffer]") {
         mfBuffer.finish();
         buffers[i] = mfBuffer.buffer();
 
-        REQUIRE(string(buffers[i].data() + MIDAS_HEADER_SIZE, buffers[i].size() - MIDAS_HEADER_SIZE) == mfStrings[i]);
+        REQUIRE(string(buffers[i].data() + sizeof(MidasHeader), buffers[i].size() - sizeof(MidasHeader)) ==
+                mfStrings[i]);
     }
 }
 

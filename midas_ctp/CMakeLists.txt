@@ -1,5 +1,12 @@
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../")
 
+set(MidasCommonSrc
+        model/CtpData.cpp
+        model/CandleData.cpp
+        model/CtpInstrument.cpp
+        trade/TradeStatusManager.cpp
+        )
+
 set(MidasCtpSrc
         main.cpp
         core/CtpProcess.cpp
@@ -9,13 +16,9 @@ set(MidasCtpSrc
         core/CtpConfig.cpp
         core/TradeManager.cpp
         core/CtpDataConsumer.cpp
-        model/CtpData.cpp
-        model/CandleData.cpp
-        model/CtpInstrument.cpp
-        trade/TradeStatusManager.cpp
         )
 
-add_executable(midas ${MidasCtpSrc})
+add_executable(midas ${MidasCtpSrc} ${MidasCommonSrc})
 target_link_libraries(midas ${Boost_LIBRARIES} tbb)
 target_link_libraries(midas pthread)
 target_link_libraries(midas thostmduserapi thosttraderapi)
@@ -26,10 +29,9 @@ set(MidasCtpBacktestSrc
         backtest/CtpBackTester.cpp
         backtest/CtpBackTesterAdmin.cpp
         backtest/CtpBackTesterConfig.cpp
-        model/CandleData.cpp
         )
 
-add_executable(backtest ${MidasCtpBacktestSrc})
+add_executable(backtest ${MidasCtpBacktestSrc} ${MidasCommonSrc})
 target_link_libraries(backtest ${Boost_LIBRARIES} tbb)
 target_link_libraries(backtest pthread)
 target_link_libraries(midas thostmduserapi thosttraderapi)

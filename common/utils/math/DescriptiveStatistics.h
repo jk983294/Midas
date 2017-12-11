@@ -149,8 +149,15 @@ public:
 
     double get_element(int index) { return dq[index]; }
 
+    /**
+     * need call sort first if you choose add_value instead of add_value_and_sort
+     */
     double get_percentile(double p) {
-        int target = static_cast<int>(size() * p);
+        if (size() == 0) return 0;
+
+        p = std::min(p, 100.0);
+        p = std::max(p, 0.0);
+        int target = static_cast<int>(size() * p * 0.01);
         return dq[target];
     }
 

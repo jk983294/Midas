@@ -1,25 +1,15 @@
 #include "Node1Process.h"
-#include "net/tcp/TcpAcceptor.h"
-#include "net/tcp/TcpPublisherAsync.h"
-#include "process/admin/MidasAdminBase.h"
-#include "utils/log/Log.h"
+#include "net/buffer/MfBuffer.h"
 
-struct TcpOutput {};
-
-typedef TcpAcceptor<TcpPublisherAsync<TcpOutput>> TTcpOutputAcceptor;
-
-Node1Process::Node1Process(int argc, char** argv)
-    : MidasProcessBase(argc, argv), channelIn("input"), channelOut("output") {
+Node1Process::Node1Process(int argc, char** argv) : MidasProcessBase(argc, argv), channelOut("output") {
     init_admin();
+    register_command_line_args('H', "heart_beat_interval", SwitchArgType::SwitchWithArg,
+                               SwitchOptionType::SwitchOptional, "heart beat interval", "heart beat interval (second)");
     timer.pause();
     timer.set_callback([this] { heart_beat_timer(); });
 }
 
-Node1Process::~Node1Process() {
-    cancelAdmin = true;
-    cvAdmin.notify_all();
-    timer.shutdown();
-}
+Node1Process::~Node1Process() { timer.shutdown(); }
 
 void Node1Process::app_start() {
     if (!configure()) {
@@ -28,28 +18,36 @@ void Node1Process::app_start() {
         throw MidasException();
     }
 
-    const string port = Config::instance().get<string>("cmd.server_port", "8023");
-    TTcpOutputAcceptor::new_instance(port, channelOut);
+    TTcpOutputAcceptor::new_instance(dataPort, channelOut);
     channelOut.start();
+
+    configure_heart_beats();
+    timer.resume();
 }
 
 void Node1Process::app_stop() { channelOut.stop(); }
 
-uint32_t Node1Process::configure_heart_beats(bool lock) {
+uint32_t Node1Process::configure_heart_beats() {
     // default 5 second a heart beat
-    uint32_t interval = Config::instance().get<uint32_t>("cmd.heart_beat_interval", 5);
+    uint32_t interval = Config::instance().get<uint32_t>("cmdline.heart_beat_interval", 5);
     timer.set_interval(interval);
     return interval;
 }
 
 void Node1Process::heart_beat_timer() {
     time_t now;
-    time(&now);
+    std::time(&now);
+
     // give downstream heartbeat
+    MfBuffer mf;
+    mf.start("hbt");
+    mf.add_timestamp("send_time", now, 0);
+    mf.finish();
+
+    channelOut.deliver(ConstBuffer(mf.data(), mf.size()));
 }
 
 void Node1Process::init_admin() {
-    TTcpReceiver::register_admin(channelIn, admin_handler());
     admin_handler().register_callback("meters", boost::bind(&Node1Process::admin_meters, this, _1, _2),
                                       "display statistical information of connections", "meters");
 }

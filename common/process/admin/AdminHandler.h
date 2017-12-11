@@ -93,7 +93,7 @@ private:
             TAdminCallbackArgs args;
             for (auto i = v.begin(); i != v.end(); ++i) {
                 args.push_back(i->second.data());
-                os << i->second.data() << " ";
+                os << " " << i->second.data();
             }
 
             MIDAS_LOG_INFO("receive admin command from user " << userId << " : " << command << os.str());
@@ -124,13 +124,15 @@ private:
     void send_response(const string& response, const string& userId, const string& requestId,
                        TcpAdmin::SharedPtr member) {
         ostringstream os;
+        string res{response};
+        std::replace(res.begin(), res.end(), '"', '\'');
         os << "{"
            << "\"userId\" : "
            << "\"" << userId << "\", "
            << "\"requestId\" : "
            << "\"" << requestId << "\", "
            << "\"response\" : "
-           << "\"" << response << "\""
+           << "\"" << res << "\""
            << "}";
         channel.deliver<TcpAdmin>(os.str(), member);
     }

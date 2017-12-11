@@ -9,14 +9,13 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include "midas/MidasConstants.h"
 #include "net/buffer/BufferDataAllocator.h"
 #include "net/buffer/ConstBuffer.h"
 #include "net/common/MidasHeader.h"
 #include "utils/ConvertHelper.h"
 
 namespace midas {
-
-static const int BUFFER_MIN_CAPACITY = 128;
 
 template <typename Allocator>
 class TMfBuffer {
@@ -34,7 +33,7 @@ public:
     buffer_size_type bufferUsedStart{0};
 
 public:
-    TMfBuffer(const Allocator& alloc_ = Allocator(), buffer_size_type minCapacity_ = BUFFER_MIN_CAPACITY)
+    TMfBuffer(const Allocator& alloc_ = Allocator(), buffer_size_type minCapacity_ = 128)
         : alloc(alloc_), minCapacity(minCapacity_) {}
 
     ~TMfBuffer() {
@@ -95,10 +94,10 @@ public:
      * no header, payload only
      */
     string mf_string() const {
-        if (!pBuffer || bufferUsed < buffer_size_type(MIDAS_HEADER_SIZE)) {
+        if (!pBuffer || bufferUsed < buffer_size_type(sizeof(MidasHeader))) {
             return string();
         } else {
-            return string(pBuffer + MIDAS_HEADER_SIZE, bufferUsed - MIDAS_HEADER_SIZE);
+            return string(pBuffer + sizeof(MidasHeader), bufferUsed - sizeof(MidasHeader));
         }
     }
 
@@ -115,9 +114,9 @@ public:
 
     void start(const boost::string_ref& id) {
         buffer_size_type need = id.size() + 5;
-        reserve(MIDAS_HEADER_SIZE + need);
-        buffer_pointer p = pBuffer + MIDAS_HEADER_SIZE;
-        bufferUsed = MIDAS_HEADER_SIZE + need;
+        reserve(sizeof(MidasHeader) + need);
+        buffer_pointer p = pBuffer + sizeof(MidasHeader);
+        bufferUsed = sizeof(MidasHeader) + need;
         bufferUsedStart = bufferUsed;
         *p++ = 'i';
         *p++ = 'd';
@@ -423,12 +422,12 @@ public:
         add_fixed_point_trim(key, value, priceScale);
     }
 
-    void finish(time_t t = std::time(0), uint16_t seq = 0, uint16_t subject = 010) {
+    void finish(time_t t = std::time(0), uint32_t seq = 0, uint8_t group = 1) {
         reserve(bufferUsed + 1);
         *(pBuffer + bufferUsed++) = ';';
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
-        write_midas_header(pBuffer, bufferUsed - MIDAS_HEADER_SIZE, ts.tv_sec, (ts.tv_nsec / 1000), 0, 0);
+        write_midas_header(pBuffer, bufferUsed - sizeof(MidasHeader), ts.tv_sec, (ts.tv_nsec / 1000), group, seq);
     }
 };
 
