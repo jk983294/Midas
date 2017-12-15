@@ -2,7 +2,6 @@
 #define MIDAS_MIDAS_CONSTANTS_H
 
 #include <string>
-#include "midas/Singleton.h"
 
 using namespace std;
 

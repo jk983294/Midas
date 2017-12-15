@@ -5,6 +5,8 @@ set(MidasCommonSrc
         model/CandleData.cpp
         model/CtpInstrument.cpp
         trade/TradeStatusManager.cpp
+        dao/CandleDao.cpp
+        dao/InstrumentInfoDao.cpp
         )
 
 set(MidasCtpSrc
