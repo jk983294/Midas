@@ -7,12 +7,12 @@
  * if still not found ,then use default value and log warning
  */
 template <typename T>
-T get_cfg_value(const char* root, const char* key, const T& defaultValue = T()) {
+T get_cfg_value(const string& root, const char* key, const T& defaultValue = T()) {
     T envValue = Config::instance().getenv<T>(key, defaultValue);
 
     if (envValue != defaultValue) return envValue;
 
-    auto path = string{root} + "." + key;
+    auto path = root + "." + key;
     T configValue = Config::instance().get<T>(path, defaultValue);
     if (configValue != defaultValue) return configValue;
 
@@ -24,7 +24,8 @@ T get_cfg_value(const char* root, const char* key, const T& defaultValue = T()) 
 }
 
 bool CtpProcess::configure() {
-    static const char root[] = "ctp";
+    const string root{"ctp"};
+    const string dbRoot{root + ".mysql"};
 
     data->brokerId = get_cfg_value<string>(root, "brokerId");
     data->investorId = get_cfg_value<string>(root, "investorId");
@@ -71,6 +72,14 @@ bool CtpProcess::configure() {
     }
     if (data->marketFront.empty()) {
         MIDAS_LOG_ERROR("empty marketFront!");
+        return false;
+    }
+
+    DaoManager::instance().account.ip = get_cfg_value<string>(dbRoot, "ip");
+    DaoManager::instance().account.userName = get_cfg_value<string>(dbRoot, "userName");
+    DaoManager::instance().account.password = get_cfg_value<string>(dbRoot, "password");
+    if (!DaoManager::instance().test_connection()) {
+        MIDAS_LOG_ERROR("database connection failed!");
         return false;
     }
 

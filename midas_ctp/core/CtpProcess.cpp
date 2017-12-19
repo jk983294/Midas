@@ -69,6 +69,7 @@ void CtpProcess::app_start() {
     data->state = CtpState::MarketInit;
 
     data->init_all_instruments();
+    load_historic_candle_data();
     manager->subscribe_all_instruments();
     sleep(1);
     data->state = CtpState::Running;
@@ -81,4 +82,16 @@ void CtpProcess::app_stop() {
     if (tradeDataThread.joinable()) {
         tradeDataThread.join();
     }
+}
+
+void CtpProcess::load_historic_candle_data() {
+    unordered_map<string, vector<CandleData>> historicCandle15;
+    DaoManager::instance().candleDao->get_all_candles(historicCandle15);
+
+    for (auto& item : data->instruments) {
+        if (historicCandle15.find(item.first) != historicCandle15.end()) {
+            item.second.load_historic_candle15(historicCandle15[item.first]);
+        }
+    }
+    MIDAS_LOG_INFO("load_historic_candle_data finish");
 }

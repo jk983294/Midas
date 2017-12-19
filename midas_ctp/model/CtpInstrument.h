@@ -22,8 +22,6 @@ public:
     CThostFtdcDepthMarketDataField image;
 
 public:
-    CtpInstrument() {}
-
     CtpInstrument(const string& instrument, const TradeSessions& s);
 
     void book_stream(ostream& os);
@@ -31,6 +29,8 @@ public:
     void image_stream(ostream& os);
 
     void update_tick(const MktDataPayload& tick);
+
+    void load_historic_candle15(vector<CandleData>& candles);
 };
 
 ostream& operator<<(ostream& os, const CtpInstrument& instrument);

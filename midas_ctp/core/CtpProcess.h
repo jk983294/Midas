@@ -9,6 +9,7 @@
 #include "MdSpi.h"
 #include "TradeManager.h"
 #include "TradeSpi.h"
+#include "dao/DaoManager.h"
 #include "experiment/CtpDataLogConsumer.h"
 #include "model/CtpData.h"
 #include "net/channel/Channel.h"
@@ -20,8 +21,8 @@ using namespace midas;
 
 class CtpProcess : public MidasProcessBase {
 public:
-    //    typedef CtpDataConsumer DataConsumer;
-    typedef CtpDataLogConsumer DataConsumer;
+    typedef CtpDataConsumer DataConsumer;
+    //    typedef CtpDataLogConsumer DataConsumer;
     typedef midas::Disruptor<CtpMdSpi, DataConsumer, MktDataPayload, midas::ConsumerStages::OneStage> TMktDataDisruptor;
 
     std::shared_ptr<CtpData> data;
@@ -74,6 +75,12 @@ private:
     string admin_close(const string& cmd, const TAdminCallbackArgs& args) const;
 
     string flush(const string& cmd, const TAdminCallbackArgs& args);
+    string save2db(const string& cmd, const TAdminCallbackArgs& args);
+
+private:
+    void save_instruments();
+    void save_candles();
+    void load_historic_candle_data();
 };
 
 #endif

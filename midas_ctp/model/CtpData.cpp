@@ -4,7 +4,7 @@ void CtpData::init_all_instruments() {
     for (auto itr = instrumentInfo.begin(); itr != instrumentInfo.end(); ++itr) {
         TradeSessions *pts = tradeStatusManager.get_session(itr->first);
         if (pts) {
-            instruments.insert({itr->first, {itr->first, *pts}});
+            instruments.insert({itr->first, CtpInstrument{itr->first, *pts}});
         }
     }
 }

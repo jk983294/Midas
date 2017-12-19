@@ -20,7 +20,14 @@ ctp
         wait_strategy block
     }
 
-    enableLogProducer true
+    mysql
+    {
+        ip "tcp://127.0.0.1:3306"
+        userName "root"
+        password "123456"
+    }
+
+    logRawData true
     tradingHourCfgPath "/home/kun/github/midas/midas_ctp/cfg/trading_hour.map"
 
 }

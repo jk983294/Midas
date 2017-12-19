@@ -1,6 +1,7 @@
 #include <utils/FileUtils.h>
 #include "CtpProcess.h"
 #include "helper/CtpVisualHelper.h"
+#include "utils/CollectionUtils.h"
 
 void CtpProcess::init_admin() {
     admin_handler().register_callback("meters", boost::bind(&CtpProcess::admin_meters, this, _1, _2),
@@ -27,6 +28,8 @@ void CtpProcess::init_admin() {
                                       "close instrument size", "close instrument size");
     admin_handler().register_callback("flush", boost::bind(&CtpProcess::flush, this, _1, _2), "flush",
                                       "flush log to disk");
+    admin_handler().register_callback("save2db", boost::bind(&CtpProcess::save2db, this, _1, _2),
+                                      "save2db (instrument|candle)", "save data into mysql");
 }
 
 string CtpProcess::admin_request(const string& cmd, const TAdminCallbackArgs& args) {
@@ -135,7 +138,7 @@ string CtpProcess::admin_buy(const string& cmd, const TAdminCallbackArgs& args) 
         double price = boost::lexical_cast<double>(args[1]);
         int size = boost::lexical_cast<int>(args[2]);
         oss << "parameter: " << instrument << " " << price << " " << size << '\n';
-        int ret = manager->request_buy_limit(instrument, price, size);
+        int ret = manager->request_buy_limit(instrument, size, price);
         if (ret == 0) {
             oss << "buy order sent success for " << instrument << " " << price << " " << size << '\n';
         } else {
@@ -154,7 +157,7 @@ string CtpProcess::admin_sell(const string& cmd, const TAdminCallbackArgs& args)
         double price = boost::lexical_cast<double>(args[1]);
         int size = boost::lexical_cast<int>(args[2]);
         oss << "parameter: " << instrument << " " << price << " " << size << '\n';
-        int ret = manager->request_sell_limit(instrument, price, size);
+        int ret = manager->request_sell_limit(instrument, size, price);
         if (ret == 0) {
             oss << "sell order sent success for " << instrument << " " << price << " " << size << '\n';
         } else {
@@ -190,4 +193,38 @@ string CtpProcess::flush(const string& cmd, const TAdminCallbackArgs& args) {
     consumerPtr->flush();
     MIDAS_LOG_FLUSH();
     return "flush command issued";
+}
+
+string CtpProcess::save2db(const string& cmd, const TAdminCallbackArgs& args) {
+    ostringstream oss;
+    if (args.empty())
+        oss << "missing parameter: save2db (instrument|candle)";
+    else if (args[0] == "instrument") {
+        std::thread([this] { save_instruments(); }).detach();
+        oss << "save instrument job submitted\n";
+    } else if (args[0] == "candle") {
+        std::thread([this] { save_candles(); }).detach();
+        oss << "save candle job submitted\n";
+    } else {
+        oss << "unrecognized parameter for save2db\n";
+    }
+    return oss.str();
+}
+
+void CtpProcess::save_instruments() {
+    MIDAS_LOG_INFO("start to save instrument to database");
+    vector<CThostFtdcInstrumentField> data2save;
+    map_values(data->instrumentInfo, data2save);
+    int ret = DaoManager::instance().instrumentInfoDao->save_instruments(data2save);
+    MIDAS_LOG_INFO("finish to save " << ret << " entries instruments into database");
+}
+void CtpProcess::save_candles() {
+    MIDAS_LOG_INFO("start to save candle to database");
+
+    int ret = 0;
+    for (const auto& item : data->instruments) {
+        ret += DaoManager::instance().candleDao->save_candles(item.second.instrument, item.second.candles15.data,
+                                                              item.second.candles15.historicDataCount);
+    }
+    MIDAS_LOG_INFO("finish to save " << ret << " entries candles into database");
 }

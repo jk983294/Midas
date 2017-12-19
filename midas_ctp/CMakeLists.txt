@@ -4,6 +4,7 @@ set(MidasCommonSrc
         model/CtpData.cpp
         model/CandleData.cpp
         model/CtpInstrument.cpp
+        model/TradeSession.cpp
         trade/TradeStatusManager.cpp
         dao/CandleDao.cpp
         dao/InstrumentInfoDao.cpp
@@ -21,10 +22,8 @@ set(MidasCtpSrc
         )
 
 add_executable(midas ${MidasCtpSrc} ${MidasCommonSrc})
-target_link_libraries(midas ${Boost_LIBRARIES} tbb)
-target_link_libraries(midas pthread)
+target_link_libraries(midas ${Boost_LIBRARIES} tbb pthread z mysqlcppconn)
 target_link_libraries(midas thostmduserapi thosttraderapi)
-target_link_libraries(midas z)
 
 set(MidasCtpBacktestSrc
         backtest/main.cpp
@@ -34,7 +33,5 @@ set(MidasCtpBacktestSrc
         )
 
 add_executable(backtest ${MidasCtpBacktestSrc} ${MidasCommonSrc})
-target_link_libraries(backtest ${Boost_LIBRARIES} tbb)
-target_link_libraries(backtest pthread)
+target_link_libraries(backtest ${Boost_LIBRARIES} tbb pthread z mysqlcppconn)
 target_link_libraries(midas thostmduserapi thosttraderapi)
-target_link_libraries(midas z)

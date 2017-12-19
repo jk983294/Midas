@@ -78,8 +78,10 @@ int main(int argc, char** argv) {
         } else {
             TradeSessions* pts = data.tradeStatusManager.get_session(instrumentId);
             if (pts) {
-                data.instruments.insert({instrumentId, {instrumentId, *pts}});
-                data.instruments[instrumentId].update_tick(payload);
+                auto result = data.instruments.insert({instrumentId, {instrumentId, *pts}});
+                if(result.second){
+                    result.first->second.update_tick(payload);
+                }
             }
         }
     }

@@ -1,8 +1,8 @@
 #include "CtpInstrument.h"
 
-CtpInstrument::CtpInstrument(const string& instrument, const TradeSessions& s) : instrument(instrument), sessions(s) {
-    candles15.set_session_pointer(&sessions);
-    candles30.set_session_pointer(&sessions);
+CtpInstrument::CtpInstrument(const string& _instrument, const TradeSessions& s) : instrument(_instrument), sessions(s) {
+    candles15.set_session(s);
+    candles30.set_session(s);
 }
 
 inline static bool is_volume_abnormal(int v) { return v <= 0 || v > 100000000; }
@@ -28,6 +28,8 @@ void CtpInstrument::update_tick(const MktDataPayload& payload) {
 
     image = tick;
 }
+
+void CtpInstrument::load_historic_candle15(vector<CandleData>& candles) { candles15.init(candles); }
 
 void CtpInstrument::book_stream(ostream& os) {
     const static int defaultPrice = -99999;

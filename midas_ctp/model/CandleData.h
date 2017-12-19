@@ -4,11 +4,9 @@
 #include <ctp/ThostFtdcUserApiStruct.h>
 #include <string>
 #include <vector>
-#include "trade/TradeStatusManager.h"
+#include "TradeSession.h"
 
 using namespace std;
-
-class TradeSessions;
 
 enum CandleScale { Minute1 = 1, Minute5 = 5, Minute15 = 15, Minute30 = 30, Hour1 = 60, Day1 = 24 * 60 };
 
@@ -18,15 +16,15 @@ public:
     int date{0};
     int time{0};
     int intradayMinute{0};
-    int volume{0};
     double open{0};
-    double close{0};
     double high{0};
     double low{0};
+    double close{0};
+    double volume{0};  // trade size
 
 public:
     CandleData() {}
-    CandleData(int date, int time, double open, double close, double high, double low);
+    CandleData(int date, int time, double open, double high, double low, double close, double volume);
 
     void update_first_tick(int _date, int _intradayMinute, double tp, int ts, double newHigh, double newLow);
 
@@ -39,7 +37,7 @@ class Candles {
 public:
     CandleScale scale;
     vector<CandleData> data;
-    TradeSessions* pSessions{nullptr};  // not the owner, only query boundary from sessions
+    TradeSessions sessions;
     size_t historicDataCount{0};
     size_t totalBinCount{0};
     size_t currentBinIndex{0};
@@ -52,7 +50,7 @@ public:
 
     void update(const CThostFtdcDepthMarketDataField& tick, int ts, double newHigh, double newLow);
 
-    void set_session_pointer(TradeSessions* p) { pSessions = p; }
+    void set_session(const TradeSessions& ts) { sessions = ts; }
 };
 
 ostream& operator<<(ostream& os, const CandleData& candle);

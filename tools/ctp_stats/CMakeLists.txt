@@ -7,6 +7,7 @@ set(statssrc
         ../../midas_ctp/model/CtpInstrument.cpp
         ../../midas_ctp/model/CtpData.cpp
         ../../midas_ctp/model/CandleData.cpp
+        ../../midas_ctp/model/TradeSession.cpp
         )
 
 add_executable(ctp_stats ${statssrc})

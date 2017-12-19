@@ -3,7 +3,6 @@
 
 #include <cppconn/exception.h>
 #include <ctp/ThostFtdcUserApiStruct.h>
-#include <mysql_connection.h>
 #include <mysql_driver.h>
 #include <vector>
 #include "MysqlCommon.h"

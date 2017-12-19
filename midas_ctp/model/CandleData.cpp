@@ -1,10 +1,11 @@
 #include "CandleData.h"
+#include "utils/convert/TimeHelper.h"
 
 // au -> 2100 <-> 230 330 900 <-> 1015 75 1030 <-> 1130 60 1330 <-> 1500 90 total minute: 555
 constexpr int maxOneDayMinute = 555;
 
-CandleData::CandleData(int date, int time, double open, double close, double high, double low)
-    : date(date), time(time), open(open), close(close), high(high), low(low) {}
+CandleData::CandleData(int date, int time, double open, double high, double low, double close, double volume)
+    : date(date), time(time), open(open), high(high), low(low), close(close), volume(volume) {}
 
 void CandleData::update_first_tick(int _date, int _intradayMinute, double tp, int ts, double newHigh, double newLow) {
     date = _date;
@@ -49,12 +50,12 @@ void Candles::init(vector<CandleData>& historicData) {
 
 void Candles::update(const CThostFtdcDepthMarketDataField& tick, int ts, double newHigh, double newLow) {
     int intradayMinute = TradeSessions::intraday_minute(tick.UpdateTime);
-    if (pSessions->update_session(intradayMinute)) {  // in trading hour
+    if (sessions.update_session(intradayMinute)) {  // in trading hour
         ++updateCount;
 
         int date = midas::cob(tick.ActionDay);
         int startIntradayMinute = (intradayMinute - (intradayMinute % scale));
-        startIntradayMinute = pSessions->adjust_within_session(startIntradayMinute, scale);
+        startIntradayMinute = sessions.adjust_within_session(startIntradayMinute, scale);
         if (data[currentBinIndex].tickCount == 0) {
             data[currentBinIndex].update_first_tick(date, startIntradayMinute, tick.LastPrice, ts, newHigh, newLow);
         } else if (data[currentBinIndex].intradayMinute != startIntradayMinute) {

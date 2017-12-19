@@ -260,6 +260,15 @@ inline int cob(const char* str) {
 inline int cob(const string& str) { return cob(str.c_str()); }
 
 /**
+ * "2017-11-12" to 20171112
+ */
+inline int cob_from_dash(const char* str) {
+    return (str[0] - '0') * 10000000 + (str[1] - '0') * 1000000 + (str[2] - '0') * 100000 + (str[3] - '0') * 10000 +
+           (str[5] - '0') * 1000 + (str[6] - '0') * 100 + (str[8] - '0') * 10 + (str[9] - '0');
+}
+inline int cob_from_dash(const string& str) { return cob_from_dash(str.c_str()); }
+
+/**
  * "20171112 23:59:59" to time_t
  */
 inline double time_string2double(const string& str) {
@@ -267,6 +276,24 @@ inline double time_string2double(const string& str) {
     std::istringstream ss(str);
     ss >> std::get_time(&t, "%Y%m%d %H:%M:%S");
     return mktime(&t);
+}
+/**
+ * 20171112 and 23:59:59 to "20171112 23:59:59"
+ */
+inline std::string time2string(int cob, int intradayTime) {
+    int day = cob % 100;
+    cob /= 100;
+    int month = cob % 100;
+    int year = cob / 100;
+
+    int second = intradayTime % 100;
+    intradayTime /= 100;
+    int minute = intradayTime % 100;
+    int hour = intradayTime / 100;
+
+    char buffer[20];
+    std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u %02u:%02u:%02u", year, month, day, hour, minute, second);
+    return buffer;
 }
 }
 
