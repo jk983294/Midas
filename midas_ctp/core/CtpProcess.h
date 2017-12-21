@@ -7,7 +7,6 @@
 #include <memory>
 #include "CtpDataConsumer.h"
 #include "MdSpi.h"
-#include "TradeManager.h"
 #include "TradeSpi.h"
 #include "dao/DaoManager.h"
 #include "experiment/CtpDataLogConsumer.h"
@@ -15,6 +14,7 @@
 #include "net/channel/Channel.h"
 #include "net/tcp/TcpReceiver.h"
 #include "process/MidasProcessBase.h"
+#include "trade/TradeManager.h"
 
 using namespace std;
 using namespace midas;
@@ -74,8 +74,8 @@ private:
     string admin_sell(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_close(const string& cmd, const TAdminCallbackArgs& args) const;
 
-    string flush(const string& cmd, const TAdminCallbackArgs& args);
-    string save2db(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_flush(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_save2db(const string& cmd, const TAdminCallbackArgs& args);
 
 private:
     void save_instruments();

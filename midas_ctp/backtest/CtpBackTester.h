@@ -13,7 +13,10 @@ using namespace midas;
 class CtpBackTester : public MidasProcessBase {
 public:
     string dataDirectory;
-    int fileType{-1};
+    string resultDirectory{"/tmp"};
+    CandleScale candleScale{CandleScale::Minute1};
+
+    std::shared_ptr<CtpData> data;
 
 public:
     CtpBackTester() = delete;
@@ -28,11 +31,13 @@ private:
     bool configure();
     void init_admin();
 
-    void load_data();
+    void load_test_data(const string& dataPath);
 
 private:
     // admin section
     string admin_meters(const string& cmd, const TAdminCallbackArgs& args) const;
+    string admin_dump(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_load_file(const string& cmd, const TAdminCallbackArgs& args);
 };
 
 #endif

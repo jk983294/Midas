@@ -47,6 +47,8 @@ public:
 
 public:
     static int intraday_minute(const char* updateTime);
+    static int intraday_minute(int hms);
+    static int intraday_minute2hms(int intradayMinute);
 
 private:
     vector<TradeSession> sessions;

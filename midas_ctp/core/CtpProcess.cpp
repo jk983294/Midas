@@ -90,7 +90,7 @@ void CtpProcess::load_historic_candle_data() {
 
     for (auto& item : data->instruments) {
         if (historicCandle15.find(item.first) != historicCandle15.end()) {
-            item.second.load_historic_candle15(historicCandle15[item.first]);
+            item.second.load_historic_candle(historicCandle15[item.first]);
         }
     }
     MIDAS_LOG_INFO("load_historic_candle_data finish");

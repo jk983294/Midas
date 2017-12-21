@@ -5,7 +5,9 @@
 constexpr int maxOneDayMinute = 555;
 
 CandleData::CandleData(int date, int time, double open, double high, double low, double close, double volume)
-    : date(date), time(time), open(open), high(high), low(low), close(close), volume(volume) {}
+    : date(date), time(time), open(open), high(high), low(low), close(close), volume(volume) {
+    intradayMinute = TradeSessions::intraday_minute(time);
+}
 
 void CandleData::update_first_tick(int _date, int _intradayMinute, double tp, int ts, double newHigh, double newLow) {
     date = _date;
@@ -32,14 +34,40 @@ int CandleData::time_diff(int newDate, int newIntradayMinute) {
     return (newDate - date) * 60 * 24 + (newIntradayMinute - intradayMinute);
 }
 
+void CandleData::update(const CandleData& data) {
+    tickCount += data.tickCount;
+    high = std::max(high, data.high);
+    low = std::min(low, data.low);
+    close = data.close;
+    volume += data.volume;
+}
+
 Candles::Candles(CandleScale s) : scale{s} {
     vector<CandleData> v;
     init(v);
 }
 
-void Candles::init(vector<CandleData>& historicData) {
-    if (historicData.size()) {
-        std::swap(data, historicData);
+void Candles::init(const vector<CandleData>& historicData, CandleScale historicScale) {
+    data.clear();
+    if (scale == historicScale) {
+        data.resize(historicData.size());
+        std::copy(historicData.begin(), historicData.end(), data.begin());
+    } else if (historicScale < scale) {
+        for (const auto& candle : historicData) {
+            if (sessions.update_session(candle.intradayMinute)) {
+                int startIntradayMinute = (candle.intradayMinute - (candle.intradayMinute % scale));
+                startIntradayMinute = sessions.adjust_within_session(startIntradayMinute, scale);
+                if (data.empty() || (startIntradayMinute != (data.end() - 1)->intradayMinute)) {
+                    data.push_back(candle);
+                    (data.end() - 1)->intradayMinute = startIntradayMinute;
+                    (data.end() - 1)->time = TradeSessions::intraday_minute2hms(startIntradayMinute);
+                } else {
+                    (data.end() - 1)->update(candle);
+                }
+            }
+        }
+    } else {
+        // do nothing because cannot build candle due to high resolution info missing
     }
 
     historicDataCount = data.size();
@@ -74,8 +102,9 @@ ostream& operator<<(ostream& os, const CandleData& candle) {
 }
 ostream& operator<<(ostream& os, const Candles& candles) {
     os << "date,time,open,high,low,close,volume,tickCount" << '\n';
-    for (size_t i = 0; i < candles.currentBinIndex + 1; ++i) {
+    for (size_t i = 0; i < candles.currentBinIndex; ++i) {
         os << candles.data[i] << '\n';
     }
+    if (candles.data[candles.currentBinIndex].date != 0) os << candles.data[candles.currentBinIndex] << '\n';
     return os;
 }

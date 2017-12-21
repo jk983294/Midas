@@ -3,7 +3,7 @@
 
 #include <ctp/ThostFtdcMdApi.h>
 #include <string>
-#include "TradeManager.h"
+#include "trade/TradeManager.h"
 
 using namespace std;
 

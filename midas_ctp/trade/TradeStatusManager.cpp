@@ -53,3 +53,16 @@ int TradeSessions::intraday_minute(const char* updateTime) {
     int minute = (updateTime[3] - '0') * 10 + (updateTime[4] - '0');
     return 60 * hour + minute;
 }
+
+int TradeSessions::intraday_minute(int hms) {
+    hms /= 100;
+    int minute = hms % 100;
+    int hour = hms / 100;
+    return 60 * hour + minute;
+}
+
+int TradeSessions::intraday_minute2hms(int intradayMinute) {
+    int minute = intradayMinute % 60;
+    int hour = intradayMinute / 60;
+    return hour * 10000 + minute * 100;
+}

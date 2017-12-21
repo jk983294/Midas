@@ -13,7 +13,7 @@ void CtpProcess::init_admin() {
                                       "query (book|image|instrument|product|exchange|account|position)",
                                       "query data in local memory");
     admin_handler().register_callback("dump", boost::bind(&CtpProcess::admin_dump, this, _1, _2),
-                                      "dump (instrument|product|exchange|account|position)", "dump data");
+                                      "dump (instrument|product|exchange|account|position|candle)", "dump data");
     admin_handler().register_callback("get_async_result",
                                       boost::bind(&CtpProcess::admin_get_async_result, this, _1, _2, _3),
                                       "get_async_result", "get_async_result");
@@ -26,9 +26,9 @@ void CtpProcess::init_admin() {
                                       "sell instrument price size", "sell in limit order manner");
     admin_handler().register_callback("close", boost::bind(&CtpProcess::admin_close, this, _1, _2),
                                       "close instrument size", "close instrument size");
-    admin_handler().register_callback("flush", boost::bind(&CtpProcess::flush, this, _1, _2), "flush",
+    admin_handler().register_callback("flush", boost::bind(&CtpProcess::admin_flush, this, _1, _2), "flush",
                                       "flush log to disk");
-    admin_handler().register_callback("save2db", boost::bind(&CtpProcess::save2db, this, _1, _2),
+    admin_handler().register_callback("save2db", boost::bind(&CtpProcess::admin_save2db, this, _1, _2),
                                       "save2db (instrument|candle)", "save data into mysql");
 }
 
@@ -94,6 +94,15 @@ string CtpProcess::admin_dump(const string& cmd, const TAdminCallbackArgs& args)
         dump2file(data->accounts, data->dataDirectory + "/account.dump");
     if (param1 == "position" || param1 == "" || param1 == "all")
         dump2file(data->positions, data->dataDirectory + "/position.dump");
+
+    if (param1 == "candle") {
+        auto itr = data->instruments.find(param2);
+        if (itr != data->instruments.end()) {
+            dump2file<CtpInstrument>(itr->second, data->dataDirectory + "/" + param2 + ".dump");
+        } else {
+            return "instrument cannot found.";
+        }
+    }
     return "dump finished";
 }
 
@@ -189,13 +198,13 @@ string CtpProcess::admin_meters(const string& cmd, const TAdminCallbackArgs& arg
     return oss.str();
 }
 
-string CtpProcess::flush(const string& cmd, const TAdminCallbackArgs& args) {
+string CtpProcess::admin_flush(const string& cmd, const TAdminCallbackArgs& args) {
     consumerPtr->flush();
     MIDAS_LOG_FLUSH();
     return "flush command issued";
 }
 
-string CtpProcess::save2db(const string& cmd, const TAdminCallbackArgs& args) {
+string CtpProcess::admin_save2db(const string& cmd, const TAdminCallbackArgs& args) {
     ostringstream oss;
     if (args.empty())
         oss << "missing parameter: save2db (instrument|candle)";

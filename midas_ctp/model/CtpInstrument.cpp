@@ -29,7 +29,10 @@ void CtpInstrument::update_tick(const MktDataPayload& payload) {
     image = tick;
 }
 
-void CtpInstrument::load_historic_candle15(vector<CandleData>& candles) { candles15.init(candles); }
+void CtpInstrument::load_historic_candle(vector<CandleData>& candles, CandleScale historicScale) {
+    candles15.init(candles, historicScale);
+    candles30.init(candles15.data, CandleScale::Minute15);
+}
 
 void CtpInstrument::book_stream(ostream& os) {
     const static int defaultPrice = -99999;

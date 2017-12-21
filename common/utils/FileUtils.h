@@ -21,8 +21,9 @@ inline bool check_file_exists(const char* path) {
 }
 
 template <typename T1, typename T2>
-void dump2file(const map<T1, T2>& m, string filePrefix) {
-    ofstream ofs(filePrefix + "." + now_string(), ofstream::out | ofstream::trunc);
+string dump2file(const map<T1, T2>& m, string filePrefix) {
+    string filePath = filePrefix + "." + now_string();
+    ofstream ofs(filePath, ofstream::out | ofstream::trunc);
 
     if (!ofs) {
         cerr << "open file failed" << '\n';
@@ -30,11 +31,13 @@ void dump2file(const map<T1, T2>& m, string filePrefix) {
         for (auto it = m.begin(); it != m.end(); ++it) ofs << it->second << '\n';
         ofs.close();
     }
+    return filePath;
 }
 
 template <typename T>
-void dump2file(const vector<T>& v, string filePrefix) {
-    ofstream ofs(filePrefix + now_string(), ofstream::out | ofstream::trunc);
+string dump2file(const vector<T>& v, string filePrefix) {
+    string filePath = filePrefix + "." + now_string();
+    ofstream ofs(filePath, ofstream::out | ofstream::trunc);
 
     if (!ofs) {
         cerr << "open file failed" << '\n';
@@ -42,6 +45,21 @@ void dump2file(const vector<T>& v, string filePrefix) {
         for (auto it = v.begin(); it != v.end(); ++it) ofs << *it << '\n';
         ofs.close();
     }
+    return filePath;
+}
+
+template <typename T>
+string dump2file(const T& v, string filePrefix) {
+    string filePath = filePrefix + "." + now_string();
+    ofstream ofs(filePath, ofstream::out | ofstream::trunc);
+
+    if (!ofs) {
+        cerr << "open file failed" << '\n';
+    } else {
+        ofs << v << '\n';
+        ofs.close();
+    }
+    return filePath;
 }
 
 /**

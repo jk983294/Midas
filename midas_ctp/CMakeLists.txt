@@ -17,7 +17,7 @@ set(MidasCtpSrc
         core/MdSpi.cpp
         core/CtpAdmin.cpp
         core/CtpConfig.cpp
-        core/TradeManager.cpp
+        trade/TradeManager.cpp
         core/CtpDataConsumer.cpp
         )
 
@@ -30,8 +30,8 @@ set(MidasCtpBacktestSrc
         backtest/CtpBackTester.cpp
         backtest/CtpBackTesterAdmin.cpp
         backtest/CtpBackTesterConfig.cpp
+        backtest/BacktestDataLoader.cpp
         )
 
 add_executable(backtest ${MidasCtpBacktestSrc} ${MidasCommonSrc})
 target_link_libraries(backtest ${Boost_LIBRARIES} tbb pthread z mysqlcppconn)
-target_link_libraries(midas thostmduserapi thosttraderapi)

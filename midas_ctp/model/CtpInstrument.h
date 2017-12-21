@@ -30,7 +30,7 @@ public:
 
     void update_tick(const MktDataPayload& tick);
 
-    void load_historic_candle15(vector<CandleData>& candles);
+    void load_historic_candle(vector<CandleData>& candles, CandleScale historicScale = CandleScale::Minute15);
 };
 
 ostream& operator<<(ostream& os, const CtpInstrument& instrument);

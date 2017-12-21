@@ -30,6 +30,8 @@ public:
 
     void update_tick(double tp, int ts, double newHigh, double newLow);
 
+    void update(const CandleData& data);
+
     int time_diff(int newDate, int newIntradayMinute);
 };
 
@@ -46,7 +48,7 @@ public:
 public:
     Candles(CandleScale s = CandleScale::Minute15);
 
-    void init(vector<CandleData>& historicData);
+    void init(const vector<CandleData>& historicData, CandleScale historicScale = CandleScale::Minute15);
 
     void update(const CThostFtdcDepthMarketDataField& tick, int ts, double newHigh, double newLow);
 
