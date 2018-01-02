@@ -30,7 +30,7 @@ set(MidasCtpBacktestSrc
         backtest/CtpBackTester.cpp
         backtest/CtpBackTesterAdmin.cpp
         backtest/CtpBackTesterConfig.cpp
-        backtest/BacktestDataLoader.cpp
+        helper/DataLoader.cpp
         )
 
 add_executable(backtest ${MidasCtpBacktestSrc} ${MidasCommonSrc})

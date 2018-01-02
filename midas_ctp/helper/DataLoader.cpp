@@ -3,9 +3,9 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
-#include "BacktestDataLoader.h"
+#include "DataLoader.h"
 
-void BacktestDataLoader::load(const string &pathName) {
+void DataLoader::load(const string &pathName) {
     boost::filesystem::path file(pathName);
     if (boost::filesystem::is_regular_file(file)) {
         load_single_file(pathName);
@@ -19,7 +19,7 @@ void BacktestDataLoader::load(const string &pathName) {
     }
 }
 
-void BacktestDataLoader::load_single_file(const string &pathName) {
+void DataLoader::load_single_file(const string &pathName) {
     currentFileName = pathName;
     boost::filesystem::path file(currentFileName);
     instrumentName = file.filename().replace_extension().string();
@@ -40,7 +40,7 @@ void BacktestDataLoader::load_single_file(const string &pathName) {
     process_data();
 }
 
-void BacktestDataLoader::process_data() {
+void DataLoader::process_data() {
     if (rawData.empty()) return;
     analysis_header(rawData[0]);
     if (hasHeader && rawData.size() == 1) return;
@@ -53,14 +53,14 @@ void BacktestDataLoader::process_data() {
     }
 }
 
-void BacktestDataLoader::analysis_header(const string &content) {
+void DataLoader::analysis_header(const string &content) {
     long digitCount = count_if(content.begin(), content.end(), [](char c) { return c <= '9' && c >= '0'; });
     long letterCount = count_if(content.begin(), content.end(),
                                 [](char c) { return (c <= 'z' && c >= 'a') || (c <= 'Z' && c >= 'A'); });
     hasHeader = (letterCount > digitCount);
 }
 
-void BacktestDataLoader::analysis_format(const string &content) {
+void DataLoader::analysis_format(const string &content) {
     long commaCount = count(content.begin(), content.end(), ',');
     if (commaCount == 0)
         format = RawDataFormat::Unknown;
@@ -70,7 +70,7 @@ void BacktestDataLoader::analysis_format(const string &content) {
         format = RawDataFormat::Type2;
 }
 
-void BacktestDataLoader::load_format_type1() {
+void DataLoader::load_format_type1() {
     vector<CandleData> result;
     auto itr = rawData.begin();
     if (hasHeader) ++itr;
@@ -90,7 +90,7 @@ void BacktestDataLoader::load_format_type1() {
     instrument2candle[instrumentName] = result;
 }
 
-void BacktestDataLoader::load_format_type2() {
+void DataLoader::load_format_type2() {
     vector<CandleData> result;
     auto itr = rawData.begin();
     if (hasHeader) ++itr;

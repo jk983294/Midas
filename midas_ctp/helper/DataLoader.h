@@ -1,5 +1,5 @@
-#ifndef MIDAS_BACKTEST_DATA_LOADER_H
-#define MIDAS_BACKTEST_DATA_LOADER_H
+#ifndef MIDAS_DATA_LOADER_H
+#define MIDAS_DATA_LOADER_H
 
 #include <map>
 #include <string>
@@ -14,7 +14,7 @@ enum RawDataFormat {
     Type2   // "DateTime","Open","High","Low","Close","TotalVolume"
 };
 
-class BacktestDataLoader {
+class DataLoader {
 public:
     map<string, vector<CandleData>> instrument2candle;
     string currentFileName;

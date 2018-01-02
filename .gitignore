@@ -1,5 +1,6 @@
 .idea/
 install/
+visualization/*.json
 *.pyc
 cmake-build-debug/
 *.gch

@@ -1,5 +1,5 @@
-#include "BacktestDataLoader.h"
 #include "CtpBackTester.h"
+#include "helper/DataLoader.h"
 
 CtpBackTester::CtpBackTester(int argc, char** argv) : MidasProcessBase(argc, argv) {
     data = make_shared<CtpData>();
@@ -21,7 +21,7 @@ void CtpBackTester::app_start() {
 }
 
 void CtpBackTester::load_test_data(const string& dataPath) {
-    BacktestDataLoader dataLoader;
+    DataLoader dataLoader;
     dataLoader.load(dataPath);
 
     for (auto& item : dataLoader.instrument2candle) {
