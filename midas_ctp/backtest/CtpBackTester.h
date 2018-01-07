@@ -33,10 +33,13 @@ private:
 
     void load_test_data(const string& dataPath);
 
+    void calculate();
+
 private:
     // admin section
     string admin_meters(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_dump(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_csv_dump(const string& cmd, const TAdminCallbackArgs& args);
     string admin_load_file(const string& cmd, const TAdminCallbackArgs& args);
 };
 

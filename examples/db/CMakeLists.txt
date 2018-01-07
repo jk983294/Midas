@@ -7,6 +7,7 @@ set(dbexamplesrc
         ../../midas_ctp/dao/InstrumentInfoDao.cpp
         ../../midas_ctp/trade/TradeStatusManager.cpp
         ../../midas_ctp/model/TradeSession.cpp
+        ../../midas_ctp/helper/CtpHelper.cpp
         )
 
 add_executable(db_example ${dbexamplesrc})

@@ -2,10 +2,9 @@
 
 void CtpData::init_all_instruments() {
     for (auto itr = instrumentInfo.begin(); itr != instrumentInfo.end(); ++itr) {
-        TradeSessions *pts = tradeStatusManager.get_session(itr->first);
-        if (pts) {
-            instruments.insert({itr->first, CtpInstrument{itr->first, *pts}});
-        }
+        const TradeSessions &pts = tradeStatusManager.get_session(itr->first);
+        std::shared_ptr<CtpInstrument> instrument = make_shared<CtpInstrument>(itr->first, pts);
+        instruments.insert({itr->first, instrument});
     }
 }
 
@@ -16,9 +15,9 @@ void CtpData::stream(ostream &os, const string &instrument, bool isImage) {
     }
 
     if (isImage)
-        itr->second.image_stream(os);
+        itr->second->image_stream(os);
     else
-        itr->second.book_stream(os);
+        itr->second->book_stream(os);
 }
 
 bool CtpData::update(const MktDataPayload &tick) {
@@ -26,6 +25,6 @@ bool CtpData::update(const MktDataPayload &tick) {
     auto itr = instruments.find(instrument);
     if (itr == instruments.end()) return false;
 
-    itr->second.update_tick(tick);
+    itr->second->update_tick(tick);
     return true;
 }

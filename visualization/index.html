@@ -25,8 +25,6 @@
             result.macd = macdResult.macd;
             result.dif = macdResult.dif;
             result.dea = macdResult.dea;
-            result.ma10 = mathUtils.calculateSma(result.close, 10);
-            result.ma60 = mathUtils.calculateSma(result.close, 60);
 
             result.oclh = [];
             for (var i = 0; i < result.close.length; i++) {
@@ -52,7 +50,7 @@
                     }
                 },
                 legend: {
-                    data: ['KLine', 'MA10', 'MA60', 'Close'],
+                    data: ['KLine', 'Close'],
                     selected: {
                         'Close': false
                     }
@@ -139,26 +137,6 @@
                         }
                     }
                 }, {
-                    name: 'MA10',
-                    type: 'line',
-                    data: data.ma10,
-                    smooth: true,
-                    lineStyle: {
-                        normal: {
-                            opacity: 0.5
-                        }
-                    }
-                }, {
-                    name: 'MA60',
-                    type: 'line',
-                    data: data.ma60,
-                    smooth: true,
-                    lineStyle: {
-                        normal: {
-                            opacity: 0.5
-                        }
-                    }
-                }, {
                     name: 'Close',
                     type: 'line',
                     data: data.close,
@@ -183,24 +161,53 @@
                 'ma10': true,
                 'ma60': true
             };
-            var count = 0;
+
+            var count = 0,
+                yIndex = 0;
+            var sets = [];
+            var isFindSet = false;
             for (var key in data) {
                 if (data.hasOwnProperty(key)) {
                     if (data[key] instanceof Array && !ignoreList[key]) {
-                        count += 1;
-                        localOption.legend.data.push(key);
-                        localOption.yAxis.push({
-                            gridIndex: 0,
-                            scale: true,
-                            splitArea: {
-                                show: false
+                        var sampleValue = data[key][0];
+                        if (midasUtils.deviateLevel(data.close[0], sampleValue) > 0.3) {
+                            // check if exist set is suitable for this index
+                            isFindSet = false;
+                            for (var j = 0, len1 = sets.length; j < len1; ++j) {
+                                if (deviateLevel(sampleValue, sets[j].average) < 0.3) {
+                                    sets[j].average = (sets[j].average + sampleValue) / 2;
+                                    yIndex = sets[j].setIndex;
+                                    isFindSet = true;
+                                    break;
+                                }
                             }
-                        });
+                            // not find in any set, create a new set
+                            if (!isFindSet) {
+                                count += 1;
+                                yIndex = count;
+                                sets.push({
+                                    average: sampleValue,
+                                    setIndex: yIndex
+                                });
+                                localOption.yAxis.push({
+                                    gridIndex: 0,
+                                    scale: true,
+                                    splitArea: {
+                                        show: false
+                                    }
+                                });
+                            }
+                        } else {
+                            // same y asix with close index
+                            yIndex = 0;
+                        }
+
+                        localOption.legend.data.push(key);
                         localOption.series.push({
                             name: key,
                             type: 'line',
                             xAxisIndex: 0,
-                            yAxisIndex: count,
+                            yAxisIndex: yIndex,
                             data: data[key],
                             smooth: true
                         });
@@ -318,7 +325,8 @@
                 data = midasUtils.subArrayOfObject(data, index1, index2);
             }
 
-            myChart.setOption(getOption(data));
+            var option = getOption(data);
+            myChart.setOption(option);
         });
     </script>
 </body>

@@ -74,15 +74,12 @@ int main(int argc, char** argv) {
 
         auto itr1 = data.instruments.find(instrumentId);
         if (itr1 != data.instruments.end()) {
-            itr1->second.update_tick(payload);
+            itr1->second->update_tick(payload);
         } else {
-            TradeSessions* pts = data.tradeStatusManager.get_session(instrumentId);
-            if (pts) {
-                auto result = data.instruments.insert({instrumentId, {instrumentId, *pts}});
-                if(result.second){
-                    result.first->second.update_tick(payload);
-                }
-            }
+            const TradeSessions& pts = data.tradeStatusManager.get_session(instrumentId);
+            std::shared_ptr<CtpInstrument> instrument = make_shared<CtpInstrument>(instrumentId, pts);
+            instrument->update_tick(payload);
+            data.instruments.insert({instrumentId, instrument});
         }
     }
 
@@ -93,7 +90,7 @@ int main(int argc, char** argv) {
     } else if (type == StatType::CandleData) {
         // cout << data.tradeStatusManager << '\n';
         for (auto it = data.instruments.begin(); it != data.instruments.end(); ++it) {
-            cout << it->second << '\n';
+            cout << *(it->second) << '\n';
         }
     }
 

@@ -35,35 +35,58 @@ http.createServer(function(request, response) {
 
     var virtualDirectory = virtualDirectories[root];
 
-    if(virtualDirectory){
+    if (virtualDirectory) {
         uri = uri.slice(root.length + 1, uri.length);
-        filename = path.join(virtualDirectory ,uri);
+        filename = path.join(virtualDirectory, uri);
     }
 
     fs.exists(filename, function(exists) {
-        if(!exists) {
-            response.writeHead(404, {"Content-Type": "text/plain"});
+        if (!exists) {
+            response.writeHead(404, {
+                "Content-Type": "text/plain"
+            });
             response.write("404 Not Found\n");
             response.end();
             return;
         }
 
-        if (fs.statSync(filename).isDirectory()) filename += '/index.html';
+        if (fs.statSync(filename).isDirectory()) {
+            response.writeHead(200, {
+                "Content-Type": "text/html"
+            });
 
-        fs.readFile(filename, "binary", function(err, file) {
-            if(err) {
-                response.writeHead(500, {"Content-Type": "text/plain"});
-                response.write(err + "\n");
-                response.end();
-                return;
-            }
+            response.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Files</title></head><body>');
 
-            var mimeType = mimeTypes[path.extname(filename).split(".")[1]];
-            response.writeHead(200, {"Content-Type": mimeType});
-            response.write(file, "binary");
+            fs.readdirSync(filename).forEach(file => {
+                if (file.endsWith('.json')) {
+                    response.write('<h4><a href="/index.html?file=' + file + '">' + file + '</a></h4>\n');
+                } else if (file.endsWith('.html') || file.endsWith('.htm')) {
+                    response.write('<h4><a href="/' + file + '">' + file + '</a></h4>\n');
+                }
+            });
+
+            response.write('</body>');
             response.end();
-        });
+        } else {
+            fs.readFile(filename, "binary", function(err, file) {
+                if (err) {
+                    response.writeHead(500, {
+                        "Content-Type": "text/plain"
+                    });
+                    response.write(err + "\n");
+                    response.end();
+                    return;
+                }
+
+                var mimeType = mimeTypes[path.extname(filename).split(".")[1]];
+                response.writeHead(200, {
+                    "Content-Type": mimeType
+                });
+                response.write(file, "binary");
+                response.end();
+            });
+        }
     });
 }).listen(parseInt(port, 10));
 
-console.log("Static file server running at\n  => http://localhost:" + port + "/");
+console.log("server running at\n  => http://localhost:" + port + "/");

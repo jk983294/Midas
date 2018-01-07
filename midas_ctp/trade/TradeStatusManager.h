@@ -13,7 +13,7 @@ public:
 public:
     void load_trade_session(const string& path);
 
-    TradeSessions* get_session(const string& instrumentId);
+    const TradeSessions& get_session(const string& instrumentId);
 };
 
 ostream& operator<<(ostream& s, const TradeStatusManager& manager);

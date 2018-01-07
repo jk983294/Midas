@@ -98,7 +98,7 @@ string CtpProcess::admin_dump(const string& cmd, const TAdminCallbackArgs& args)
     if (param1 == "candle") {
         auto itr = data->instruments.find(param2);
         if (itr != data->instruments.end()) {
-            dump2file<CtpInstrument>(itr->second, data->dataDirectory + "/" + param2 + ".dump");
+            dump2file<CtpInstrument>(*(itr->second), data->dataDirectory + "/" + param2 + ".dump");
         } else {
             return "instrument cannot found.";
         }
@@ -232,8 +232,8 @@ void CtpProcess::save_candles() {
 
     int ret = 0;
     for (const auto& item : data->instruments) {
-        ret += DaoManager::instance().candleDao->save_candles(item.second.instrument, item.second.candles15.data,
-                                                              item.second.candles15.historicDataCount);
+        ret += DaoManager::instance().candleDao->save_candles(item.second->instrument, item.second->candles15.data,
+                                                              item.second->candles15.historicDataCount);
     }
     MIDAS_LOG_INFO("finish to save " << ret << " entries candles into database");
 }

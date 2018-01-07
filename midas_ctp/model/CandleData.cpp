@@ -96,15 +96,18 @@ void Candles::update(const CThostFtdcDepthMarketDataField& tick, int ts, double 
 }
 
 ostream& operator<<(ostream& os, const CandleData& candle) {
-    os << candle.date << "," << candle.time << "," << candle.open << "," << candle.high << "," << candle.low << ","
-       << candle.close << "," << candle.volume << "," << candle.tickCount;
+    os << midas::cob2string(candle.date) << "," << midas::intradayTime2string(candle.time) << "," << candle.open << ","
+       << candle.high << "," << candle.low << "," << candle.close << "," << candle.volume;
     return os;
 }
 ostream& operator<<(ostream& os, const Candles& candles) {
-    os << "date,time,open,high,low,close,volume,tickCount" << '\n';
-    for (size_t i = 0; i < candles.currentBinIndex; ++i) {
+    os << "date,time,open,high,low,close,volume\n";
+
+    size_t endPos = candles.currentBinIndex;
+    if (candles.data[candles.currentBinIndex].date != 0) ++endPos;
+
+    for (size_t i = 0; i < endPos; ++i) {
         os << candles.data[i] << '\n';
     }
-    if (candles.data[candles.currentBinIndex].date != 0) os << candles.data[candles.currentBinIndex] << '\n';
     return os;
 }

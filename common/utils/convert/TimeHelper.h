@@ -278,7 +278,7 @@ inline double time_string2double(const string& str) {
     return mktime(&t);
 }
 /**
- * 20171112 and 23:59:59 to "20171112 23:59:59"
+ * 20171112 and 23:59:59 to "2017-11-12 23:59:59"
  */
 inline std::string time2string(int cob, int intradayTime) {
     int day = cob % 100;
@@ -293,6 +293,26 @@ inline std::string time2string(int cob, int intradayTime) {
 
     char buffer[20];
     std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u %02u:%02u:%02u", year, month, day, hour, minute, second);
+    return buffer;
+}
+inline std::string cob2string(int cob) {
+    int day = cob % 100;
+    cob /= 100;
+    int month = cob % 100;
+    int year = cob / 100;
+
+    char buffer[12];
+    std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u", year, month, day);
+    return buffer;
+}
+inline std::string intradayTime2string(int intradayTime) {
+    int second = intradayTime % 100;
+    intradayTime /= 100;
+    int minute = intradayTime % 100;
+    int hour = intradayTime / 100;
+
+    char buffer[12];
+    std::snprintf(buffer, sizeof buffer, "%02u:%02u:%02u", hour, minute, second);
     return buffer;
 }
 }

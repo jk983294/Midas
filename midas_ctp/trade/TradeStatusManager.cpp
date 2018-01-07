@@ -1,4 +1,5 @@
 #include "TradeStatusManager.h"
+#include "helper/CtpHelper.h"
 #include "utils/FileUtils.h"
 #include "utils/VisualHelper.h"
 
@@ -27,20 +28,14 @@ void TradeStatusManager::load_trade_session(const string& path) {
     }
 }
 
-TradeSessions* TradeStatusManager::get_session(const string& instrumentId) {
-    string productId{""};
-    for (auto i = instrumentId.begin(); i != instrumentId.end(); ++i) {
-        if (*i <= '9' && *i >= '0')
-            break;
-        else
-            productId += *i;
-    }
+const TradeSessions& TradeStatusManager::get_session(const string& instrumentId) {
+    string productId = get_product_name(instrumentId);
 
     auto itr = product2sessions.find(productId);
     if (itr != product2sessions.end())
-        return &(itr->second);
+        return itr->second;
     else
-        return nullptr;
+        throw std::string("no trade session found for " + instrumentId);
 }
 
 ostream& operator<<(ostream& s, const TradeStatusManager& manager) {

@@ -8,6 +8,7 @@ set(MidasCommonSrc
         trade/TradeStatusManager.cpp
         dao/CandleDao.cpp
         dao/InstrumentInfoDao.cpp
+        helper/CtpHelper.cpp
         )
 
 set(MidasCtpSrc

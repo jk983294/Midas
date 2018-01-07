@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -47,7 +48,7 @@ public:
     map<string, CThostFtdcTradingAccountField> accounts;
     vector<CThostFtdcInvestorPositionField> positions;
 
-    map<string, CtpInstrument> instruments;
+    map<string, std::shared_ptr<CtpInstrument>> instruments;
     TradeStatusManager tradeStatusManager;
 
     TMapSS user2asyncData;

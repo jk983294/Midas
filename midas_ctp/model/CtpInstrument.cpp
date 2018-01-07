@@ -1,6 +1,8 @@
 #include "CtpInstrument.h"
+#include "helper/CtpHelper.h"
 
 CtpInstrument::CtpInstrument(const string& _instrument, const TradeSessions& s) : instrument(_instrument), sessions(s) {
+    productName = get_product_name(_instrument);
     candles15.set_session(s);
     candles30.set_session(s);
 }
@@ -32,6 +34,17 @@ void CtpInstrument::update_tick(const MktDataPayload& payload) {
 void CtpInstrument::load_historic_candle(vector<CandleData>& candles, CandleScale historicScale) {
     candles15.init(candles, historicScale);
     candles30.init(candles15.data, CandleScale::Minute15);
+}
+
+const Candles& CtpInstrument::get_candle_reference(CandleScale scale) {
+    switch (scale) {
+        case CandleScale::Minute15:
+            return candles15;
+        case CandleScale::Minute30:
+            return candles30;
+        default:
+            return candles15;
+    }
 }
 
 void CtpInstrument::book_stream(ostream& os) {

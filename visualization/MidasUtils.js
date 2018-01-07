@@ -333,8 +333,6 @@ var midasUtils = (function() {
         return Math.abs((value - benchmark) / benchmark);
     }
 
-
-
     return {
         array2object: array2object,
         object2array: object2array,
