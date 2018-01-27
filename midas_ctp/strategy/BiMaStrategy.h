@@ -34,9 +34,9 @@ public:
         signals.resize(size);
     }
 
-    string getCsvHeader() override { return "slow,fast"; }
+    string get_csv_header() override { return "slow,fast"; }
 
-    string getCsvLine(size_t index) override {
+    string get_csv_line(size_t index) override {
         ostringstream oss;
         oss << slowMa[index] << "," << fastMa[index];
         return oss.str();

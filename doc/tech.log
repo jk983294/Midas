@@ -1,0 +1,2 @@
+strategy for train, don't calculate any more, train simulator will calculate candle by candle
+strategy for realtime use case, calculate until current index

@@ -387,7 +387,7 @@ TEST_CASE("MfBufferSize", "[MfBufferSize]") {
         mf.add("abcde" + int2str(i));
     }
     mf.finish();
-    REQUIRE(mf.size() == 9911);
+    REQUIRE(mf.size() == 9913);
     REQUIRE(mf.capacity() == 16384);
 
     MfBuffer mf2;
@@ -402,7 +402,7 @@ TEST_CASE("MfBufferSize", "[MfBufferSize]") {
         mf2.add("abcde" + int2str(i));
     }
     mf2.finish();
-    REQUIRE(mf2.size() == 9911);
+    REQUIRE(mf2.size() == 9913);
     REQUIRE(mf2.capacity() == 10000);
 
     REQUIRE(mf.mf_string() == mf2.mf_string());

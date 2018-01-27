@@ -21,7 +21,7 @@ void CtpBackTester::app_start() {
 
     load_test_data(dataDirectory);
 
-    calculate();
+    calculate(StrategyType::TBiMaStrategy);
 }
 
 void CtpBackTester::load_test_data(const string& dataPath) {
@@ -33,17 +33,15 @@ void CtpBackTester::load_test_data(const string& dataPath) {
         std::shared_ptr<CtpInstrument> instrument = make_shared<CtpInstrument>(item.first, pts);
         instrument->load_historic_candle(item.second, CandleScale::Minute1);
         set_master_contract(*instrument);
-        StrategyFactory::set_strategy(*instrument, StrategyType::TBiMaStrategy);
         data->instruments.insert({item.first, instrument});
     }
 }
 
-void CtpBackTester::calculate() {
-    for (auto& item : data->instruments) {
-        if (item.second->isMasterContract) {
-            item.second->strategy->calculate_all();
-        }
-    }
+BacktestResult CtpBackTester::calculate(StrategyType type) {
+    StrategyFactory::set_strategy(data->instruments, type);
+    std::unique_ptr<Simulator> simulator = make_unique<Simulator>(data);
+    BacktestResult result;
+    return result;
 }
 
 void CtpBackTester::app_stop() { MidasProcessBase::app_stop(); }

@@ -83,8 +83,9 @@ TEST_CASE("DescriptiveStatistics", "[DescriptiveStatistics]") {
     std::vector<double> data1{9, 8, 7, 6, 5, 4, 3, 2, 1, 1.2, 8.5, 9.0};
     ds.set_window_size(0);
     for (double aData : data1) {
-        ds.add_value_and_sort(aData);
+        ds.add_value(aData);
     }
-    REQUIRE(ds.get_percentile(0.6) == 7.0);
-    REQUIRE(ds.get_percentile(0.9) == 9.0);
+    ds.sort();
+    REQUIRE(ds.get_percentile(60) == 7.0);
+    REQUIRE(ds.get_percentile(90) == 9.0);
 }

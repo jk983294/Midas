@@ -23,6 +23,7 @@ public:
 
 public:
     StrategyBase(const Candles& candles_) : candles(candles_) {}
+    virtual ~StrategyBase() = default;
 
     virtual void init() = 0;
     virtual void calculate(size_t index) = 0;
@@ -34,21 +35,21 @@ public:
         }
     }
 
-    void applyParameter(StrategyParameter parameter) {
+    void apply_parameter(StrategyParameter parameter) {
         singleDouble = parameter.singleDouble;
         singleInt = parameter.singleInt;
     }
 
-    virtual string getCsvHeader() = 0;
-    virtual string getCsvLine(size_t index) = 0;
+    virtual string get_csv_header() = 0;
+    virtual string get_csv_line(size_t index) = 0;
 
     void csv_stream(ostream& os) {
-        os << "date,time,open,high,low,close,volume," << getCsvHeader() << '\n';
+        os << "date,time,open,high,low,close,volume," << get_csv_header() << '\n';
         size_t endPos = candles.currentBinIndex;
         if (candles.data[candles.currentBinIndex].date != 0) ++endPos;
 
         for (size_t i = 0; i < endPos; ++i) {
-            os << candles.data[i] << "," << getCsvLine(i) << '\n';
+            os << candles.data[i] << "," << get_csv_line(i) << '\n';
         }
     }
 };

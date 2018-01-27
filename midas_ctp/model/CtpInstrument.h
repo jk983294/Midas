@@ -24,7 +24,7 @@ public:
     Candles candles30{CandleScale::Minute30};
     TradeSessions sessions;
     CThostFtdcDepthMarketDataField image;
-    std::shared_ptr<StrategyBase> strategy;
+    std::unique_ptr<StrategyBase> strategy;
 
 public:
     CtpInstrument(const string& instrument, const TradeSessions& s);

@@ -5,6 +5,7 @@ set(MidasCommonSrc
         model/CandleData.cpp
         model/CtpInstrument.cpp
         model/TradeSession.cpp
+        model/CtpOrder.cpp
         trade/TradeStatusManager.cpp
         dao/CandleDao.cpp
         dao/InstrumentInfoDao.cpp

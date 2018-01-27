@@ -5,6 +5,7 @@ set(tests
         utils/TestLog.cpp
         utils/TestConvertHelper.cpp
         utils/TestTimeHelper.cpp
+        utils/TestRegExpHelper.cpp
         midas/TestMidasConfig.cpp
         midas/TestMidasTick.cpp
         net/TestBuffer.cpp
@@ -12,6 +13,7 @@ set(tests
         net/TestIpAddress.cpp
         net/TestNetworkHelper.cpp
         math/TestMathHelper.cpp
+        time/TestTimestamp.cpp
 #        net/TestTcp.cpp
 #        net/TestUdp.cpp
         )

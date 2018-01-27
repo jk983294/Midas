@@ -2,10 +2,12 @@
 #define MIDAS_CTP_BACK_TESTER_H
 
 #include <memory>
+#include "backtest/train/Simulator.h"
 #include "model/CtpData.h"
 #include "net/channel/Channel.h"
 #include "net/tcp/TcpReceiver.h"
 #include "process/MidasProcessBase.h"
+#include "strategy/StrategyFactory.h"
 
 using namespace std;
 using namespace midas;
@@ -33,7 +35,7 @@ private:
 
     void load_test_data(const string& dataPath);
 
-    void calculate();
+    BacktestResult calculate(StrategyType type);
 
 private:
     // admin section
@@ -41,6 +43,8 @@ private:
     string admin_dump(const string& cmd, const TAdminCallbackArgs& args);
     string admin_csv_dump(const string& cmd, const TAdminCallbackArgs& args);
     string admin_load_file(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_train(const string& cmd, const TAdminCallbackArgs& args);
+    string admin_calculate(const string& cmd, const TAdminCallbackArgs& args);
 };
 
 #endif
