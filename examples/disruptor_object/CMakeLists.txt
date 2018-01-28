@@ -5,5 +5,5 @@ set(disruptor_object_src
         )
 
 add_executable(disruptor_object ${disruptor_object_src})
-target_link_libraries(disruptor_object ${Boost_LIBRARIES} tbb)
-target_link_libraries(disruptor_object pthread)
+target_link_libraries(disruptor_object midas_common_lib)
+target_link_libraries(disruptor_object ${Boost_LIBRARIES} tbb pthread)

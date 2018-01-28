@@ -2,12 +2,12 @@
 #define MIDAS_CTP_BACK_TESTER_H
 
 #include <memory>
-#include "backtest/train/Simulator.h"
 #include "model/CtpData.h"
 #include "net/channel/Channel.h"
 #include "net/tcp/TcpReceiver.h"
 #include "process/MidasProcessBase.h"
 #include "strategy/StrategyFactory.h"
+#include "train/Simulator.h"
 
 using namespace std;
 using namespace midas;

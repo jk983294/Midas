@@ -6,4 +6,5 @@ set(node3src
         )
 
 add_executable(node3 ${node3src})
+target_link_libraries(node3 midas_common_lib)
 target_link_libraries(node3 ${Boost_LIBRARIES} tbb pthread)

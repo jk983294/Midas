@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-
 project(midas)
-
-LINK_DIRECTORIES(/home/myproject/libs)
 
 # boost lib
 find_package( Boost 1.58.0 COMPONENTS system thread program_options filesystem )
@@ -23,10 +20,12 @@ message ("cxx Flags: " ${CMAKE_CXX_FLAGS})
 
 # Source code
 include_directories(common)
+include_directories(ctp_common)
 include_directories(lib)
-include_directories(midas_ctp)
 include_directories("/home/$USER/include")
 
+add_subdirectory(common)
+add_subdirectory(ctp_common)
 add_subdirectory(test)
 add_subdirectory(examples)
 add_subdirectory(midas_ctp)

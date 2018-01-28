@@ -5,7 +5,6 @@ set(jnlsrc
         )
 
 add_executable(Journal ${jnlsrc})
-target_link_libraries(Journal ${Boost_LIBRARIES} tbb)
-target_link_libraries(Journal pthread)
-target_link_libraries(Journal z) # zip lib
+target_link_libraries(Journal midas_common_lib)
+target_link_libraries(Journal ${Boost_LIBRARIES} tbb pthread z)
 

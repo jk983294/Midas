@@ -5,4 +5,5 @@ set(poolsrc
         )
 
 add_executable(pool ${poolsrc})
+target_link_libraries(pool midas_common_lib)
 target_link_libraries(pool ${Boost_LIBRARIES} tbb pthread)

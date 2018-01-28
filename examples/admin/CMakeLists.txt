@@ -5,5 +5,5 @@ set(admin1src
         )
 
 add_executable(admin ${admin1src})
-target_link_libraries(admin ${Boost_LIBRARIES} tbb)
-target_link_libraries(admin pthread)
+target_link_libraries(admin midas_common_lib)
+target_link_libraries(admin ${Boost_LIBRARIES} tbb pthread)

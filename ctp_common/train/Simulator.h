@@ -3,6 +3,7 @@
 
 #include "TrainCommon.h"
 #include "model/CtpOrder.h"
+#include "model/CtpData.h"
 
 class Simulator {
 public:

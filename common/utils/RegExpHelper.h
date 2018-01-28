@@ -6,15 +6,9 @@
 
 namespace midas {
 
-inline bool is_int(const std::string& str) {
-    static const std::regex e("[-+]?\\d+");
-    return regex_match(str, e);
-}
+bool is_int(const std::string& str);
 
-inline bool is_double(const std::string& str) {
-    static const std::regex e("[-+]?\\d+\\.\\d+");
-    return regex_match(str, e);
-}
+bool is_double(const std::string& str);
 }
 
 #endif

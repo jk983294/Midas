@@ -5,7 +5,7 @@
 #include "TrainCommon.h"
 #include "strategy/StrategyBase.h"
 #include "utils/log/Log.h"
-#include "backtest/train/Simulator.h"
+#include "Simulator.h"
 
 
 class ParameterTrainer {

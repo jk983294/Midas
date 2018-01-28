@@ -5,7 +5,6 @@ set(dpsrc
         )
 
 add_executable(delta_play ${dpsrc})
-target_link_libraries(delta_play ${Boost_LIBRARIES})
-target_link_libraries(delta_play pthread)
-target_link_libraries(delta_play z)
+target_link_libraries(delta_play midas_common_lib)
+target_link_libraries(delta_play ${Boost_LIBRARIES} pthread z)
 

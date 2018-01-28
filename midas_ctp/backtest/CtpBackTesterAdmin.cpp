@@ -1,7 +1,7 @@
 #include <utils/FileUtils.h>
 #include <utils/RegExpHelper.h>
 #include "CtpBackTester.h"
-#include "backtest/train/ParameterTrainer.h"
+#include "train/ParameterTrainer.h"
 
 void CtpBackTester::init_admin() {
     admin_handler().register_callback("meters", boost::bind(&CtpBackTester::admin_meters, this, _1, _2),
