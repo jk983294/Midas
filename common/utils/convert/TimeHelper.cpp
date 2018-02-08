@@ -58,7 +58,7 @@ void timespec_diff(const timespec& t1, const timespec& t2, timespec diff) {
 int64_t nanoSinceEpoch() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    return static_cast<int64_t>(ts.tv_sec) * oneSecondNano + ts.tv_nsec;
+    return static_cast<int64_t>(ts.tv_sec * oneSecondNano + ts.tv_nsec);
 }
 
 uint64_t nanoSinceEpochU() {
@@ -264,43 +264,5 @@ double time_string2double(const string& str) {
     std::istringstream ss(str);
     ss >> std::get_time(&t, "%Y%m%d %H:%M:%S");
     return mktime(&t);
-}
-/**
- * 20171112 and 23:59:59 to "2017-11-12 23:59:59"
- */
-std::string time2string(int cob, int intradayTime) {
-    int day = cob % 100;
-    cob /= 100;
-    int month = cob % 100;
-    int year = cob / 100;
-
-    int second = intradayTime % 100;
-    intradayTime /= 100;
-    int minute = intradayTime % 100;
-    int hour = intradayTime / 100;
-
-    char buffer[20];
-    std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u %02u:%02u:%02u", year, month, day, hour, minute, second);
-    return string(buffer);
-}
-std::string cob2string(int cob) {
-    int day = cob % 100;
-    cob /= 100;
-    int month = cob % 100;
-    int year = cob / 100;
-
-    char buffer[12];
-    std::snprintf(buffer, sizeof buffer, "%4u-%02u-%02u", year, month, day);
-    return string(buffer);
-}
-std::string intradayTime2string(int intradayTime) {
-    int second = intradayTime % 100;
-    intradayTime /= 100;
-    int minute = intradayTime % 100;
-    int hour = intradayTime / 100;
-
-    char buffer[12];
-    std::snprintf(buffer, sizeof buffer, "%02u:%02u:%02u", hour, minute, second);
-    return string(buffer);
 }
 }

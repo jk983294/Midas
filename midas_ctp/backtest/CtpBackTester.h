@@ -15,6 +15,7 @@ using namespace midas;
 class CtpBackTester : public MidasProcessBase {
 public:
     string dataDirectory;
+    string productCfgFile;
     string resultDirectory{"/tmp"};
     CandleScale candleScale{CandleScale::Minute1};
 
@@ -35,6 +36,10 @@ private:
 
     void load_test_data(const string& dataPath);
 
+    void fake_instrument_info_from_product();
+
+    void link_instrument_info();
+
     BacktestResult calculate(StrategyType type);
 
 private:
@@ -42,7 +47,6 @@ private:
     string admin_meters(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_dump(const string& cmd, const TAdminCallbackArgs& args);
     string admin_csv_dump(const string& cmd, const TAdminCallbackArgs& args);
-    string admin_load_file(const string& cmd, const TAdminCallbackArgs& args);
     string admin_train(const string& cmd, const TAdminCallbackArgs& args);
     string admin_calculate(const string& cmd, const TAdminCallbackArgs& args);
 };

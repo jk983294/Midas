@@ -92,13 +92,6 @@ int cob_from_dash(const string& str);
  * "20171112 23:59:59" to time_t
  */
 double time_string2double(const string& str);
-
-/**
- * 20171112 and 23:59:59 to "2017-11-12 23:59:59"
- */
-std::string time2string(int cob, int intradayTime);
-std::string cob2string(int cob);
-std::string intradayTime2string(int intradayTime);
 }
 
 #endif

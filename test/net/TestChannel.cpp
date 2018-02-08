@@ -22,7 +22,7 @@ public:
         set_name(memberName_);
     }
 
-    ~TestMemberBase() { testMemberCreated = false; }
+    virtual ~TestMemberBase() { testMemberCreated = false; }
     static SharedPtr new_instance(CChannel& c, const string& n) { return SharedPtr(new Derived(c, n)); }
     void start() { channel.join<Derived>(static_cast<Derived*>(this)); }
     void stop() { channel.leave<Derived>(static_cast<Derived*>(this)); }

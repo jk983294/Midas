@@ -5,10 +5,9 @@
 #include <ctp/ThostFtdcTraderApi.h>
 #include <string>
 #include "model/CtpData.h"
+#include "model/CtpDef.h"
 
 using namespace std;
-
-enum CtpOrderType { MarketOrder, LimitOrder, ConditionOrder };
 
 class TradeManager {
 public:

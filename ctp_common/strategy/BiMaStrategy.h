@@ -21,6 +21,16 @@ public:
         dsFast.add_value(candles.data[index].close);
         slowMa[index] = dsSlow.get_mean();
         fastMa[index] = dsFast.get_mean();
+
+        if (index > 10) {
+            if (fastMa[index] > slowMa[index] && fastMa[index - 1] < slowMa[index - 1]) {
+                signals[index] = 1.0;
+                decision = StrategyDecision::longSignal;
+            } else if (fastMa[index] < slowMa[index] && fastMa[index - 1] > slowMa[index - 1]) {
+                signals[index] = -1.0;
+                decision = StrategyDecision::shortSignal;
+            }
+        }
     }
 
     void init() override {
@@ -32,6 +42,7 @@ public:
         slowMa.resize(size);
         fastMa.resize(size);
         signals.resize(size);
+        fill(signals.begin(), signals.end(), 0);
     }
 
     string get_csv_header() override { return "slow,fast"; }

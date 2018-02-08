@@ -30,7 +30,7 @@ std::vector<string> InstrumentInfoDao::get_all_instruments() {
     return result;
 }
 
-int InstrumentInfoDao::save_instruments(const std::vector<CThostFtdcInstrumentField>& instruments) {
+int InstrumentInfoDao::save_instruments(const vector<std::shared_ptr<CThostFtdcInstrumentField>>& instruments) {
     static const string sql{
         "insert into ctp.instrument_info (InstrumentID, ExchangeID, VolumeMultiple, PriceTick, CreateDate, OpenDate, "
         "ExpireDate, LongMarginRatio, ShortMarginRatio, UnderlyingMultiple) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"};
@@ -44,7 +44,8 @@ int InstrumentInfoDao::save_instruments(const std::vector<CThostFtdcInstrumentFi
         connection->setSchema("ctp");
         std::shared_ptr<sql::PreparedStatement> statement{connection->prepareStatement(sql)};
 
-        for (const auto& item : instruments) {
+        for (const auto& pItem : instruments) {
+            CThostFtdcInstrumentField& item = *pItem;
             if (alreadyInDbInstruments.find(item.InstrumentID) != alreadyInDbInstruments.end()) {
                 continue;
             }

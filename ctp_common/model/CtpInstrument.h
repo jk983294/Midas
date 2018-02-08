@@ -18,12 +18,13 @@ class CtpInstrument {
 public:
     bool isMasterContract{false};
     long updateCount{0};
-    string instrument;
+    string id;
     string productName;
     Candles candles15{CandleScale::Minute15};
     Candles candles30{CandleScale::Minute30};
     TradeSessions sessions;
     CThostFtdcDepthMarketDataField image;
+    std::shared_ptr<CThostFtdcInstrumentField> info;
     std::unique_ptr<StrategyBase> strategy;
 
 public:

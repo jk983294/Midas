@@ -1,55 +1,55 @@
-CFFEX IC 中证500股指
-CFFEX IF 沪深300股指
-CFFEX IH 上证50股指
-CFFEX T 10年国债
-CFFEX TF 5年国债
-CZCE CF 棉花
-CZCE CY 棉纱
-CZCE FG 玻璃
-CZCE JR 粳稻
-CZCE LR 晚籼稻
-CZCE MA 甲醇MA
-CZCE ME 甲醇
-CZCE OI 菜籽油
-CZCE PM 普通小麦
-CZCE RI 早籼稻
-CZCE RM 菜籽粕
-CZCE RS 油菜籽
-CZCE SF 硅铁
-CZCE SM 锰硅
-CZCE SR 白砂糖
-CZCE TA 化纤
-CZCE TC 动力煤
-CZCE WH 强筋麦
-CZCE ZC 动力煤ZC
-DCE a 黄大豆1号
-DCE bb 胶合板
-DCE b 黄大豆2号
-DCE cs 玉米淀粉
-DCE c 黄玉米
-DCE fb 纤维板
-DCE i 铁矿石
-DCE jd 鲜鸡蛋
-DCE jm 焦煤
-DCE j 焦炭
-DCE l 聚乙烯
-DCE m 豆粕
-DCE pp 聚丙烯
-DCE p 棕榈油
-DCE v 聚氯乙烯
-DCE y 豆油
-INE sc 原油
-SHFE ag 白银
-SHFE al 铝
-SHFE au 黄金
-SHFE bu 沥青
-SHFE cu 铜
-SHFE fu 燃料油
-SHFE hc 热轧板
-SHFE ni 镍
-SHFE pb 铅
-SHFE rb 螺纹钢
-SHFE ru 天然橡胶
-SHFE sn 锡
-SHFE wr 线材
-SHFE zn 锌
+ProductID: CF ProductName: 棉花 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: CY ProductName: 棉纱 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: FG ProductName: 玻璃 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 20 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: IC ProductName: 中证500股指 ExchangeID: CFFEX ProductClass: Futures VolumeMultiple: 200 PriceTick: 0.2 MaxMarketOrderVolume: 50 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 100 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: IF ProductName: 沪深300股指 ExchangeID: CFFEX ProductClass: Futures VolumeMultiple: 300 PriceTick: 0.2 MaxMarketOrderVolume: 50 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 100 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: IH ProductName: 上证50股指 ExchangeID: CFFEX ProductClass: Futures VolumeMultiple: 300 PriceTick: 0.2 MaxMarketOrderVolume: 50 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 100 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: JR ProductName: 粳稻 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 20 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: LR ProductName: 晚籼稻 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 20 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: MA ProductName: 甲醇MA ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: ME ProductName: 甲醇 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 50 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: OI ProductName: 菜籽油 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 2 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: PM ProductName: 普通小麦 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 50 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: RI ProductName: 早籼稻 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 20 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: RM ProductName: 菜籽粕 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: RS ProductName: 油菜籽 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: SF ProductName: 硅铁 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 2 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: SM ProductName: 锰硅 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 2 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: SR ProductName: 白砂糖 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: T ProductName: 10年国债 ExchangeID: CFFEX ProductClass: Futures VolumeMultiple: 10000 PriceTick: 0.005 MaxMarketOrderVolume: 50 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 200 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: TA ProductName: 化纤 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 2 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: TC ProductName: 动力煤 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 200 PriceTick: 0.2 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: TF ProductName: 5年国债 ExchangeID: CFFEX ProductClass: Futures VolumeMultiple: 10000 PriceTick: 0.005 MaxMarketOrderVolume: 50 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 200 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: WH ProductName: 强筋麦 ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 20 PriceTick: 1 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: ZC ProductName: 动力煤ZC ExchangeID: CZCE ProductClass: Futures VolumeMultiple: 100 PriceTick: 0.2 MaxMarketOrderVolume: 200 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: speculation_first TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: a ProductName: 黄大豆1号 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: ag ProductName: 白银 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 15 PriceTick: 1 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: al ProductName: 铝 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: au ProductName: 黄金 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 1000 PriceTick: 0.05 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: b ProductName: 黄大豆2号 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: bb ProductName: 胶合板 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 500 PriceTick: 0.05 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: bu ProductName: 沥青 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 10 PriceTick: 2 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: c ProductName: 黄玉米 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 2000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 2000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: cs ProductName: 玉米淀粉 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: cu ProductName: 铜 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 5 PriceTick: 10 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: fb ProductName: 纤维板 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 500 PriceTick: 0.05 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: fu ProductName: 燃料油 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 50 PriceTick: 1 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: hc ProductName: 热轧板 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: i ProductName: 铁矿石 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 100 PriceTick: 0.5 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: j ProductName: 焦炭 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 100 PriceTick: 0.5 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: jd ProductName: 鲜鸡蛋 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 300 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 300 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: jm ProductName: 焦煤 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 60 PriceTick: 0.5 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: l ProductName: 聚乙烯 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: m ProductName: 豆粕 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: ni ProductName: 镍 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 1 PriceTick: 10 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: p ProductName: 棕榈油 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 2 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: pb ProductName: 铅 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: pp ProductName: 聚丙烯 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 1 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: rb ProductName: 螺纹钢 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: ru ProductName: 天然橡胶 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 10 PriceTick: 5 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: sc ProductName: 原油 ExchangeID: INE ProductClass: Futures VolumeMultiple: 1000 PriceTick: 0.1 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: All ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: sn ProductName: 锡 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 1 PriceTick: 10 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1
+ProductID: v ProductName: 聚氯乙烯 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: wr ProductName: 线材 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 10 PriceTick: 1 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: y ProductName: 豆油 ExchangeID: DCE ProductClass: Futures VolumeMultiple: 10 PriceTick: 2 MaxMarketOrderVolume: 1000 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 1000 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: NoUseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308
+ProductID: zn ProductName: 锌 ExchangeID: SHFE ProductClass: Futures VolumeMultiple: 5 PriceTick: 5 MaxMarketOrderVolume: 500 MinMarketOrderVolume: 1 MaxLimitOrderVolume: 500 MinLimitOrderVolume: 1 PositionType: gross PositionDateType: UseHistory CloseDealType: normal TradeCurrencyID: CNY MortgageFundUseRange: None ExchangeProductID:  UnderlyingMultiple: 1.79769e+308

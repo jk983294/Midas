@@ -130,7 +130,7 @@ public:
         }
     }
 
-    ~Payload() {
+    virtual ~Payload() {
         if (recvBufferSize) {
             delete[] data_;
         }

@@ -26,6 +26,8 @@ public:
 public:
     void load(const string& pathName);
 
+    std::map<string, std::shared_ptr<CThostFtdcProductField>> load_products(const string& pathName);
+
 private:
     void load_single_file(const string& pathName);
     void process_data();

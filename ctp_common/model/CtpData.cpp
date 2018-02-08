@@ -2,9 +2,11 @@
 
 void CtpData::init_all_instruments() {
     for (auto itr = instrumentInfo.begin(); itr != instrumentInfo.end(); ++itr) {
-        const TradeSessions &pts = tradeStatusManager.get_session(itr->first);
-        std::shared_ptr<CtpInstrument> instrument = make_shared<CtpInstrument>(itr->first, pts);
-        instruments.insert({itr->first, instrument});
+        const string &instrumentId = itr->first;
+        const TradeSessions &pts = tradeStatusManager.get_session(instrumentId);
+        std::shared_ptr<CtpInstrument> instrument = make_shared<CtpInstrument>(instrumentId, pts);
+        instrument->info = itr->second;
+        instruments.insert({instrumentId, std::move(instrument)});
     }
 }
 

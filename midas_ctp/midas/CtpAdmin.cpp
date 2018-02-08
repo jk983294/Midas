@@ -14,12 +14,6 @@ void CtpProcess::init_admin() {
                                       "query data in local memory");
     admin_handler().register_callback("dump", boost::bind(&CtpProcess::admin_dump, this, _1, _2),
                                       "dump (instrument|product|exchange|account|position|candle)", "dump data");
-    admin_handler().register_callback("get_async_result",
-                                      boost::bind(&CtpProcess::admin_get_async_result, this, _1, _2, _3),
-                                      "get_async_result", "get_async_result");
-    admin_handler().register_callback("clear_async_result",
-                                      boost::bind(&CtpProcess::admin_clear_async_result, this, _1, _2, _3),
-                                      "clear_async_result", "clear_async_result");
     admin_handler().register_callback("buy", boost::bind(&CtpProcess::admin_buy, this, _1, _2),
                                       "buy instrument price size", "buy in limit order manner");
     admin_handler().register_callback("sell", boost::bind(&CtpProcess::admin_sell, this, _1, _2),
@@ -106,38 +100,6 @@ string CtpProcess::admin_dump(const string& cmd, const TAdminCallbackArgs& args)
     return "dump finished";
 }
 
-string CtpProcess::admin_get_async_result(const string& cmd, const TAdminCallbackArgs& args,
-                                          const std::string& userId) {
-    ostringstream oss;
-    if (args.size() == 0)
-        oss << "missing parameter\n";
-    else {
-        string content = args[0];
-        oss << "user: " << userId << "parameter: " << content;
-    }
-    CtpData::TMapSS::accessor a;
-    if (data->user2asyncData.find(a, userId)) {
-        oss << a->second << '\n';
-        data->user2asyncData.erase(a);
-    } else {
-        oss << "no async result for user " << userId;
-    }
-    return oss.str();
-}
-
-string CtpProcess::admin_clear_async_result(const string& cmd, const TAdminCallbackArgs& args,
-                                            const std::string& userId) {
-    ostringstream oss;
-    CtpData::TMapSS::accessor a;
-    if (data->user2asyncData.find(a, userId)) {
-        data->user2asyncData.erase(a);
-        oss << "clear async result for user " << userId;
-    } else {
-        oss << "no async result for user " << userId;
-    }
-    return oss.str();
-}
-
 string CtpProcess::admin_buy(const string& cmd, const TAdminCallbackArgs& args) const {
     ostringstream oss;
     if (args.size() < 3)
@@ -222,7 +184,7 @@ string CtpProcess::admin_save2db(const string& cmd, const TAdminCallbackArgs& ar
 
 void CtpProcess::save_instruments() {
     MIDAS_LOG_INFO("start to save instrument to database");
-    vector<CThostFtdcInstrumentField> data2save;
+    vector<std::shared_ptr<CThostFtdcInstrumentField>> data2save;
     map_values(data->instrumentInfo, data2save);
     int ret = DaoManager::instance().instrumentInfoDao->save_instruments(data2save);
     MIDAS_LOG_INFO("finish to save " << ret << " entries instruments into database");
@@ -232,7 +194,7 @@ void CtpProcess::save_candles() {
 
     int ret = 0;
     for (const auto& item : data->instruments) {
-        ret += DaoManager::instance().candleDao->save_candles(item.second->instrument, item.second->candles15.data,
+        ret += DaoManager::instance().candleDao->save_candles(item.second->id, item.second->candles15.data,
                                                               item.second->candles15.historicDataCount);
     }
     MIDAS_LOG_INFO("finish to save " << ret << " entries candles into database");

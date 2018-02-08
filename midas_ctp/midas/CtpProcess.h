@@ -68,8 +68,6 @@ private:
     string admin_query(const string& cmd, const TAdminCallbackArgs& args);
     string admin_dump(const string& cmd, const TAdminCallbackArgs& args);
 
-    string admin_get_async_result(const string& cmd, const TAdminCallbackArgs& args, const std::string& userId);
-    string admin_clear_async_result(const string& cmd, const TAdminCallbackArgs& args, const std::string& userId);
     string admin_buy(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_sell(const string& cmd, const TAdminCallbackArgs& args) const;
     string admin_close(const string& cmd, const TAdminCallbackArgs& args) const;

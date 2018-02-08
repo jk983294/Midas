@@ -5,6 +5,47 @@
 #include <iostream>
 #include "DataLoader.h"
 
+std::map<string, std::shared_ptr<CThostFtdcProductField>> DataLoader::load_products(const string &pathName) {
+    map<string, std::shared_ptr<CThostFtdcProductField>> products;
+    ifstream ifs(pathName, ifstream::in);
+
+    if (ifs.is_open()) {
+        string line, key, value;
+        while (getline(ifs, line)) {
+            if (!line.empty()) {
+                std::shared_ptr<CThostFtdcProductField> product(new CThostFtdcProductField);
+                stringstream ss;
+                ss << line;
+                while (ss >> key) {
+                    if (key == "ProductID:") {
+                        ss >> product->ProductID;
+                    } else if (key == "VolumeMultiple:") {
+                        ss >> product->VolumeMultiple;
+                    } else if (key == "PriceTick:") {
+                        ss >> product->PriceTick;
+                    } else if (key == "MaxMarketOrderVolume:") {
+                        ss >> product->MaxMarketOrderVolume;
+                    } else if (key == "MinMarketOrderVolume:") {
+                        ss >> product->MinMarketOrderVolume;
+                    } else if (key == "MaxLimitOrderVolume:") {
+                        ss >> product->MaxLimitOrderVolume;
+                    } else if (key == "MinLimitOrderVolume:") {
+                        ss >> product->MinLimitOrderVolume;
+                    } else {
+                        ss >> value;
+                    }
+                }
+                products.insert({std::string(product->ProductID), std::move(product)});
+            }
+        }
+
+        ifs.close();
+    } else {
+        throw "no product file!";
+    }
+    return products;
+}
+
 void DataLoader::load(const string &pathName) {
     boost::filesystem::path file(pathName);
     if (boost::filesystem::is_regular_file(file)) {
@@ -87,7 +128,7 @@ void DataLoader::load_format_type1() {
             result.push_back(CandleData{date, time, open, high, low, close, volume});
         }
     }
-    instrument2candle[instrumentName] = result;
+    instrument2candle.insert({instrumentName, std::move(result)});
 }
 
 void DataLoader::load_format_type2() {
@@ -107,5 +148,5 @@ void DataLoader::load_format_type2() {
             result.push_back(CandleData{date, time, open, high, low, close, volume});
         }
     }
-    instrument2candle[instrumentName] = result;
+    instrument2candle.insert({instrumentName, std::move(result)});
 }

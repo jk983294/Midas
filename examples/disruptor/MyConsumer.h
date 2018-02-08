@@ -8,6 +8,7 @@ public:
     typedef std::shared_ptr<MyConsumer> SharedPtr;
 
     MyConsumer() : callbackCount(0), c(0) {}
+    virtual ~MyConsumer() = default;
 
     void data_callback1(midas::Payload& payload) {
         ++callbackCount;

@@ -18,7 +18,7 @@ T get_cfg_value(const char* root, const char* key, const T& defaultValue = T()) 
 
     configValue = Config::instance().get<T>(to_lower_case(path), defaultValue);
     if (configValue == defaultValue) {
-        MIDAS_LOG_WARNING("config entry not found for " << key);
+        MIDAS_LOG_WARNING("config entry not found for " << key << " set it to default " << defaultValue);
     }
     return configValue;
 }
@@ -27,12 +27,21 @@ bool CtpBackTester::configure() {
     static const char root[] = "backtest";
 
     dataDirectory = get_cfg_value<string>(root, "dataDirectory", "");
+    productCfgFile = get_cfg_value<string>(root, "productCfgPath", "");
     candleScale = CandleScale(get_cfg_value<int>(root, "candleScale", 1));
 
     if (dataDirectory.empty()) {
         MIDAS_LOG_WARNING("data path not provided.");
     } else if (!check_file_exists(dataDirectory.c_str())) {
         MIDAS_LOG_ERROR(dataDirectory << " data path not exist!");
+        return false;
+    }
+
+    if (productCfgFile.empty()) {
+        MIDAS_LOG_ERROR("product cfg file not provided.");
+        return false;
+    } else if (!check_file_exists(productCfgFile.c_str())) {
+        MIDAS_LOG_ERROR(productCfgFile << " product cfg file not exist!");
         return false;
     }
 

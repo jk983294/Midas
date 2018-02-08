@@ -14,11 +14,21 @@ struct StrategyParameter {
     static StrategyParameter& instance() { return midas::Singleton<StrategyParameter>::instance(); }
 };
 
+enum StrategyDecision { longSignal, shortSignal, clearPositionSignal, holdPosition, holdEmpty };
+
 class StrategyBase {
 public:
+    int itr{0};
     int singleInt{1};
     double singleDouble{1.0};
     const Candles& candles;
+    StrategyDecision decision{StrategyDecision::holdEmpty};
+
+    /**
+     * value > 0.5 means long signal
+     * value < -0.5 means short signal
+     * other value means no signal
+     */
     vector<double> signals;
 
 public:
@@ -30,7 +40,7 @@ public:
 
     void calculate_all() {
         init();
-        for (size_t i = 0; i < candles.currentBinIndex; ++i) {
+        for (int i = 0; i < candles.currentBinIndex; ++i) {
             calculate(i);
         }
     }
@@ -40,16 +50,27 @@ public:
         singleInt = parameter.singleInt;
     }
 
+    bool is_valid_time() { return itr < candles.historicDataCount; }
+
+    const CandleData& current_candle() const { return candles.get(itr); }
+
+    const CandleData& previous_candle() const { return candles.get(itr - 1); }
+
+    const midas::Timestamp& current_time() const { return candles.get(itr).timestamp; }
+
+    void calculate_previous_candle() {
+        if (itr == 0) return;
+        calculate(itr - 1);
+    }
+
     virtual string get_csv_header() = 0;
     virtual string get_csv_line(size_t index) = 0;
 
     void csv_stream(ostream& os) {
-        os << "date,time,open,high,low,close,volume," << get_csv_header() << '\n';
-        size_t endPos = candles.currentBinIndex;
-        if (candles.data[candles.currentBinIndex].date != 0) ++endPos;
-
-        for (size_t i = 0; i < endPos; ++i) {
-            os << candles.data[i] << "," << get_csv_line(i) << '\n';
+        os << "date,time,open,high,low,close,volume,signals," << get_csv_header() << '\n';
+        int totalAvailableCount = candles.total_available_count();
+        for (int i = 0; i < totalAvailableCount; ++i) {
+            os << candles.data[i] << ',' << signals[i] << ',' << get_csv_line(i) << '\n';
         }
     }
 };

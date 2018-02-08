@@ -50,6 +50,7 @@ int TradeSession::adjust_within_session(int startIntradayMinute, int scale) {
 }
 
 int TradeSessions::adjust_within_session(int startIntradayMinute, int scale) {
+    startIntradayMinute = (startIntradayMinute - (startIntradayMinute % scale));
     return sessions[sessionIndex].adjust_within_session(startIntradayMinute, scale);
 }
 

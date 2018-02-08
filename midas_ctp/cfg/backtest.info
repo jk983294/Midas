@@ -4,6 +4,7 @@ backtest
 {
     dataDirectory "/home/kun/Data/ctp/backtest"
     tradingHourCfgPath "/home/kun/github/midas/midas_ctp/cfg/trading_hour.map"
+    productCfgPath "/home/kun/github/midas/midas_ctp/cfg/product.info"
 
     ; 1     1 minute candle data
     ; 15    15 minute candle data

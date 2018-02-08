@@ -16,6 +16,11 @@ void map_values(const M& m, V& v) {
         v.push_back(it->second);
     }
 }
+
+template <typename M, typename Key>
+bool is_exists(const M& m, const Key& key) {
+    return m.find(key) != m.end();
+}
 }
 
 #endif

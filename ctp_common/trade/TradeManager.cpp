@@ -1,9 +1,6 @@
 #include "TradeManager.h"
 #include "helper/CtpVisualHelper.h"
 
-const static bool BuyFlag = true;
-const static bool SellFlag = false;
-
 /**
  * 0 send success
  * -1 failed due to network issue
@@ -206,7 +203,7 @@ void TradeManager::ReqExecOrderAction(CThostFtdcExecOrderField *pExecOrder) {
 
 int TradeManager::request_buy_limit(string instrument, int volume, double price) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::LimitOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Limit, BuyFlag, volume);
     fill_limit_order(req, price);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy limit order [[ volume: " << volume << " price:" << price << "]] result: " << iResult);
@@ -215,7 +212,7 @@ int TradeManager::request_buy_limit(string instrument, int volume, double price)
 
 int TradeManager::request_buy_market(string instrument, int volume) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::MarketOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Market, BuyFlag, volume);
     fill_market_order(req);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy market order [[ volume: " << volume << "]] result: " << iResult);
@@ -224,7 +221,7 @@ int TradeManager::request_buy_market(string instrument, int volume) {
 
 int TradeManager::request_buy_if_above(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Condition, BuyFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceGreaterThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -234,7 +231,7 @@ int TradeManager::request_buy_if_above(string instrument, int volume, double con
 
 int TradeManager::request_buy_if_below(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, BuyFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Condition, BuyFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceLesserThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("buy if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -244,7 +241,7 @@ int TradeManager::request_buy_if_below(string instrument, int volume, double con
 
 int TradeManager::request_sell_limit(string instrument, int volume, double price) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::LimitOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Limit, SellFlag, volume);
     fill_limit_order(req, price);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell limit order [[ volume: " << volume << " price:" << price << "]] result: " << iResult);
@@ -253,7 +250,7 @@ int TradeManager::request_sell_limit(string instrument, int volume, double price
 
 int TradeManager::request_sell_market(string instrument, int volume) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::MarketOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Market, SellFlag, volume);
     fill_market_order(req);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell market order [[ volume: " << volume << "]] result: " << iResult);
@@ -262,7 +259,7 @@ int TradeManager::request_sell_market(string instrument, int volume) {
 
 int TradeManager::request_sell_if_above(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Condition, SellFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceGreaterThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell if above order [[ volume: " << volume << " price:" << conditionPrice
@@ -272,7 +269,7 @@ int TradeManager::request_sell_if_above(string instrument, int volume, double co
 
 int TradeManager::request_sell_if_below(string instrument, int volume, double conditionPrice, double limitPrice) {
     CThostFtdcInputOrderField req{0};
-    fill_common_order(req, instrument, CtpOrderType::ConditionOrder, SellFlag, volume);
+    fill_common_order(req, instrument, CtpOrderType::Condition, SellFlag, volume);
     fill_condition_order(req, THOST_FTDC_CC_LastPriceLesserThanStopPrice, conditionPrice, limitPrice);
     int iResult = traderApi->ReqOrderInsert(&req, ++tradeRequestId);
     MIDAS_LOG_INFO("sell if above order [[ volume: " << volume << " price:" << conditionPrice

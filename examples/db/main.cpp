@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     instrument.LongMarginRatio = 0.05;
     instrument.ShortMarginRatio = 0.05;
     instrument.UnderlyingMultiple = 1;
-    int ret = DaoManager::instance().instrumentInfoDao->save_instruments({instrument});
+    int ret = DaoManager::instance().instrumentInfoDao->save_instruments({make_shared<CThostFtdcInstrumentField>(instrument)});
     cout << "insert " << ret << " entries.\n";
 
     CandleData candle{20171113, 90000, 53480, 53550, 53370, 53400, 5764};

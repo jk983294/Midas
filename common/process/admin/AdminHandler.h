@@ -32,8 +32,8 @@ public:
 
 public:
     AdminHandler() : channel("admin") {
-        register_callback("net_help", MIDAS_BIND3(&AdminHandler::admin_net_help, this), "show cmd usage",
-                          "net_help [command name]");
+        register_callback("help", MIDAS_BIND3(&AdminHandler::admin_net_help, this), "show cmd usage",
+                          "help [command name]");
         TcpAdmin::data_callback(MIDAS_BIND2(&AdminHandler::data_notify, this));
     }
 

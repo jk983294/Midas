@@ -36,7 +36,7 @@ public:
     TMfBuffer(const Allocator& alloc_ = Allocator(), buffer_size_type minCapacity_ = 128)
         : alloc(alloc_), minCapacity(minCapacity_) {}
 
-    ~TMfBuffer() {
+    virtual ~TMfBuffer() {
         if (pBuffer) {
             alloc.deallocate(pBuffer, bufferSize);
         }

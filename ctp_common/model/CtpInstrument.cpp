@@ -1,7 +1,7 @@
 #include "CtpInstrument.h"
 #include "helper/CtpHelper.h"
 
-CtpInstrument::CtpInstrument(const string& _instrument, const TradeSessions& s) : instrument(_instrument), sessions(s) {
+CtpInstrument::CtpInstrument(const string& _instrument, const TradeSessions& s) : id(_instrument), sessions(s) {
     productName = get_product_name(_instrument);
     candles15.set_session(s);
     candles30.set_session(s);
@@ -88,7 +88,7 @@ void CtpInstrument::image_stream(ostream& os) {
 }
 
 ostream& operator<<(ostream& os, const CtpInstrument& instrument) {
-    os << instrument.instrument << " updateCount: " << instrument.updateCount << '\n';
+    os << instrument.id << " updateCount: " << instrument.updateCount << '\n';
     os << "candles15:" << '\n' << instrument.candles15 << '\n';
     os << "candles30:" << '\n' << instrument.candles30 << '\n';
     return os;

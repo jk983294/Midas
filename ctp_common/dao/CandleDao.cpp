@@ -49,7 +49,7 @@ int CandleDao::save_candles(const std::string& instrument, const std::vector<Can
             if (itr->tickCount == 0) break;
 
             statement->setString(1, instrument);
-            statement->setString(2, midas::time2string(itr->date, itr->time));
+            statement->setString(2, itr->timestamp.to_string());
             statement->setDouble(3, itr->open);
             statement->setDouble(4, itr->high);
             statement->setDouble(5, itr->low);

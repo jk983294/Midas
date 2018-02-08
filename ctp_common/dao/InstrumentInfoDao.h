@@ -19,7 +19,7 @@ public:
 
     std::vector<string> get_all_instruments();
 
-    int save_instruments(const std::vector<CThostFtdcInstrumentField>& instruments);
+    int save_instruments(const vector<std::shared_ptr<CThostFtdcInstrumentField>>& instruments);
 };
 
 #endif

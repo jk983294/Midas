@@ -34,6 +34,20 @@ string dump2file(const map<T1, T2>& m, string filePrefix) {
     return filePath;
 }
 
+template <typename T1, typename T2>
+string dump2file(const map<T1, std::shared_ptr<T2>>& m, string filePrefix) {
+    string filePath = filePrefix + "." + now_string();
+    ofstream ofs(filePath, ofstream::out | ofstream::trunc);
+
+    if (!ofs) {
+        cerr << "open file failed" << '\n';
+    } else {
+        for (auto it = m.begin(); it != m.end(); ++it) ofs << *it->second << '\n';
+        ofs.close();
+    }
+    return filePath;
+}
+
 template <typename T>
 string dump2file(const vector<T>& v, string filePrefix) {
     string filePath = filePrefix + "." + now_string();

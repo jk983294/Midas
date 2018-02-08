@@ -46,7 +46,9 @@ void TradeSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *
 
 void TradeSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo,
                                   int nRequestID, bool bIsLast) {
-    if (pInstrument) data->instrumentInfo.insert(make_pair(string(pInstrument->InstrumentID), *pInstrument));
+    if (pInstrument)
+        data->instrumentInfo.insert(
+            make_pair(string(pInstrument->InstrumentID), make_shared<CThostFtdcInstrumentField>(*pInstrument)));
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query instrument success.");
@@ -79,7 +81,8 @@ void TradeSpi::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRs
 ///请求查询产品响应
 void TradeSpi::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
                                bool bIsLast) {
-    if (pProduct) data->products.insert(make_pair(string(pProduct->ProductID), *pProduct));
+    if (pProduct)
+        data->products.insert(make_pair(string(pProduct->ProductID), make_shared<CThostFtdcProductField>(*pProduct)));
 
     if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         MIDAS_LOG_INFO("request ID " << nRequestID << " query product success.");
