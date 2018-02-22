@@ -21,6 +21,8 @@
 #include "MidasException.h"
 #include "Singleton.h"
 #include "utils/MidasBind.h"
+#include "utils/convert/StringHelper.h"
+#include "utils/log/Log.h"
 
 using namespace std;
 
@@ -108,8 +110,30 @@ template <typename T>
 bool __put(Config& config, const std::string& path, const T& defaultValue) {
     return config.putDefaultImpl(path, defaultValue);
 }
+
+/**
+* first check env value, then check config value
+* if still not found, change config path to lower case
+* if still not found ,then use default value and log warning
+*/
+template <typename T>
+T get_cfg_value(const string& root, const char* key, const T& defaultValue = T()) {
+    T envValue = Config::instance().getenv<T>(key, defaultValue);
+
+    if (envValue != defaultValue) return envValue;
+
+    auto path = root + "." + key;
+    T configValue = Config::instance().get<T>(path, defaultValue);
+    if (configValue != defaultValue) return configValue;
+
+    configValue = Config::instance().get<T>(to_lower_case(path), defaultValue);
+    if (configValue == defaultValue) {
+        MIDAS_LOG_WARNING("config entry not found for " << key);
+    }
+    return configValue;
+}
 }
 
 #include "MidasConfig.inl"
 
-#endif  // MIDAS_MIDASCONFIG_H
+#endif

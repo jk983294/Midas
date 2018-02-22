@@ -7,12 +7,18 @@ using namespace std;
 
 namespace midas {
 
+long get_tid();
+
 // example "1:3:7-11:13"
-inline void set_cpu_affinity(pid_t pid, const std::string& affinityString);
+void set_cpu_affinity(pid_t pid, const std::string& affinityString);
+void set_cpu_affinity(const std::string& affinityString);
 
-inline long get_tid();
+string get_user_id();
 
-inline string get_user_id();
+bool destroy_timer(int* timerfd);
+bool create_timer(uint32_t intv_msecs, int* timerfd);
+bool stop_timer(int* timerfd);
+bool restart_timer(uint32_t intv_msecs, int* timerfd);
 
 /**
  * hint for branch prediction
@@ -33,7 +39,5 @@ inline bool is_unlikely_hint(bool exp) {
 #endif
 }
 }
-
-#include "MidasUtils.inl"
 
 #endif

@@ -1,28 +1,6 @@
 #include "CtpProcess.h"
 #include "utils/FileUtils.h"
 
-/**
- * first check env value, then check config value
- * if still not found, change config path to lower case
- * if still not found ,then use default value and log warning
- */
-template <typename T>
-T get_cfg_value(const string& root, const char* key, const T& defaultValue = T()) {
-    T envValue = Config::instance().getenv<T>(key, defaultValue);
-
-    if (envValue != defaultValue) return envValue;
-
-    auto path = root + "." + key;
-    T configValue = Config::instance().get<T>(path, defaultValue);
-    if (configValue != defaultValue) return configValue;
-
-    configValue = Config::instance().get<T>(to_lower_case(path), defaultValue);
-    if (configValue == defaultValue) {
-        MIDAS_LOG_WARNING("config entry not found for " << key);
-    }
-    return configValue;
-}
-
 bool CtpProcess::configure() {
     const string root{"ctp"};
     const string dbRoot{root + ".mysql"};

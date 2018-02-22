@@ -4,3 +4,4 @@ visualization/*.json
 *.pyc
 cmake-build-debug/
 *.gch
+src/

@@ -1,0 +1,44 @@
+ctp
+{
+    name "ctp"
+
+    book_cache
+    {
+        name "ctp_cache"
+        exchange_key SHFE
+        exchange_code 1001
+        num_products 1000
+        symbol_data_file "/home/kun/Data/ctp/shm/ctp_symbol_data"
+    }
+
+    dataDirectory "/home/kun/Data/ctp"
+    rawMsgLogDirectory "/home/kun/Data/ctp/raw_msg_log"
+
+    session {
+        ; first set Trade Front: 180.168.146.187:10001, Market Front：180.168.146.187:10011
+        ; second set Trade Front: 180.168.146.187:10030, Market Front：180.168.146.187:10031
+        tradeFront "tcp://180.168.146.187:10030"
+        marketFront "tcp://180.168.146.187:10031"
+        brokerId "9999"
+        investorId "073985"
+        password "123456"
+    }
+
+    mktdata_disruptor
+    {
+        max_msg_size 256
+        ring_size_exponent 10
+        wait_strategy block
+    }
+
+    mysql
+    {
+        ip "tcp://127.0.0.1:3306"
+        userName "root"
+        password "123456"
+    }
+
+    logRawData true
+    tradingHourCfgPath "/home/kun/github/midas/midas_ctp/cfg/trading_hour.map"
+
+}

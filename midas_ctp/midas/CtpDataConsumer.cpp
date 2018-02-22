@@ -1,3 +1,4 @@
+#include <midas/MidasConfig.h>
 #include "CtpDataConsumer.h"
 #include "helper/CtpVisualHelper.h"
 
@@ -20,7 +21,7 @@ void CtpDataConsumer::data_callback1(MktDataPayload& payload) {
 }
 
 void CtpDataConsumer::stats(ostream& os) {
-    os << "CtpDataConsumer stats:" << '\n' << "msgs recv        = " << receivedMsgCount << '\n';
+    os << "CtpDataConsumer stats:" << '\n' << "msgs receive        = " << receivedMsgCount << '\n';
 }
 
 void CtpDataConsumer::flush() {

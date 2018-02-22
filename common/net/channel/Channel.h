@@ -14,6 +14,7 @@
 #include "MemberEntry.h"
 #include "SlotEntry.h"
 #include "midas/Lock.h"
+#include "midas/MidasConfig.h"
 #include "midas/MidasConstants.h"
 #include "net/buffer/ConstBuffer.h"
 #include "process/admin/MidasAdminBase.h"

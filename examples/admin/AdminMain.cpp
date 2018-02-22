@@ -1,5 +1,8 @@
 #include <utils/MidasUtils.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/write.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "net/common/NetworkHelper.h"
 
