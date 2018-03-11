@@ -20,7 +20,6 @@ void TradeStatusManager::load_trade_session(const string& path) {
                     product2sessions[productType].add_session(TradeSession{s.substr(itr1 + 1)});
                 }
             }
-
             ifs.close();
         }
     } else {
@@ -29,13 +28,17 @@ void TradeStatusManager::load_trade_session(const string& path) {
 }
 
 const TradeSessions& TradeStatusManager::get_session(const string& instrumentId) {
+    static TradeSessions dummy;
     string productId = get_product_name(instrumentId);
 
     auto itr = product2sessions.find(productId);
     if (itr != product2sessions.end())
         return itr->second;
-    else
-        throw std::string("no trade session found for " + instrumentId);
+    else {
+        MIDAS_LOG_WARNING("no trade session found for " << instrumentId << " using dummy one");
+        product2sessions[productId] = dummy;
+        return dummy;
+    }
 }
 
 ostream& operator<<(ostream& s, const TradeStatusManager& manager) {

@@ -1,34 +1,22 @@
 #include "ShmCache.h"
 #include "midas/MidasConfig.h"
 #include "midas/md/MdBook.h"
-#include "utils/log/Log.h"
 
 using namespace std;
 
 namespace midas {
-ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange> const& exchanges,
-                   SymbolData* symbolData_)
+ShmCache::ShmCache(std::string const& cachePropertyName, midas::MdExchange const& exchange, SymbolData* symbolData_)
     : symbolData(symbolData_) {
     numProducts = get_cfg_value<uint16_t>(cachePropertyName, "num_products", UINT16_MAX);
-    nameBookCache = get_cfg_value<string>(cachePropertyName, "name");
-    MIDAS_LOG_INFO("num_products = " << numProducts << " name = " << nameBookCache);
+    nameBookCache = get_cfg_value<string>(cachePropertyName, "shmName");
+    MIDAS_LOG_INFO("num_products = " << numProducts << " shmName = " << nameBookCache);
 
-    //
-    // First size up the memory cache: sum up the depth for all exchanges
-    //
-    uint16_t totalDepth = 0;
-    for (auto it = exchanges.begin(); it != exchanges.end(); ++it) {
-        totalDepth = static_cast<uint16_t>(totalDepth + it->exchangeDepth);
-    }
+    uint16_t totalDepth = exchange.exchangeDepth;
 
     //
     //---Layout of SHM book cache---
     //+-----------------------------------+<-- BEGIN BOOK METADATA
     //|   BookMetadata - EXCH1            |
-    //|   ...                             |
-    //|   ...                             |
-    //|   ...                             |
-    //|   BookMetadata - EXCHn            |
     //|-----------------------------------|
     //|   BookMetadata - dummy            |
     //|-----------------------------------|<-- BEGIN LOCATOR CODE 0 ----+
@@ -36,15 +24,6 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
     //|   BidBookLevel2   - EXCH1         |                             |
     //|   ...                             |                             |
     //|   BidBookLevelD_1 - EXCH1         |                             |
-    //|-----------------------------------|                             |
-    //|   ...                             |                             |
-    //|   ...                             |                             |
-    //|   ...                             |                             |
-    //|-----------------------------------|                             |
-    //|   BidBookLevel1   - EXCHn         |                             |
-    //|   BidBookLevel2   - EXCHn         |                             |
-    //|   ...                             |                             |
-    //|   BidBookLevelD_N - EXCHn         |                             |
     //|-----------------------------------|                             |
     //|   BidBookLevel    - dummy         |                             |
     //|-----------------------------------|<-- BID LOCK (8 bytes)       |-> BYTES PER PRODUCT
@@ -54,15 +33,6 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
     //|   AskBookLevel2   - EXCH1         |                             |
     //|   ...                             |                             |
     //|   AskBookLevelD_1 - EXCH1         |                             |
-    //|-----------------------------------|                             |
-    //|   ...                             |                             |
-    //|   ...                             |                             |
-    //|   ...                             |                             |
-    //|-----------------------------------|                             |
-    //|   AskBookLevel1   - EXCHn         |                             |
-    //|   AskBookLevel2   - EXCHn         |                             |
-    //|   ...                             |                             |
-    //|   AskBookLevelD_N - EXCHn         |                             |
     //|-----------------------------------|                             |
     //|   AskBookLevel    - dummy         |                             |
     //|-----------------------------------|<-- ASK lock (8 bytes)       |
@@ -77,15 +47,6 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
     //|   ...                             |
     //|   BidBookLevelD_1 - EXCH1         |
     //|-----------------------------------|
-    //|   ...                             |
-    //|   ...                             |
-    //|   ...                             |
-    //|-----------------------------------|
-    //|   BidBookLevel1   - EXCHn         |
-    //|   BidBookLevel2   - EXCHn         |
-    //|   ...                             |
-    //|   BidBookLevelD_N - EXCHn         |
-    //|-----------------------------------|
     //|   BidBookLevel    - dummy         |
     //|-----------------------------------|<-- BID LOCK (8 bytes)
     //|   BidBookLevel    - dummy         |
@@ -94,15 +55,6 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
     //|   AskBookLevel2   - EXCH1         |
     //|   ...                             |
     //|   AskBookLevelD_1 - EXCH1         |
-    //|-----------------------------------|
-    //|   ...                             |
-    //|   ...                             |
-    //|   ...                             |
-    //|-----------------------------------|
-    //|   AskBookLevel1   - EXCHn         |
-    //|   AskBookLevel2   - EXCHn         |
-    //|   ...                             |
-    //|   AskBookLevelD_N - EXCHn         |
     //|-----------------------------------|
     //|   AskBookLevel    - dummy         |
     //|-----------------------------------|<-- ASK LOCK (8 bytes)
@@ -114,8 +66,7 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
      * Bid side for all products, BidBookLevel for max num of symbols for total depth of all exchanges (+ 2 dummies)
      * Ask side for all products, AskBookLevel for max num of symbols for total depth of all exchanges (+ 2 dummies)
      */
-    sizeBookCache = (exchanges.size() + 1) * sizeof(BookMetadata) +
-                    (totalDepth + 2) * sizeof(BidBookLevel) * numProducts +
+    sizeBookCache = 2 * sizeof(BookMetadata) + (totalDepth + 2) * sizeof(BidBookLevel) * numProducts +
                     (totalDepth + 2) * sizeof(AskBookLevel) * numProducts;
 
     MIDAS_LOG_INFO("Sizing shared memory cache " << sizeBookCache);
@@ -131,8 +82,9 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
                     sizeBookCache = size;
                     addrBookCache = mmap(nullptr, sizeBookCache, PROT_READ | PROT_WRITE, MAP_SHARED, fdBookCache, 0);
                     if (addrBookCache != MAP_FAILED) {
-                        MIDAS_LOG_INFO("Book cache -- name: " << nameBookCache << ", fd: " << fdBookCache << ", size: "
-                                                              << sizeBookCache << ", addr: " << addrBookCache);
+                        MIDAS_LOG_INFO("Book cache -- shmName: /dev/shm/" << nameBookCache << ", fd: " << fdBookCache
+                                                                          << ", size: " << sizeBookCache
+                                                                          << ", addr: " << addrBookCache);
                         struct rlimit limit;
                         if (getrlimit(RLIMIT_MEMLOCK, &limit) < 0) {
                             MIDAS_LOG_ERROR("getrlimit: " << errno << " " << strerror(errno));
@@ -171,7 +123,7 @@ ShmCache::ShmCache(std::string const& cachePropertyName, std::vector<MdExchange>
         throw std::runtime_error(strerror(errno));
     }
 
-    auto numBytes = init_book_cache((uint8_t *) addrBookCache, exchanges);
+    auto numBytes = init_book_cache((uint8_t*)addrBookCache, exchange);
     MIDAS_LOG_INFO(numBytes << " bytes initialized in shared memory book cache");
 }
 
@@ -185,52 +137,52 @@ ShmCache::~ShmCache() {
     }
 }
 
-std::size_t ShmCache::init_book_cache(uint8_t *startingAddress, std::vector<midas::MdExchange> const &exchanges) {
-    std::size_t numOtherBytes = 0;
+std::size_t ShmCache::init_book_cache(uint8_t* startingAddress, midas::MdExchange const& exchange) {
     BookMetadata dummy;
     BookMetadata* metadata = (BookMetadata*)startingAddress;
     {
-        BookMetadata* metap = metadata;
-        for (auto it = exchanges.begin(); it != exchanges.end(); ++it) {
-            *metap = dummy;
-            metap->exchange = it->exchange;
-            metap->exchangeDepth = it->exchangeDepth;
-            metap->exchangeOffsetBytesBid = it->offsetBytesBid;
-            metap->exchangeOffsetBytesAsk = it->offsetBytesAsk;
+        BookMetadata* pMeta = metadata;
+        {
+            *pMeta = dummy;
+            pMeta->exchange = exchange.exchange;
+            pMeta->exchangeDepth = exchange.exchangeDepth;
+            pMeta->exchangeOffsetBytesBid = exchange.offsetBytesBid;
+            pMeta->exchangeOffsetBytesAsk = exchange.offsetBytesAsk;
             sizeBookMetadata += sizeof(BookMetadata);
-            ++metap;
+            ++pMeta;
         }
         {
-            // Now initialize the dummy part
-            *metap = dummy;
+            // Now initialize the dummy part, only one dummy metadata entry
+            *pMeta = dummy;
             sizeBookMetadata += sizeof(BookMetadata);
-            ++metap;
         }
     }
 
-    // calculate the postMetadata address: this is the address the application will use:
-    // the address returned from the address() method
+    /**
+     * calculate the postMetadata address:
+     * this is the address the application will use: the address returned from the address() method
+     */
     uint8_t* postMetadata = startingAddress + sizeBookMetadata;
+    std::size_t numOtherBytes = 0;
 
     BidBookLevel dummyBid;
     AskBookLevel dummyAsk;
 
     for (uint16_t u = 0; u < numProducts; ++u) {
-        BidBookLevel* bl = nullptr;
-        for (BookMetadata* metap = metadata; metap->exchange != ExchangeNone; ++metap) {
+        BidBookLevel* bl = (BidBookLevel*)postMetadata;
+        for (BookMetadata* pMeta = metadata; pMeta->exchange != ExchangeNone; ++pMeta) {
             bl = (BidBookLevel*)(postMetadata + numOtherBytes);
-            for (uint8_t d = 0; d < metap->exchangeDepth; ++d) {
+            for (uint8_t d = 0; d < pMeta->exchangeDepth; ++d) {
                 *bl = dummyBid;
-                bl->exchange = metap->exchange;
+                bl->exchange = pMeta->exchange;
                 ++bl;
                 numOtherBytes += sizeof(BidBookLevel);
             }
         }
         {
-            // Now initialize the dummy bid level
+            // Now initialize the dummy bid level, two dummy bid level, one for separator, one for lock
             *bl = dummyBid;
             bl->exchange = ExchangeNone;
-            ++bl;
             numOtherBytes += sizeof(BidBookLevel);
             uint64_t* lock = (uint64_t*)(postMetadata + numOtherBytes);
             *lock = 0;
@@ -238,21 +190,21 @@ std::size_t ShmCache::init_book_cache(uint8_t *startingAddress, std::vector<mida
             *lock = 0xdeadbeefdeadbeef;
             numOtherBytes += sizeof(BidBookLevel);
         }
-        AskBookLevel* al = nullptr;
-        for (BookMetadata* metap = metadata; metap->exchange != ExchangeNone; ++metap) {
+
+        AskBookLevel* al = (AskBookLevel*)postMetadata;
+        for (BookMetadata* pMeta = metadata; pMeta->exchange != ExchangeNone; ++pMeta) {
             al = (AskBookLevel*)(postMetadata + numOtherBytes);
-            for (uint8_t d = 0; d < metap->exchangeDepth; ++d) {
+            for (uint8_t d = 0; d < pMeta->exchangeDepth; ++d) {
                 *al = dummyAsk;
-                al->exchange = metap->exchange;
+                al->exchange = pMeta->exchange;
                 ++al;
                 numOtherBytes += sizeof(AskBookLevel);
             }
         }
         {
-            // Now initialize the dummy ask level
+            // Now initialize the dummy ask level, two dummy ask level, one for separator, one for lock
             *al = dummyAsk;
             al->exchange = ExchangeNone;
-            ++al;
             numOtherBytes += sizeof(AskBookLevel);
             uint64_t* lock = (uint64_t*)(postMetadata + numOtherBytes);
             *lock = 0;

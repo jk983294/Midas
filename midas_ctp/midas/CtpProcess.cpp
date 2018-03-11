@@ -7,12 +7,6 @@ CtpProcess::CtpProcess(int argc, char** argv) : MidasProcessBase(argc, argv) {
 }
 
 CtpProcess::~CtpProcess() {
-    if (mdApi) {
-        mdApi->RegisterSpi(nullptr);
-        mdApi->Release();
-        mdApi = nullptr;
-    }
-
     if (traderApi) {
         traderApi->RegisterSpi(nullptr);
         traderApi->Release();
@@ -33,16 +27,6 @@ void CtpProcess::trade_thread() {
     traderApi->Join();
 }
 
-void CtpProcess::market_thread() {
-    MIDAS_LOG_INFO("start market data thread " << data->marketFlowPath);
-    mdApi = CThostFtdcMdApi::CreateFtdcMdApi(data->marketFlowPath.c_str());
-    manager->register_md_api(mdApi);
-    mdApi->RegisterSpi(mdSpi.get());                           // register event handler class
-    mdApi->RegisterFront((char*)(data->marketFront.c_str()));  // connect
-    mdApi->Init();
-    mdApi->Join();
-}
-
 void CtpProcess::app_start() {
     if (!configure()) {
         MIDAS_LOG_ERROR("failed to configure");
@@ -50,15 +34,8 @@ void CtpProcess::app_start() {
         throw MidasException();
     }
 
-    mdSpi = make_shared<CtpMdSpi>(manager, data);
-
-    std::vector<CtpMdSpi::SharedPtr> producerStore;
-    producerStore.push_back(mdSpi);
-    consumerPtr = std::make_shared<DataConsumer>(data);
-    disruptorPtr = boost::make_shared<TMktDataDisruptor>("mktdata_disruptor", "ctp.mktdata_disruptor", producerStore,
-                                                         boost::ref(*consumerPtr));
-
-    marketDataThread = std::thread([this] { market_thread(); });
+    marketManager = make_shared<MarketManager<CtpDataConsumer>>(std::make_shared<CtpDataConsumer>(data));
+    marketManager->start();
     tradeDataThread = std::thread([this] { trade_thread(); });
     sleep(5);
 
@@ -70,15 +47,12 @@ void CtpProcess::app_start() {
 
     data->init_all_instruments();
     load_historic_candle_data();
-    manager->subscribe_all_instruments();
+    marketManager->mdSpi->subscribe_all_instruments(data->instrumentInfo);
     sleep(1);
     data->state = CtpState::Running;
 }
 
 void CtpProcess::app_stop() {
-    if (marketDataThread.joinable()) {
-        marketDataThread.join();
-    }
     if (tradeDataThread.joinable()) {
         tradeDataThread.join();
     }

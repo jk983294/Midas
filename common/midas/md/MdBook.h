@@ -10,47 +10,53 @@ namespace midas {
 #pragma pack(push, 1)
 
 struct BookMetadata {
-    uint8_t watermark[8] = {'b', '0', '0', 'k', 'M', 'e', 'T', 'A'};
-    uint16_t exchange = ExchangeNone;
-    uint8_t exchangeDepth = 0;
-    uint16_t exchangeOffsetBytesBid = 0;
-    uint16_t exchangeOffsetBytesAsk = 0;
+    uint8_t watermark[8]{'b', 'o', 'o', 'k', 'M', 'e', 'T', 'A'};
+    uint16_t exchange{ExchangeNone};
+    uint8_t exchangeDepth{0};
+    uint16_t exchangeOffsetBytesBid{0};
+    uint16_t exchangeOffsetBytesAsk{0};
+
+    BookMetadata() = default;
 };
 
 struct BidBookLevel {
-    int64_t price = PriceBlank;
-    uint64_t shares = 0;
-    uint32_t orders = 0;
-    uint16_t exchange = ExchangeNone;
-    uint64_t sequence = 0;
-    uint64_t updateTS = 0;
-    uint64_t timestamp = 0;
-    uint8_t priceScaleCode = DefaultPriceScale;
-    uint32_t lotSize = DefaultLotSize;
+    int64_t price{PriceBlank};
+    uint64_t shares{0};
+    uint32_t orders{0};
+    uint16_t exchange{ExchangeNone};
+    uint64_t sequence{0};
+    uint64_t updateTS{0};
+    uint64_t timestamp{0};
+    uint8_t priceScaleCode{DefaultPriceScale};
+    uint32_t lotSize{DefaultLotSize};
+
+    BidBookLevel() = default;
 };
 
 struct AskBookLevel {
-    int64_t price = PriceBlank;
-    uint64_t shares = 0;
-    uint32_t orders = 0;
-    uint16_t exchange = ExchangeNone;
-    uint64_t sequence = 0;
-    uint64_t updateTS = 0;
-    uint64_t timestamp = 0;
-    uint8_t priceScaleCode = DefaultPriceScale;
-    uint32_t lotSize = DefaultLotSize;
+    int64_t price{PriceBlank};
+    uint64_t shares{0};
+    uint32_t orders{0};
+    uint16_t exchange{ExchangeNone};
+    uint64_t sequence{0};
+    uint64_t updateTS{0};
+    uint64_t timestamp{0};
+    uint8_t priceScaleCode{DefaultPriceScale};
+    uint32_t lotSize{DefaultLotSize};
+
+    AskBookLevel() = default;
 };
 
 struct MdBook {
     enum struct BookType : uint8_t { price = 0, image = 1, order = 2, none = 255 };
 
-    void* __thunk = nullptr;
-    uint16_t numBidLevels = 0;
-    BidBookLevel* bidLevels = nullptr;
-    uint16_t numAskLevels = 0;
-    AskBookLevel* askLevels = nullptr;
-    BookType bookType = BookType::none;
-    uint8_t myAlloc = 1;
+    void* __thunk{nullptr};
+    uint16_t numBidLevels{0};
+    BidBookLevel* bidLevels{nullptr};
+    uint16_t numAskLevels{0};
+    AskBookLevel* askLevels{nullptr};
+    BookType bookType{BookType::none};
+    uint8_t myAlloc{1};
 
     MdBook() = default;
 
@@ -66,6 +72,23 @@ struct MdBook {
 };
 
 #pragma pack(pop)
+
+inline constexpr uint16_t bytes_per_product(int depth) {
+    return static_cast<uint16_t>((depth + 2) * (sizeof(BidBookLevel) + sizeof(AskBookLevel)));
+}
+
+inline constexpr uint16_t bytes_offset_ask(int depth) {
+    return static_cast<uint16_t>((depth + 2) * sizeof(BidBookLevel));
+}
+
+inline constexpr uint16_t ask_lock_offset(uint16_t bytesPerProduct) {
+    return (bytesPerProduct / (sizeof(BidBookLevel) + sizeof(AskBookLevel))) * sizeof(BidBookLevel) +
+           ((bytesPerProduct / (sizeof(BidBookLevel) + sizeof(AskBookLevel))) - 1) * sizeof(AskBookLevel);
+}
+
+inline constexpr uint16_t bid_lock_offset(uint16_t bytesPerProduct) {
+    return ((bytesPerProduct / (sizeof(BidBookLevel) + sizeof(AskBookLevel))) - 1) * sizeof(BidBookLevel);
+}
 
 inline void clearBidLevel(BidBookLevel* lp) {
     lp->price = PriceBlank;

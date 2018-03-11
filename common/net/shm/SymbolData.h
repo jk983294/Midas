@@ -31,8 +31,8 @@ static const uint16_t SYMBOL_DATA_INVALID_LOCATOR_CODE = 0xFFFF;
 static const uint16_t SYMBOL_DATA_MAX_LOCATOR_CODE = (0xFFFF - 1);
 
 struct __header {
-    uint32_t countShm = 0;
-    uint32_t capacityShm = 0;
+    uint32_t countShm{0};     // already used count
+    uint32_t capacityShm{0};  // __data count = 2 * SYMBOL_DATA_MAX_LOCATOR_CODE
 };
 
 struct __data {
@@ -43,7 +43,7 @@ struct __data {
     __data& operator=(__data const&) = default;
 
     char symbol[32 + 1] = {};
-    uint16_t locator_shm{SYMBOL_DATA_INVALID_LOCATOR_CODE};
+    uint16_t locatorShm{SYMBOL_DATA_INVALID_LOCATOR_CODE};
     uint8_t inUse{0};
     uint8_t newSymbol{0};
 
@@ -55,7 +55,7 @@ struct __data {
 };
 
 inline std::string get_symbol(__data const* d) { return d->symbol; }
-inline uint16_t get_locator(__data const* d) { return d->locator_shm; }
+inline uint16_t get_locator(__data const* d) { return d->locatorShm; }
 inline bool get_in_use(__data const* d) { return d->inUse; }
 inline bool get_new_symbol(__data const* d) { return d->newSymbol; }
 inline std::size_t get_max_bid_depth(__data::__vsd const* v) { return (v ? v->maxBidDepth : 0); }
@@ -66,9 +66,9 @@ inline void set_symbol(__data* d, std::string const& s) {
     memset(d->symbol, '\0', sizeof(d->symbol));
     strncpy(d->symbol, s.c_str(), sizeof(d->symbol) - 1);
 }
-inline void set_locator(__data* d, uint16_t l) { d->locator_shm = l; }
+inline void set_locator(__data* d, uint16_t l) { d->locatorShm = l; }
 inline void set_in_use(__data* d, bool dl) { d->inUse = (dl ? static_cast<uint8_t>(1) : static_cast<uint8_t>(0)); }
-inline void set_newsymbol(__data* d, bool ns) {
+inline void set_new_symbol(__data* d, bool ns) {
     d->newSymbol = (ns ? static_cast<uint8_t>(1) : static_cast<uint8_t>(0));
 }
 inline void set_max_bid_depth(__data::__vsd* v, std::size_t n) {
@@ -91,8 +91,8 @@ public:
     int fd{-1};
     UserFlag userFlag = UserFlag::readonly;
     void* addr{MAP_FAILED};
-    __header* hdr{nullptr};
-    __data* first{nullptr};
+    __header* pHeader{nullptr};
+    __data* first{nullptr};  // first __data address
     uint16_t maxLocator{SYMBOL_DATA_MAX_LOCATOR_CODE};
     uint32_t symbolCapacity{2 * SYMBOL_DATA_MAX_LOCATOR_CODE};
     std::size_t mappedSize{sizeof(__header) + 2 * SYMBOL_DATA_MAX_LOCATOR_CODE * sizeof(__data)};
@@ -106,7 +106,7 @@ public:
 public:
     SymbolData(std::string const& symbolFile, UserFlag flag);
 
-    ~SymbolData() { finis(); }
+    ~SymbolData() { finish(); }
 
     SymbolData(SymbolData const&) = delete;
 
@@ -124,13 +124,13 @@ private:
     void add_symbol(std::string const& symbol, uint16_t& locator, bool assignFreeLocator);
     void add_internal(__data* datum);
     void modify_symbol(std::string const& symbol, uint16_t locator);
-    void mod_internal(__data* datum);
+    void modify_internal(__data* datum);
     void delete_symbol(std::string const& symbol);
-    void del_internal(__data* datum);
-    void clr_internal();
+    void delete_internal(__data* datum);
+    void clear_internal();
     void mmap(void* address);
     void init();
-    void finis();
+    void finish();
     void* page_aligned(void* addr) { return (void*)(reinterpret_cast<uint64_t>(addr) & ~(pageSize - 1)); }
 };
 

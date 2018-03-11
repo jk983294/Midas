@@ -1,3 +1,4 @@
+#include <market/MarketManager.h>
 #include <utils/FileUtils.h>
 #include "CtpProcess.h"
 #include "helper/CtpVisualHelper.h"
@@ -153,15 +154,15 @@ string CtpProcess::admin_meters(const string& cmd, const TAdminCallbackArgs& arg
     ostringstream oss;
     oss << setw(24) << "MD login time" << setw(24) << "MD logout time" << setw(24) << "Trade login time" << setw(24)
         << "Trade logout time\n"
-        << setw(24) << ntime2string(data->mdLogInTime) << setw(24) << ntime2string(data->mdLogOutTime) << setw(24)
-        << ntime2string(data->tradeLogInTime) << setw(24) << ntime2string(data->tradeLogOutTime) << "\n";
-    if (disruptorPtr) disruptorPtr->stats(oss);
-    if (consumerPtr) consumerPtr->stats(oss);
+        << setw(24) << ntime2string(marketManager->mdSpi->mdLogInTime) << setw(24)
+        << ntime2string(marketManager->mdSpi->mdLogOutTime) << setw(24) << ntime2string(data->tradeLogInTime)
+        << setw(24) << ntime2string(data->tradeLogOutTime) << "\n";
+    marketManager->stats(oss);
     return oss.str();
 }
 
 string CtpProcess::admin_flush(const string& cmd, const TAdminCallbackArgs& args) {
-    consumerPtr->flush();
+    marketManager->consumerPtr->flush();
     MIDAS_LOG_FLUSH();
     return "flush command issued";
 }

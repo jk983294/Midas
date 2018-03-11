@@ -7,7 +7,7 @@ using namespace std;
 void TradeSpi::OnFrontConnected() {
     MIDAS_LOG_INFO("TradeSpi OnFrontConnected OK");
     data->tradeLogInTime = ntime();
-    manager->request_login(true);
+    manager->request_login();
 }
 
 void TradeSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo,
@@ -191,7 +191,7 @@ void TradeSpi::OnRtnExecOrder(CThostFtdcExecOrderField *pExecOrder) {
 }
 
 /**
- * 建议客户端以成交通知为准判断报单是否成交,以及成交数量和价格
+ * 建议客户端以成交通知为��判断报单是否成交,以及成交数量和价格
  * 若以报单回报(状态为“部分成交或全不成交”)为准,由于报单回报与成交回报之间存在理论上的时间差,有可能导致平仓不成功
  * @param pTrade
  */

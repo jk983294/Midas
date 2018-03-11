@@ -2,6 +2,7 @@
 #define MIDAS_MD_SPI_H
 
 #include <ctp/ThostFtdcMdApi.h>
+#include <set>
 #include <string>
 #include "trade/TradeManager.h"
 
@@ -12,15 +13,25 @@ public:
     typedef std::shared_ptr<CtpMdSpi> SharedPtr;
     typedef std::function<size_t(const CThostFtdcDepthMarketDataField &, uint64_t /*rcvt*/, int64_t /*id*/)> TCallback;
 
-    shared_ptr<TradeManager> manager;
-    shared_ptr<CtpData> data;
     TCallback dataCallback;
+    CThostFtdcMdApi *mdApi{nullptr};
+    uint64_t mdLogInTime{0}, mdLogOutTime{0};
+    int marketRequestId{0};
+    set<string> instruments;
+    std::mutex instrumentMutex;
+    string brokerId;    // 经纪公司代码
+    string investorId;  // 投资者代码
+    string password;    // 用户密码
 
 public:
-    CtpMdSpi(shared_ptr<TradeManager> manager_, shared_ptr<CtpData> d) : manager(manager_), data(d) {}
-    virtual ~CtpMdSpi() {}
+    CtpMdSpi(CThostFtdcMdApi *mdApi_);
 
+    virtual ~CtpMdSpi() {}
     void register_data_callback(const TCallback &cb) { dataCallback = cb; }
+
+    void subscribe_all_instruments(const map<string, std::shared_ptr<CThostFtdcInstrumentField>> &map);
+    void subscribe_all_instruments();
+    void subscribe(string symbol);
 
 public:
     ///错误应答
@@ -51,6 +62,10 @@ public:
 
 private:
     bool IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo);
+
+    void request_login();
+
+    void subscribe_market_data(const vector<string> &toSubscribe);
 };
 
 #endif

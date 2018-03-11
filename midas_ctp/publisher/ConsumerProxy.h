@@ -25,12 +25,11 @@ public:
     std::string ipConsumer;
     uint16_t portConsumer;
     pid_t pidConsumer{0};
-    uint8_t clientId{0};
+    uint16_t clientId{0};
     std::string userConsumer;
     std::string shmKeyConsumer;
-    std::mutex consumerProxyLock;
     std::atomic<uint64_t> controlSeqNo{0};
-    uint8_t numDataQueues;
+    uint32_t numDataQueues;
     std::unique_ptr<DataChannel> dataChannel;
     time_t lastHeartbeat{0};
     uint32_t subscriptionFlags{0};

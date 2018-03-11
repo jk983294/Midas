@@ -1,11 +1,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
 #include <strings.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <cstddef>
 #include <cstdio>
@@ -59,7 +56,7 @@ static int set_rcvbuf(int fdSocket, int bufSize) {
 static int shutdown(int fdSocket) { return close(fdSocket); }
 
 int make_tcp_socket_server(char const *addrListen, uint16_t portListen) {
-    MIDAS_LOG_INFO("(" << addrListen << ":" << portListen << ")");
+    MIDAS_LOG_INFO("make tcp server (" << addrListen << ":" << portListen << ")");
 
     int descriptor = -1;
     struct in_addr serverInAddr;
@@ -96,14 +93,13 @@ int make_tcp_socket_server(char const *addrListen, uint16_t portListen) {
         }
         set_nonblock(descriptor);
     }
-
     return descriptor;
 }
 
 int make_tcp_socket_client(char const *addrLocal, uint16_t portLocal, char const *addrRemote, uint16_t portRemote,
                            int timeout) {
     MIDAS_LOG_INFO("(" << addrLocal << ":" << portLocal << ") -> (" << addrRemote << ":" << portRemote << ")");
-    int descriptor = -1;
+    int descriptor;
     int rc = -1;
     if ((descriptor = socket(AF_INET, SOCK_STREAM, 0)) >= 0) {
         struct sockaddr_in laddr, raddr;
@@ -143,7 +139,7 @@ int make_tcp_socket_client(char const *addrLocal, uint16_t portLocal, char const
 int make_udp_socket(char const *addrLocal, uint16_t portLocal) {
     MIDAS_LOG_INFO("(" << addrLocal << ":" << portLocal << ")");
 
-    int descriptor = -1;
+    int descriptor;
     if ((descriptor = socket(PF_INET, SOCK_DGRAM, 0)) >= 0) {
         struct sockaddr_in laddr;
         bzero((char *)&laddr, sizeof(laddr));

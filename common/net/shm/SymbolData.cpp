@@ -4,7 +4,7 @@
 using namespace std;
 
 namespace midas {
-__data::__data(std::string const& symbol, uint16_t locator) : locator_shm(locator) { set_symbol(this, symbol); }
+__data::__data(std::string const& symbol, uint16_t locator) : locatorShm(locator) { set_symbol(this, symbol); }
 
 __data::__vsd* get_vsd(__data* d, uint16_t e) {
     for (std::size_t i = 0; i < sizeof(d->vsd) / sizeof(d->vsd[0]); ++i) {
@@ -18,7 +18,6 @@ __data::__vsd* get_vsd(__data* d, uint16_t e) {
             return &v;
         }
     }
-
     return nullptr;
 }
 
@@ -62,7 +61,7 @@ SymbolData::SymbolData(std::string const& symbolFile, UserFlag flag) : userFlag(
         }
     } catch (std::runtime_error const& err) {
         MIDAS_LOG_ERROR(err.what());
-        finis();
+        finish();
         throw;
     }
 }
@@ -122,7 +121,7 @@ bool SymbolData::remove(std::string const& symbol) {
 
 std::ostream& operator<<(std::ostream& o, SymbolData const& sd) {
     uint32_t count = 0;
-    for (__data *iterator = sd.first; count < sd.hdr->capacityShm; ++count, ++iterator) {
+    for (__data *iterator = sd.first; count < sd.pHeader->capacityShm; ++count, ++iterator) {
         if (get_in_use(iterator)) {
             o << *iterator;
         }
@@ -141,7 +140,7 @@ void SymbolData::add_symbol(std::string const& symbol, uint16_t& locator, bool a
         throw std::runtime_error(ostr.str());
     }
 
-    if (hdr->countShm == hdr->capacityShm) {
+    if (pHeader->countShm == pHeader->capacityShm) {
         throw std::runtime_error("add_symbol: max capacity breaching");
     }
 
@@ -165,12 +164,12 @@ void SymbolData::add_symbol(std::string const& symbol, uint16_t& locator, bool a
         locator = freeLocator;
     }
     __data d(symbol, locator);
-    set_newsymbol(&d, true);  // mark as new symbol
-    set_in_use(&d, true);     // mark as this symbol entry being in-use
-    *here = d;                // copy to mmap
-    hdr->countShm += 1;       // increment element count
-    add_internal(here);       // add to internal map
-    ::msync(hdr, sizeof(__header), MS_ASYNC);
+    set_new_symbol(&d, true);  // mark as new symbol
+    set_in_use(&d, true);      // mark as this symbol entry being in-use
+    *here = d;                 // copy to mmap
+    pHeader->countShm += 1;    // increment element count
+    add_internal(here);        // add to internal map
+    ::msync(pHeader, sizeof(__header), MS_ASYNC);
     ::msync(page_aligned(here), pageSize, MS_ASYNC);
     MIDAS_LOG_INFO("Added new symbol " << symbol << " with locator code " << locator);
     return;
@@ -195,7 +194,7 @@ void SymbolData::modify_symbol(std::string const& symbol, uint16_t locator) {
     if (symIt != lookupBySymbol.end()) {
         __data* here = symIt->second;
         set_locator(here, locator);
-        mod_internal(here);  // modify internal map
+        modify_internal(here);  // modify internal map
         ::msync(page_aligned(here), pageSize, MS_ASYNC);
         MIDAS_LOG_INFO("Modified symbol " << symbol << " to locator " << locator);
     } else {
@@ -205,7 +204,7 @@ void SymbolData::modify_symbol(std::string const& symbol, uint16_t locator) {
     }
 }
 
-void SymbolData::mod_internal(__data* d) {
+void SymbolData::modify_internal(__data* d) {
     auto symbol(get_symbol(d));
     auto symIt = lookupBySymbol.find(symbol);
     if (symIt != lookupBySymbol.end()) {
@@ -245,10 +244,10 @@ void SymbolData::delete_symbol(std::string const& symbol) {
     if (symIt != lookupBySymbol.end()) {   //'symbol' found
         set_in_use(symIt->second, false);  // mark in mmapped area
         ::msync(page_aligned(symIt->second), pageSize, MS_ASYNC);
-        pool.push_back(symIt->second);  // return back to pool for reuse
-        del_internal(symIt->second);    // clear internal maps
-        hdr->countShm -= 1;             // decrement element count
-        ::msync(hdr, sizeof(__header), MS_ASYNC);
+        pool.push_back(symIt->second);   // return back to pool for reuse
+        delete_internal(symIt->second);  // clear internal maps
+        pHeader->countShm -= 1;          // decrement element count
+        ::msync(pHeader, sizeof(__header), MS_ASYNC);
     } else {
         std::ostringstream ostr;
         ostr << "delete_symbol: " << symbol << " does not exist!";
@@ -256,7 +255,7 @@ void SymbolData::delete_symbol(std::string const& symbol) {
     }
 }
 
-void SymbolData::del_internal(__data* d) {
+void SymbolData::delete_internal(__data* d) {
     auto symbol(get_symbol(d));
     auto locator(get_locator(d));
 
@@ -274,7 +273,7 @@ void SymbolData::del_internal(__data* d) {
     }
 }
 
-void SymbolData::clr_internal() {
+void SymbolData::clear_internal() {
     lookupBySymbol.clear();
     lookupByLocator.clear();
     pool.clear();
@@ -288,14 +287,14 @@ void SymbolData::mmap(void* address) {
         ostr << "fstat: errno " << errno;
         throw std::runtime_error(ostr.str());
     } else {
-        std::size_t currsz = static_cast<std::size_t>(stats.st_size);
-        if ((mappedSize != currsz) && userFlag == UserFlag::readwrite && ftruncate(fd, mappedSize) < 0) {
+        std::size_t currentSize = static_cast<std::size_t>(stats.st_size);
+        if ((mappedSize != currentSize) && userFlag == UserFlag::readwrite && ftruncate(fd, mappedSize) < 0) {
             ostr << "ftruncate: errno " << errno;
             throw std::runtime_error(ostr.str());
         }
 
         if (userFlag == UserFlag::readonly) {
-            mappedSize = currsz;
+            mappedSize = currentSize;
         }
 
         int prot = (userFlag == UserFlag::readwrite ? PROT_READ | PROT_WRITE : PROT_READ);
@@ -304,14 +303,14 @@ void SymbolData::mmap(void* address) {
             ostr << "mmap: errno " << errno;
             throw std::runtime_error(ostr.str());
         } else {
-            hdr = (__header*)addr;
-            if ((hdr->capacityShm != symbolCapacity) && (userFlag == UserFlag::readwrite)) {
-                hdr->capacityShm = symbolCapacity;
-                ::msync(hdr, sizeof(__header), MS_ASYNC);
+            pHeader = (__header*)addr;
+            if ((pHeader->capacityShm != symbolCapacity) && (userFlag == UserFlag::readwrite)) {
+                pHeader->capacityShm = symbolCapacity;
+                ::msync(pHeader, sizeof(__header), MS_ASYNC);
             }
 
             if (userFlag == UserFlag::readonly) {
-                symbolCapacity = hdr->capacityShm;
+                symbolCapacity = pHeader->capacityShm;
             }
         }
     }
@@ -319,16 +318,16 @@ void SymbolData::mmap(void* address) {
 
 void SymbolData::init() {
     std::lock_guard<std::recursive_mutex> g(mutex);
-    clr_internal();
-    hdr = (__header*)addr;
-    first = (__data*)((char*)hdr + sizeof(hdr));
+    clear_internal();
+    pHeader = (__header*)addr;
+    first = (__data*)((char*)pHeader + sizeof(pHeader));
 
     uint32_t count = 0;
-    for (__data *iterator = first; count < hdr->capacityShm; ++count, ++iterator) {
+    for (__data *iterator = first; count < pHeader->capacityShm; ++count, ++iterator) {
         if (get_in_use(iterator)) {
             add_internal(iterator);
             if (userFlag == UserFlag::readwrite && get_new_symbol(iterator)) {
-                set_newsymbol(iterator, false);  // reset if this was marked new before
+                set_new_symbol(iterator, false);  // reset if this was marked new before
             }
         } else {
             if (userFlag == UserFlag::readwrite && get_locator(iterator) == 0) {
@@ -342,10 +341,10 @@ void SymbolData::init() {
     if (userFlag == UserFlag::readwrite) {
         ::msync(addr, mappedSize, MS_ASYNC);
     }
-    MIDAS_LOG_ERROR("count: " << hdr->countShm << ", capacity: " << hdr->capacityShm);
+    MIDAS_LOG_INFO("count: " << pHeader->countShm << ", capacity: " << pHeader->capacityShm);
 }
 
-void SymbolData::finis() {
+void SymbolData::finish() {
     std::lock_guard<std::recursive_mutex> g(mutex);
     if (addr != MAP_FAILED) {
         if (userFlag == UserFlag::readwrite) {
@@ -359,6 +358,6 @@ void SymbolData::finis() {
         ::close(fd);
         fd = -1;
     }
-    clr_internal();
+    clear_internal();
 }
 }

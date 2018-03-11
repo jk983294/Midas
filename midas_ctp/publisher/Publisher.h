@@ -15,23 +15,18 @@ class DataSource;         // Forward declaration
 class Publisher : public midas::MidasProcessBase {
 public:
     enum struct MdCommand : uint8_t { subscribe = 0x00, unsubscribe = 0x01 };
-    std::string keyConfig;
     bool sendBookUpdate{false};
     uint32_t houseKeepingBatch{50};
-    time_t timeCacheTurnover{0};
-    bool MFDSCheck;
-    std::recursive_mutex subscriptionLock;
     std::unordered_map<int, std::shared_ptr<ConsumerProxy>> consumers;
     std::shared_ptr<PubControlChannel> controlChannel;
     // enum       symbol,      exch,     flags
-    using commandQueueT = std::vector<std::tuple<MdCommand, std::string, uint16_t, uint32_t>>;
-    std::unordered_map<int, commandQueueT> commandQueues;
+    using CommandQueueT = std::vector<std::tuple<MdCommand, std::string, uint16_t, uint32_t>>;
+    std::unordered_map<int, CommandQueueT> commandQueues;
     std::unordered_map<uint16_t, std::unique_ptr<midas::ShmCache>> bookCaches;
     std::unordered_map<std::string, std::shared_ptr<DataSource>> subscriptionBySource;
-
+    std::vector<std::shared_ptr<DataSource>> dataSources;
     uint64_t startTime{0};
     uint64_t session{0};
-    pid_t pid{0};
     std::string name;
 
 public:
@@ -39,9 +34,9 @@ public:
     Publisher(int argc, char** argv);
     ~Publisher();
 
-    void register_feed_client(int clientSock, std::string const& clientIP, uint16_t clientPort);
+    void register_client(int clientSock, std::string const& clientIP, uint16_t clientPort);
 
-    void unregister_feed_client(int clientSock);
+    void unregister_client(int clientSock);
 
     void update_client_heartbeat(int clientSock);
 
@@ -51,19 +46,21 @@ public:
 
     void on_subscribe(int clientSock, midas::Header*, midas::CtrlSubscribe*);
 
+    bool do_subscribe(int clientSock, char const* symbol, uint16_t exch, uint32_t flags);
+
     void on_unsubscribe(int clientSock, midas::Header*, midas::CtrlUnsubscribe*);
+
+    void do_unsubscribe(int clientSock, char const* symbol, uint16_t exch);
 
     void on_house_keeping();
 
     void clear_book();
 
-    std::string inject_market_data(const std::string&);
-
-    std::string clear_market_data(const std::string&, uint16_t exch);
-
-    std::string inject_market_data_event(const std::string&);
-
     void create_book_cache(std::string const& key);
+
+    uint8_t* book_cache_addr(uint16_t cacheId) const;
+
+    midas::ShmCache* book_cache(uint16_t cacheId) const;
 
 protected:
     void app_start() override;

@@ -10,19 +10,15 @@
  */
 bool IsFlowControl(int iResult) { return ((iResult == -2) || (iResult == -3)); }
 
-void TradeManager::request_login(bool isTradeLogin) {
+void TradeManager::request_login() {
     CThostFtdcReqUserLoginField req;
     memset(&req, 0, sizeof(req));
     strcpy(req.BrokerID, data->brokerId.c_str());
     strcpy(req.UserID, data->investorId.c_str());
     strcpy(req.Password, data->password.c_str());
     int iResult = 0;
-    if (isTradeLogin)
-        iResult = traderApi->ReqUserLogin(&req, ++tradeRequestId);
-    else
-        iResult = mdApi->ReqUserLogin(&req, ++marketRequestId);
-
-    MIDAS_LOG_INFO("send user login request: " << ctp_result(iResult));
+    iResult = traderApi->ReqUserLogin(&req, ++tradeRequestId);
+    MIDAS_LOG_INFO("submit user login request: " << ctp_result(iResult));
 }
 
 void TradeManager::request_confirm_settlement() {
@@ -401,35 +397,4 @@ void TradeManager::fill_condition_order(CThostFtdcInputOrderField &req, TThostFt
     req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
     req.LimitPrice = limitPrice;
     req.TimeCondition = THOST_FTDC_TC_GFD;
-}
-
-void TradeManager::subscribe_all_instruments() {
-    vector<string> instruments;
-    for (auto itr = data->instrumentInfo.begin(); itr != data->instrumentInfo.end(); ++itr) {
-        instruments.push_back(itr->first);
-    }
-    subscribe_market_data(instruments);
-}
-void TradeManager::subscribe_market_data(const vector<string> &instruments) {
-    int instrumentCount = (int)instruments.size();
-    if (instrumentCount <= 0) return;
-
-    char **ppInstrumentID = new char *[instrumentCount];
-    for (int i = 0; i < instrumentCount; ++i) {
-        ppInstrumentID[i] = new char[instruments[i].size() + 1];
-        strcpy(ppInstrumentID[i], instruments[i].c_str());
-        ppInstrumentID[i][instruments[i].size()] = '\0';
-    }
-
-    int iResult = mdApi->SubscribeMarketData(ppInstrumentID, instrumentCount);
-    if (iResult == 0) {
-        MIDAS_LOG_INFO("send subscribe market data request OK! " << instrumentCount << " instruments get subscribed.");
-    } else {
-        MIDAS_LOG_ERROR("send subscribe market data request failed!")
-    }
-
-    for (int i = 0; i < instrumentCount; ++i) {
-        delete[] ppInstrumentID[i];
-    }
-    delete[] ppInstrumentID;
 }

@@ -5,13 +5,16 @@ ctp
     dataDirectory "/home/kun/Data/ctp"
     rawMsgLogDirectory "/home/kun/Data/ctp/raw_msg_log"
 
-    ; first set Trade Front: 180.168.146.187:10001, Market Front：180.168.146.187:10011
-    ; second set Trade Front: 180.168.146.187:10030, Market Front：180.168.146.187:10031
-    tradeFront "tcp://180.168.146.187:10030"
-    marketFront "tcp://180.168.146.187:10031"
-    brokerId "9999"
-    investorId "073985"
-    password "123456"
+    session
+    {
+        ; first set Trade Front: 180.168.146.187:10001, Market Front：180.168.146.187:10011
+        ; second set Trade Front: 180.168.146.187:10030, Market Front：180.168.146.187:10031
+        tradeFront "tcp://180.168.146.187:10030"
+        marketFront "tcp://180.168.146.187:10031"
+        brokerId "9999"
+        investorId "073985"
+        password "123456"
+    }
 
     mktdata_disruptor
     {

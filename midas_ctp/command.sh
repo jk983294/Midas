@@ -47,3 +47,10 @@ awk '{print $6, $2, $4}' product.dump | sort > product.info
 
 # get all instrument with code / exchange / expire date
 awk '{print $4, $2, $34}' instrument.dump
+
+# shared memory location
+ll /dev/shm
+rm -f ctp_cache
+
+# shared memory error ENOMEM ERROR mlock: 12 Cannot allocate memory
+echo 1000000 > /proc/sys/vm/max_map_count

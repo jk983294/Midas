@@ -1,7 +1,6 @@
 #ifndef MIDAS_DATA_SOURCE_H
 #define MIDAS_DATA_SOURCE_H
 
-#include <midas/md/MdExchange.h>
 #include <net/raw/MdProtocol.h>
 #include <net/shm/CircularBuffer.h>
 #include <net/shm/HeapMemory.h>
@@ -13,7 +12,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <vector>
 
 class ConsumerProxy;  // fwd declare
 class Publisher;      // fwd declare
@@ -22,8 +20,6 @@ class DataSource {
 public:
     uint8_t queueIndex;
     uint64_t mdSequence{0};
-    std::string core;
-    std::string scheduler;
     midas::CircularBuffer<midas::HeapMemory, uint8_t> circularBuffer;
     Publisher const& publisher;
     std::mutex consumerLock;
@@ -39,7 +35,7 @@ public:
 
     DataSource& operator=(DataSource const&) = delete;
 
-    virtual bool ready() = 0;
+    virtual bool ready() { return true; }
 
     virtual void on_call_house_keeping() = 0;
 
@@ -52,17 +48,14 @@ public:
     std::size_t unregister_consumer(std::shared_ptr<ConsumerProxy> const& consumerProxy);
 
     virtual void clear_all_market_data() = 0;
-    virtual void clear_market_data(std::string const& key) = 0;
     virtual void clear_all_book_cache() = 0;
 
     uint64_t step_sequence() { return ++mdSequence; }
     void clear_book_cache(void* userData);
 
-    static std::vector<midas::MdExchange> participant_exchanges();
-
 protected:
     // Call from a suitable implementation-specific callback/timer
-    // to send a data heartbeat message to all enabled consumers
+    // to submit a data heartbeat message to all enabled consumers
     bool send_data_heartbeat();
 
     // Called from register_consumer after adding to consumers

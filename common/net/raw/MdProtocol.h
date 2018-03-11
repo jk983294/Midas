@@ -89,12 +89,12 @@ struct MDConsumerCallbacks {
  * Heartbeat exchanged only with an header
  */
 struct Header {
-    uint64_t session{0};  // session id
-    uint64_t seq{0};      // sequence#
-    uint64_t xmitts{0};   // transmit timestamp for message unit
-    uint8_t streamId{0};  // stream-id - always 0 for control traffic
-    uint8_t count{0};     // number of messages in 'message packet'
-    uint16_t size{0};     // total size (bytes) of messages (excluding header size) in 'message packet'
+    uint64_t session{0};            // session id
+    uint64_t seq{0};                // sequence#
+    uint64_t transmitTimestamp{0};  // transmit timestamp for message unit
+    uint8_t streamId{0};            // stream-id - always 0 for control traffic
+    uint8_t count{0};               // number of messages in 'message packet'
+    uint16_t size{0};               // total size (bytes) of messages (excluding header size) in 'message packet'
 
     Header() = default;
 };
@@ -192,7 +192,7 @@ struct CtrlUnsubscribeResponse {
 struct DataTradingAction {
     uint8_t type{DATA_TRADING_ACTION_TYPE};
     uint16_t msgSize{sizeof(DataTradingAction)};
-    uint64_t pubrcvt{0};  // MDPublisher receive timestamp
+    uint64_t pubRcvt{0};  // MDPublisher receive timestamp
     uint16_t locate{0};
     char symbol[9]{};
     uint16_t exchange{ExchangeNone};  // exchange where action occurred
@@ -204,11 +204,11 @@ struct DataTradingAction {
 struct DataBookChanged {
     uint8_t type{DATA_BOOK_CHANGED_TYPE};
     uint16_t msgSize{sizeof(DataBookChanged)};
-    uint64_t pubrcvt{0};  // MDPublisher receive timestamp
+    uint64_t pubRcvt{0};  // MDPublisher receive timestamp
     uint16_t locate{0};
     char symbol[9]{};
     uint16_t exchange{ExchangeNone};  // the exchange where the event occurred
-    BookChanged bookchanged;
+    BookChanged bookChanged;
 
     DataBookChanged() = default;
 };
@@ -216,7 +216,7 @@ struct DataBookChanged {
 struct DataBookRefreshed {
     uint8_t type{DATA_BOOK_REFRESHED_TYPE};
     uint16_t msgSize{sizeof(DataBookRefreshed)};
-    uint64_t pubrcvt{0};  // MDPublisher receive timestamp
+    uint64_t pubRcvt{0};  // MDPublisher receive timestamp
     uint16_t locate{0};
     char symbol[9]{};
     uint16_t exchange{ExchangeNone};  // the exchange where the event occurred

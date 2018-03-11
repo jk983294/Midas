@@ -66,61 +66,59 @@ void set_cpu_affinity(const std::string& affinityString) {
     set_cpu_affinity(static_cast<pid_t>(get_tid()), affinityString);
 }
 
-bool destroy_timer(int* timerfd) {
-    struct itimerspec newt = {{0, 0}, {0, 0}};
-    struct itimerspec oldt = {{0, 0}, {0, 0}};
-    if (timerfd_settime(*timerfd, 0, &newt, &oldt) < 0) {
-        MIDAS_LOG_ERROR("Failed to reset timer " << *timerfd << " :" << errno << " " << strerror(errno));
+bool destroy_timer(int* timerFd) {
+    struct itimerspec newTime = {{0, 0}, {0, 0}};
+    struct itimerspec oldTime = {{0, 0}, {0, 0}};
+    if (timerfd_settime(*timerFd, 0, &newTime, &oldTime) < 0) {
+        MIDAS_LOG_ERROR("Failed to reset timer " << *timerFd << " :" << errno << " " << strerror(errno));
     }
-    close(*timerfd);
-    *timerfd = -1;
+    close(*timerFd);
+    *timerFd = -1;
     return true;
 }
 
-bool create_timer(uint32_t intv_msecs, int* timerfd) {
+bool create_timer(uint32_t intervalMilliseconds, int* timerFd) {
     bool rc = true;
 
     int fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK | TFD_CLOEXEC);
     if (fd < 0) {
-        MIDAS_LOG_ERROR("Failed to make timerfd " << errno << " " << strerror(errno));
+        MIDAS_LOG_ERROR("Failed to make timerFd " << errno << " " << strerror(errno));
         rc = false;
     } else {
-        *timerfd = fd;
-        uint32_t s = intv_msecs / 1000;
-        uint32_t m = intv_msecs - s * 1000;
-        struct itimerspec newt = {{s, m * 1000000}, {s, m * 1000000}};
-        if (timerfd_settime(*timerfd, 0, &newt, nullptr) < 0) {
+        *timerFd = fd;
+        uint32_t s = intervalMilliseconds / 1000;
+        uint32_t m = intervalMilliseconds - s * 1000;
+        struct itimerspec newTime = {{s, m * 1000000}, {s, m * 1000000}};
+        if (timerfd_settime(*timerFd, 0, &newTime, nullptr) < 0) {
             MIDAS_LOG_ERROR("Failed to arm timer" << errno << " " << strerror(errno));
-            destroy_timer(timerfd);
+            destroy_timer(timerFd);
             rc = false;
         }
     }
     return rc;
 }
 
-bool stop_timer(int* timerfd) {
+bool stop_timer(int* timerFd) {
     bool rc = true;
 
-    struct itimerspec newt = {{0, 0}, {0, 0}};
-    struct itimerspec oldt = {{0, 0}, {0, 0}};
-    if (timerfd_settime(*timerfd, 0, &newt, &oldt) < 0) {
-        MIDAS_LOG_ERROR("Failed to stop timer " << *timerfd << " :" << errno << " " << strerror(errno));
-
+    struct itimerspec newTime = {{0, 0}, {0, 0}};
+    struct itimerspec oldTime = {{0, 0}, {0, 0}};
+    if (timerfd_settime(*timerFd, 0, &newTime, &oldTime) < 0) {
+        MIDAS_LOG_ERROR("Failed to stop timer " << *timerFd << " :" << errno << " " << strerror(errno));
         rc = false;
     }
-
     return rc;
 }
 
-bool restart_timer(uint32_t intv_msecs, int* timerfd) {
+bool restart_timer(uint32_t intervalMilliseconds, int* timerFd) {
     bool rc = true;
-    uint32_t s = intv_msecs / 1000;
-    uint32_t m = intv_msecs - s * 1000;
-    struct itimerspec newt = {{s, m * 1000}, {s, m * 1000}};
-    struct itimerspec oldt = {{0, 0}, {0, 0}};
-    if (timerfd_settime(*timerfd, 0, &newt, &oldt) < 0) {
-        MIDAS_LOG_ERROR("Failed to restart timer " << *timerfd << " :" << errno << " " << strerror(errno));
-        destroy_timer(timerfd);
+    uint32_t s = intervalMilliseconds / 1000;
+    uint32_t m = intervalMilliseconds - s * 1000;
+    struct itimerspec newTime = {{s, m * 1000}, {s, m * 1000}};
+    struct itimerspec oldTime = {{0, 0}, {0, 0}};
+    if (timerfd_settime(*timerFd, 0, &newTime, &oldTime) < 0) {
+        MIDAS_LOG_ERROR("Failed to restart timer " << *timerFd << " :" << errno << " " << strerror(errno));
+        destroy_timer(timerFd);
         rc = false;
     }
     return rc;

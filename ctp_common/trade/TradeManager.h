@@ -12,18 +12,16 @@ using namespace std;
 class TradeManager {
 public:
     CThostFtdcTraderApi* traderApi;
-    CThostFtdcMdApi* mdApi;
     shared_ptr<CtpData> data;
-    int tradeRequestId{0}, marketRequestId{0};  // 请求编号
+    int tradeRequestId{0};  // 请求编号
 
 public:
     TradeManager(shared_ptr<CtpData> d);
 
     void register_trader_api(CThostFtdcTraderApi* a) { traderApi = a; }
-    void register_md_api(CThostFtdcMdApi* a) { mdApi = a; }
 
     ///用户登录请求
-    void request_login(bool isTradeLogin);
+    void request_login();
     ///投资者结算结果确认
     void request_confirm_settlement();
     ///报单录入请求
@@ -64,9 +62,6 @@ public:
      * so that other invoke won't get the all chain queried
      */
     void init_ctp();
-
-    void subscribe_all_instruments();
-    void subscribe_market_data(const vector<string>& instruments);
 
 private:
     //    int request_open_position(string instrument, CtpOrderType type, bool isBuy, int volume,

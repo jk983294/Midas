@@ -1,0 +1,37 @@
+ctp
+{
+    name ctp_sub
+    publisher_ip 127.0.0.1
+    publisher_port 65023
+    consumer_ip 127.0.0.1
+    client_id 7
+    user_name kun
+    password fake
+    heartbeat_interval 60
+    max_missing_heartbeat_interval 300
+
+    subscribe
+    {
+        symbol cu1804
+        exchange_key CtpAll
+        exchange_code 6
+    }
+
+    book_cache
+    {
+        shmName ctp_cache
+        exchange_key CtpAll
+        exchange_code 6
+        num_products 600
+        symbol_data_file "/home/kun/Data/ctp/shm/ctp_symbol_data"
+    }
+
+    data_channel
+    {
+        shm_queue_size 16777216
+    }
+
+    dataDirectory "/home/kun/Data/ctp"
+    rawMsgLogDirectory "/home/kun/Data/ctp/raw_msg_log"
+
+}

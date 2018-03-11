@@ -23,7 +23,7 @@ enum CtpState { TradeLogging, TradeLogged, TradeInit, TradeInitFinished, MarketI
 
 class CtpData {
 public:
-    uint64_t mdLogInTime, mdLogOutTime, tradeLogInTime, tradeLogOutTime;
+    uint64_t tradeLogInTime, tradeLogOutTime;
     std::atomic<CtpState> state{CtpState::TradeLogging};
     std::mutex ctpMutex;
     std::condition_variable ctpCv;
@@ -32,8 +32,7 @@ public:
     string investorId;  // 投资者代码
     string password;    // 用户密码
     string tradeFront;
-    string marketFront;
-    string dataDirectory, tradeFlowPath, marketFlowPath;
+    string dataDirectory, tradeFlowPath;
 
     // 会话参数
     TThostFtdcFrontIDType frontId;        //前置编号

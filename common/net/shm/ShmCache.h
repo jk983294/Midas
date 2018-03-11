@@ -25,13 +25,12 @@ public:
     std::string nameBookCache;
     void* addrBookCache{MAP_FAILED};
     std::size_t sizeBookCache{0};
-    std::size_t sizeBookMetadata{0};
+    std::size_t sizeBookMetadata{0};  // = sizeof(BookMetadata) * (exchanges.size() + 1)
     int fdBookCache{-1};
     uint16_t numProducts{0};
 
 public:
-    ShmCache(std::string const& cachePropertyName, std::vector<midas::MdExchange> const& exchanges,
-             SymbolData* symbolData_);
+    ShmCache(std::string const& cachePropertyName, midas::MdExchange const& exchange, SymbolData* symbolData_);
 
     ShmCache(ShmCache const&) = delete;
 
@@ -39,9 +38,7 @@ public:
 
     ~ShmCache();
 
-    std::size_t init_book_cache(uint8_t *startingAddress, std::vector<midas::MdExchange> const &exchanges);
-
-    SymbolData& symbol_data() { return *symbolData; }
+    std::size_t init_book_cache(uint8_t* startingAddress, midas::MdExchange const& exchange);
 
     std::string name() const { return nameBookCache; }
 

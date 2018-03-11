@@ -6,7 +6,6 @@
 #include "MdDefs.h"
 
 namespace midas {
-static constexpr int MdLockMetaOffset = 12;
 class MdLock {
 public:
     static uint32_t updateTimeoutTSC;
@@ -27,7 +26,7 @@ public:
 
         // loop until reader releases lock in the worst case, this will loop until the readerCount in pMeta is 0
         bool timeout = false;
-        const uint64_t baseTsc = __rdtsc();
+        const uint64_t baseTsc = __rdtsc();  // read time stamp counter
         uint64_t nowTsc = baseTsc;
         do {
             if (nowTsc > baseTsc + updateTimeoutTSC) {
@@ -58,7 +57,7 @@ public:
         __atomic_store_n(pMeta, expected, __ATOMIC_RELEASE);
     }
 
-    static void _unlock_reader(uint64_t *pMeta, uint8_t id) {
+    static void _unlock_reader(uint64_t *pMeta, uint32_t id) {
         uint64_t expected = __atomic_load_n(pMeta, __ATOMIC_RELAXED);
         uint64_t target = expected;
         auto m = reinterpret_cast<MetaT *>(&target);

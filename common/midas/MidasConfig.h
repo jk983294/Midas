@@ -128,7 +128,7 @@ T get_cfg_value(const string& root, const char* key, const T& defaultValue = T()
 
     configValue = Config::instance().get<T>(to_lower_case(path), defaultValue);
     if (configValue == defaultValue) {
-        MIDAS_LOG_WARNING("config entry not found for " << key);
+        MIDAS_LOG_WARNING("config entry not found for " << key << ", use default value:" << defaultValue);
     }
     return configValue;
 }

@@ -2,43 +2,28 @@
 #include <midas/md/MdDefs.h>
 #include <net/raw/MdProtocol.h>
 #include <net/raw/RawSocket.h>
-#include <sys/epoll.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <utils/log/Log.h>
+#include <utils/MidasUtils.h>
+#include "Consumer.h"
 #include "SubControlChannel.h"
-#include "Subscriber.h"
 
 using namespace std;
 using namespace midas;
 
-namespace {
-thread_local bool control_thread = false;
-}
-
-PubControlChannel::PubControlChannel(std::string const& key, Publisher* feedServer_) : feedServer(feedServer_) {
+SubControlChannel::SubControlChannel(std::string const& key, Consumer* consumer_) : consumer(consumer_) {
+    pthread_mutex_init(&connectedLock, nullptr);
+    pthread_cond_init(&connectedCV, nullptr);
+    ipConsumer = midas::get_cfg_value<string>(key, "consumer_ip");
     ipPublisher = midas::get_cfg_value<string>(key, "publisher_ip");
     portPublisher = midas::get_cfg_value<uint16_t>(key, "publisher_port");
     intervalHeartbeat = midas::get_cfg_value<uint32_t>(key, "heartbeat_interval", 1);
-    maxMissingHB = midas::get_cfg_value<uint32_t>(key, "max_missing_heartbeat_interval", 5);
-    intervalKeepTicking = midas::get_cfg_value<uint32_t>(key, "house_keeping_interval", 20);
-    controlCore = midas::get_cfg_value<string>(key, "control_core");
-
-    if ((20 > intervalKeepTicking) || (1000 < intervalKeepTicking)) {
-        intervalKeepTicking = 20;
-    }
-    MIDAS_LOG_INFO(ipPublisher << ":" << portPublisher << " heartbeat_interval: " << intervalHeartbeat
-                               << " house_keeping_interval: " << intervalKeepTicking
-                               << " control_core: " << controlCore);
+    MIDAS_LOG_INFO("producer : " << ipPublisher << ":" << portPublisher
+                                 << " heartbeat_interval: " << intervalHeartbeat);
 }
 
-PubControlChannel::~PubControlChannel() {
+SubControlChannel::~SubControlChannel() {
     MIDAS_LOG_INFO("Destroying control channel");
-
-    if (mode == PubControlChannel::consumer) {
-        pthread_cond_destroy(&connectedCV);
-        pthread_mutex_destroy(&connectedLock);
-    }
+    pthread_cond_destroy(&connectedCV);
+    pthread_mutex_destroy(&connectedLock);
 }
 
 /**
@@ -47,14 +32,14 @@ PubControlChannel::~PubControlChannel() {
  * @param npkts continue reading if 'npkts' is 0
  * @return
  */
-int PubControlChannel::recv(int sockfd, int npkts) {
+int SubControlChannel::recv(int sockfd, int npkts) {
     uint8_t buffer[1024];
     int pktsRcvd = 0;
     bool cleanup = false;
 
     for (;;) {
         Header hdr;
-        ssize_t n = read_socket(sockfd, (uint8_t*)&hdr, sizeof(Header));  // Reader Header first
+        ssize_t n = read_socket(sockfd, (uint8_t*)&hdr, sizeof(Header));  // reader Header first
         if (n > 0) {
             if (hdr.size == 0) {
                 // heartbeat
@@ -62,50 +47,34 @@ int PubControlChannel::recv(int sockfd, int npkts) {
                 n = read_socket(sockfd, buffer, hdr.size);
                 if (n > 0) {
                     bool isConnected = false;
-                    uint8_t* datap = buffer;
+                    uint8_t* pData = buffer;
                     for (auto c = 0; c < hdr.count; ++c) {
-                        switch (*datap) {
-                            case CTRL_CONNECT_TYPE:
-                                MIDAS_LOG_INFO("Dispatching onConnectV2");
-                                feedServer->on_connect(sockfd, &hdr, (CtrlConnect*)datap);
-                                break;
+                        switch (*pData) {
                             case CTRL_CONNECT_RESPONSE_TYPE:
-                                MIDAS_LOG_INFO("Dispatching onConnectResponse");
-                                feedClient->onConnectResponse(&hdr, (CtrlConnectResponse*)datap, &isConnected);
-                                break;
-                            case CTRL_DISCONNECT_TYPE:
-                                MIDAS_LOG_INFO("Dispatching onDisconnect");
-                                feedServer->on_disconnect(sockfd, &hdr, (CtrlDisconnect*)datap);
+                                MIDAS_LOG_INFO("Dispatching on_connect_response");
+                                consumer->on_connect_response(&hdr, (CtrlConnectResponse*)pData, &isConnected);
                                 break;
                             case CTRL_DISCONNECT_RESPONSE_TYPE:
-                                MIDAS_LOG_INFO("Dispatching onDisconnectResponse");
-                                feedClient->onDisconnectResponse(&hdr, (CtrlDisconnectResponse*)datap);
-                                break;
-                            case CTRL_SUBSCRIBE_TYPE:
-                                feedServer->on_subscribe(sockfd, &hdr, (CtrlSubscribe*)datap);
+                                MIDAS_LOG_INFO("Dispatching on_disconnect_response");
+                                consumer->on_disconnect_response(&hdr, (CtrlDisconnectResponse*)pData);
                                 break;
                             case CTRL_SUBSCRIBE_RESPONSE_TYPE:
-                                feedClient->onSubscribeResponse(&hdr, (CtrlSubscribeResponse*)datap);
-                                break;
-                            case CTRL_UNSUBSCRIBE_TYPE:
-                                feedServer->on_unsubscribe(sockfd, &hdr, (CtrlUnsubscribe*)datap);
+                                consumer->on_subscribe_response(&hdr, (CtrlSubscribeResponse*)pData);
                                 break;
                             case CTRL_UNSUBSCRIBE_RESPONSE_TYPE:
-                                feedClient->onUnsubscribeResponse(&hdr, (CtrlUnsubscribeResponse*)datap);
+                                consumer->on_unsubscribe_response(&hdr, (CtrlUnsubscribeResponse*)pData);
                                 break;
                             default:
                                 break;
                         }
-                        datap += 1;             // advance by 1 byte to size field
-                        datap += (*datap - 1);  // advance to next message
+                        pData += 1;             // advance by 1 byte to size field
+                        pData += (*pData - 1);  // advance to next message
                     }
-                    //
                     // Multiple CtrlConnectResponse is delivered in message unit
-                    // Call 'signalConnected' only when the entire unit is processed
-                    //
+                    // Call 'signal_connected' only when the entire unit is processed
                     if (isConnected) {
-                        signalConnected();
-                        feedClient->onControlChannelEstablished();
+                        signal_connected();
+                        consumer->on_control_channel_established();
                     }
                 } else {
                     cleanup = true;
@@ -113,7 +82,6 @@ int PubControlChannel::recv(int sockfd, int npkts) {
                 }
             }
             if (++pktsRcvd == npkts) {  // won't ever break if npkts == 0
-
                 break;
             }
         } else {
@@ -122,30 +90,25 @@ int PubControlChannel::recv(int sockfd, int npkts) {
         }
     }
 
-    if (cleanup) {
-        close_socket(sockfd);
-    }
-
+    if (cleanup) close_socket(sockfd);
     return (cleanup ? -1 : pktsRcvd);
 }
 
-bool PubControlChannel::mdpConnect() {
+bool SubControlChannel::connect() {
     bool cleanup = false;
-
     if (fdControl == -1) {
         if ((fdControl = make_tcp_socket_client(ipConsumer.c_str(), 0, ipPublisher.c_str(), portPublisher,
                                                 connectTimeout)) >= 0) {
             MIDAS_LOG_INFO("consumer connected to producer " << ipPublisher << ":" << portPublisher);
-            feedClient->onControlChannelConnected();
+            consumer->on_control_channel_connected();
             epoll_event inEvent;
             inEvent.events = EPOLLIN;
             inEvent.data.fd = fdControl;
-            if (-1 == epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdControl, &inEvent)) {
+            if (-1 == epoll_ctl(fdEpoll, EPOLL_CTL_ADD, fdControl, &inEvent)) {
                 MIDAS_LOG_ERROR("epoll_ctl failed: " << errno);
                 cleanup = true;
             } else {
-                // Now do the HANDSHAKE by sending a connect message
-                if (sendConnect() != 0) {
+                if (send_connect() != 0) {  // Now do the HANDSHAKE
                     cleanup = true;
                 }
             }
@@ -163,8 +126,8 @@ bool PubControlChannel::mdpConnect() {
  * Send a disconnect msg to publisher
  * @return
  */
-bool PubControlChannel::mdpDisconnect() {
-    sendDisconnect();
+bool SubControlChannel::disconnect() {
+    send_disconnect();
     close_socket(fdControl);
     fdControl = -1;
     connected = false;
@@ -172,24 +135,7 @@ bool PubControlChannel::mdpDisconnect() {
     return true;
 }
 
-bool PubControlChannel::mdpServer() {
-    if (fdControl == -1) {
-        if ((fdControl = make_tcp_socket_server(ipPublisher.c_str(), portPublisher)) >= 0) {
-            MIDAS_LOG_INFO("producer accepting connection on " << ipPublisher << ":" << portPublisher);
-            epoll_event inEvent;
-            inEvent.events = EPOLLIN;
-            inEvent.data.fd = fdControl;
-            if (-1 == epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdControl, &inEvent)) {
-                MIDAS_LOG_ERROR("epoll_ctl failed: " << errno);
-                close_socket(fdControl);
-                fdControl = -1;
-            }
-        }
-    }
-    return fdControl >= 0;
-}
-
-void PubControlChannel::signalConnected() {
+void SubControlChannel::signal_connected() {
     MIDAS_LOG_INFO("Handshake with producer completed");
     pthread_mutex_lock(&connectedLock);
     connected = true;
@@ -197,20 +143,9 @@ void PubControlChannel::signalConnected() {
     pthread_cond_signal(&connectedCV);
 }
 
-void PubControlChannel::runloop() {
-    if (mode == PubControlChannel::consumer) {
-        runloop_consumer();
-    } else {
-        runloop_publisher();
-    }
-}
-
-void PubControlChannel::runloop_consumer() {
-    assert(mode == PubControlChannel::consumer);
-
+void SubControlChannel::run_loop() {
     int nfds;
-
-    if ((fdEPOLL = epoll_create(1)) < 0) {
+    if ((fdEpoll = epoll_create(1)) < 0) {
         MIDAS_LOG_ERROR("Failed on epoll_create " << errno << " " << strerror(errno));
         return;
     }
@@ -221,25 +156,19 @@ void PubControlChannel::runloop_consumer() {
 
     if (create_timer(intervalHeartbeat * 1000, &fdHeartbeatTimer)) {
         inEvent.data.fd = fdHeartbeatTimer;
-        epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdHeartbeatTimer, &inEvent);
+        epoll_ctl(fdEpoll, EPOLL_CTL_ADD, fdHeartbeatTimer, &inEvent);
     }
 
-    if (create_timer(intervalKeepTicking /* ms */, &fdKeepTickingTimer)) {
-        inEvent.data.fd = fdKeepTickingTimer;
-        epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdKeepTickingTimer, &inEvent);
-    }
-
-    if (create_timer(feedClient->callbackInteval(), &fdPeriodicalTimer)) {
+    if (create_timer(consumer->callback_interval(), &fdPeriodicalTimer)) {
         inEvent.data.fd = fdPeriodicalTimer;
-        epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdPeriodicalTimer, &inEvent);
+        epoll_ctl(fdEpoll, EPOLL_CTL_ADD, fdPeriodicalTimer, &inEvent);
     }
 
     while (!stopped) {
-        mdpConnect();
-
-        nfds = epoll_wait(fdEPOLL, outEvent, sizeof(outEvent) / sizeof(outEvent[0]), 1000 /*1 sec*/);
+        connect();
+        nfds = epoll_wait(fdEpoll, outEvent, sizeof(outEvent) / sizeof(outEvent[0]), 1000 /*1 sec*/);
         if (nfds == -1) {
-            MIDAS_LOG_ERROR("ERROR: epoll_wait " << strerror(errno));
+            if (errno != EINTR) MIDAS_LOG_ERROR("epoll_wait " << strerror(errno));
             continue;
         }
         for (int n = 0; n < nfds; ++n) {
@@ -248,19 +177,18 @@ void PubControlChannel::runloop_consumer() {
                 // Message from producer, receive one pkt at a time - there may be more than one msg in a pkt
                 int npkts = this->recv(fdControl, 1);
                 if (npkts < 0) {  // socket would have been closed in recv and removed from epoll
-
                     MIDAS_LOG_WARNING("Publisher hung up?");
                     close_socket(fdControl);
                     fdControl = -1;
                     connected = false;
-                    feedClient->onControlChannelDisconnected();
+                    consumer->on_control_channel_disconnected();
                     ::usleep(pauseMillisecsAfterDisconnect * 1000);
                 }
             } else if (fdReady == fdHeartbeatTimer) {
                 uint64_t dummy;
                 read(fdReady, &dummy, sizeof(dummy));
                 if (connected) {
-                    sendHeartbeat();
+                    send_heartbeat();
                 }
             } else if (fdReady == fdKeepTickingTimer) {
                 uint64_t dummy;
@@ -269,12 +197,10 @@ void PubControlChannel::runloop_consumer() {
                     int rc;
                     mdsymT s;
                     for (uint32_t nreq = 0; nreq < numReqAtATime; ++nreq) {  // Handle subscribe requests
+                        if (!reqSubscribe.get(s)) break;                     // no more requests in queue
 
-                        if (!reqSubscribe.get(s)) {
-                            break;  // no more requests in queue
-                        }
-                        if ((rc = sendSubscribe(std::get<0>(s), std::get<1>(s))) != 0) {
-                            MIDAS_LOG_WARNING("Failed to send subscribe request for "
+                        if ((rc = send_subscribe(std::get<0>(s), std::get<1>(s))) != 0) {
+                            MIDAS_LOG_WARNING("Failed to submit subscribe request for "
                                               << std::get<0>(s) << "." << std::get<1>(s) << ", error: " << rc
                                               << ", will retry");
                             reqSubscribe.put(s);
@@ -282,11 +208,10 @@ void PubControlChannel::runloop_consumer() {
                         }
                     }
                     for (uint32_t nreq = 0; nreq < numReqAtATime; ++nreq) {  // Handle unsubscribe requests
-                        if (!reqUnsubscribe.get(s)) {
-                            break;  // no more requests in queue
-                        }
-                        if ((rc = sendUnsubscribe(std::get<0>(s), std::get<1>(s))) != 0) {
-                            MIDAS_LOG_WARNING("Failed to send unsubscribe request for "
+                        if (!reqUnsubscribe.get(s)) break;                   // no more requests in queue
+
+                        if ((rc = send_unsubscribe(std::get<0>(s), std::get<1>(s))) != 0) {
+                            MIDAS_LOG_WARNING("Failed to submit unsubscribe request for "
                                               << std::get<0>(s) << "." << std::get<1>(s) << ", error: " << rc
                                               << ", will retry");
                             reqUnsubscribe.put(s);
@@ -298,7 +223,7 @@ void PubControlChannel::runloop_consumer() {
                 uint64_t dummy;
                 read(fdReady, &dummy, sizeof(dummy));
                 if (connected) {
-                    feedClient->callbackPeriodically();
+                    consumer->callback_periodically();
                 }
             }
         }
@@ -307,229 +232,145 @@ void PubControlChannel::runloop_consumer() {
     destroy_timer(&fdPeriodicalTimer);
     destroy_timer(&fdKeepTickingTimer);
     destroy_timer(&fdHeartbeatTimer);
-    mdpDisconnect();
+    disconnect();
 }
 
-void PubControlChannel::runloop_publisher() {
-    assert(mode == PubControlChannel::publisher);
-
-    int nfds;
-    epoll_event inEvent;
-    epoll_event outEvent[128];
-
-    if ((fdEPOLL = epoll_create(1)) < 0) {
-        MIDAS_LOG_ERROR("Failed on epoll_create " << errno << " " << strerror(errno));
-        return;
-    }
-
-    inEvent.events = EPOLLIN;
-
-    if (create_timer(intervalHeartbeat * 1000, &fdHeartbeatTimer)) {
-        inEvent.data.fd = fdHeartbeatTimer;
-        epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdHeartbeatTimer, &inEvent);
-    }
-
-    if (create_timer(intervalKeepTicking /* ms */, &fdKeepTickingTimer)) {
-        inEvent.data.fd = fdKeepTickingTimer;
-        epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdKeepTickingTimer, &inEvent);
-    }
-
-    while (!stopped) {
-        mdpServer();  // Establish server socket
-
-        nfds = epoll_wait(fdEPOLL, outEvent, sizeof(outEvent) / sizeof(outEvent[0]), 1);
-        if (nfds == -1) {
-            MIDAS_LOG_ERROR("ERROR: epoll_wait  " << strerror(errno));
-            continue;
-        }
-        for (int n = 0; n < nfds; ++n) {
-            int fdReady = outEvent[n].data.fd;
-            if (fdReady == fdControl) {
-                uint16_t portClient = 0;
-                char* ipClient = nullptr;
-                int fdClient = accept_tcp_socket_client(fdControl, &portClient, &ipClient);
-                if (fdClient >= 0) {
-                    MIDAS_LOG_WARNING("Accepted connection(" << fdClient << ") from consumer at " << ipClient << ":"
-                                                             << portClient);
-                    feedServer->register_feed_client(fdClient, ipClient, portClient);
-                    if (ipClient) {
-                        free(ipClient);
-                    }
-                    inEvent.data.fd = fdClient;
-                    epoll_ctl(fdEPOLL, EPOLL_CTL_ADD, fdClient, &inEvent);
-                }
-            } else if (fdReady == fdHeartbeatTimer) {
-                uint64_t dummy;
-                read(fdReady, &dummy, sizeof(dummy));
-            } else if (fdReady == fdKeepTickingTimer) {
-                uint64_t dummy;
-                read(fdReady, &dummy, sizeof(dummy));
-                feedServer->on_house_keeping();
-            } else {
-                // Message from an consumer, receive one pkt at a time - there may be more than one msg in a pkt
-                int npkts = this->recv(fdReady, 1);
-                if (npkts < 0) {  // Socket would have been closed by recv and removed from epoll
-
-                    MIDAS_LOG_WARNING("Consumer(" << fdReady << ") hung up?");
-                    feedServer->unregister_feed_client(fdReady);
-                } else {
-                    feedServer->update_client_heartbeat(fdReady);
-                }
-            }
-        }
-    }
-    destroy_timer(&fdHeartbeatTimer);
-}
-
-void* PubControlChannel::run(void* arg) {
-    PubControlChannel* cc = static_cast<PubControlChannel*>(arg);
+void* SubControlChannel::run(void* arg) {
+    SubControlChannel* cc = static_cast<SubControlChannel*>(arg);
     MIDAS_LOG_INFO("Starting control channel thread, id: " << midas::get_tid());
-    control_thread = true;
-    cc->runloop();  // blocks here
+    cc->run_loop();  // blocks here
     return nullptr;
 }
 
-int PubControlChannel::sendConnect() {
-    assert(mode == PubControlChannel::consumer);
-
-    MIDAS_LOG_INFO("Session: " << feedClient->session << ", Sequence: " << (controlSeqNo + 1)
-                               << ", Client_UserID: " << feedClient->user() << ", Client_Name: " << feedClient->name()
-                               << ", Client_PID: " << feedClient->pid() << ", Client_ID: " << feedClient->clientid()
-                               << ",  Client_Flags: " << feedClient->subscriptionFlags());
+int SubControlChannel::send_connect() {
+    MIDAS_LOG_INFO("Session: " << consumer->session << ", Sequence: " << (controlSeqNo + 1)
+                               << ", Client_Name: " << consumer->shmName << ", Client_PID: " << consumer->pid
+                               << ", Client_ID: " << consumer->clientId
+                               << ",  Client_Flags: " << consumer->subscriptionFlags);
 
     uint8_t buffer[sizeof(Header) + sizeof(CtrlConnect)];
-    Header* hp = (Header*)buffer;
-    hp->session = feedClient->session();
-    hp->seq = ++controlSeqNo;
-    hp->streamId = STREAM_ID_CONTROL_CHANNEL;
-    hp->count = 1;
-    hp->size = sizeof(CtrlConnect);
+    Header* pHeader = (Header*)buffer;
+    pHeader->session = consumer->session;
+    pHeader->seq = ++controlSeqNo;
+    pHeader->streamId = STREAM_ID_CONTROL_CHANNEL;
+    pHeader->count = 1;
+    pHeader->size = sizeof(CtrlConnect);
 
     CtrlConnect dummy;
-    CtrlConnect* cp = (CtrlConnect*)(buffer + sizeof(Header));
-    *cp = dummy;
-    cp->clientPid = feedClient->pid();
-    cp->clientId = feedClient->clientid();
-    cp->flags = feedClient->subscriptionFlags();
-    memcpy(cp->user, feedClient->user().c_str(), feedClient->user().length());
-    memcpy(cp->pwd, feedClient->pwd().c_str(), feedClient->pwd().length());
-    memcpy(cp->shmKey, feedClient->name().c_str(), feedClient->name().length());
+    CtrlConnect* cc = (CtrlConnect*)(buffer + sizeof(Header));
+    *cc = dummy;
+    cc->clientPid = consumer->pid;
+    cc->clientId = static_cast<uint8_t>(consumer->clientId);
+    cc->flags = consumer->subscriptionFlags;
+    memcpy(cc->user, consumer->userName.c_str(), consumer->userName.length());
+    memcpy(cc->pwd, consumer->password.c_str(), consumer->password.length());
+    memcpy(cc->shmKey, consumer->shmName.c_str(), consumer->shmName.length());
 
-    hp->xmitts = midas::ntime();
-
-    return (write_socket(fdControl, buffer, sizeof(Header) + hp->size) == sizeof(buffer) ? CONSUMER_OK
-                                                                                         : CONSUMER_NOT_CONNECTED);
+    pHeader->transmitTimestamp = midas::ntime();
+    return (write_socket(fdControl, buffer, sizeof(Header) + pHeader->size) == sizeof(buffer) ? CONSUMER_OK
+                                                                                              : CONSUMER_NOT_CONNECTED);
 }
 
-int PubControlChannel::sendDisconnect() {
-    assert(mode == PubControlChannel::consumer);
-
-    MIDAS_LOG_INFO("Session: " << feedClient->session << ", Sequence: " << (controlSeqNo + 1)
-                               << ", Client_UserID: " << feedClient->user() << ", Client_Name: " << feedClient->name()
-                               << ", Client_PID: " << feedClient->pid() << ", Client_ID: " << feedClient->clientid());
+int SubControlChannel::send_disconnect() {
+    MIDAS_LOG_INFO("Session: " << consumer->session << ", Sequence: " << (controlSeqNo + 1)
+                               << ", Client_UserID: " << consumer->userName << ", Client_Name: " << consumer->shmName
+                               << ", Client_PID: " << consumer->pid << ", Client_ID: " << consumer->clientId);
 
     uint8_t buffer[sizeof(Header) + sizeof(CtrlDisconnect)];
 
-    Header* hp = (Header*)buffer;
-    hp->session = feedClient->session();
-    hp->seq = ++controlSeqNo;
-    hp->streamId = STREAM_ID_CONTROL_CHANNEL;
-    hp->count = 1;
-    hp->size = sizeof(CtrlDisconnect);
+    Header* pHader = (Header*)buffer;
+    pHader->session = consumer->session;
+    pHader->seq = ++controlSeqNo;
+    pHader->streamId = STREAM_ID_CONTROL_CHANNEL;
+    pHader->count = 1;
+    pHader->size = sizeof(CtrlDisconnect);
 
     CtrlDisconnect dummy;
-    CtrlDisconnect* dcp = (CtrlDisconnect*)(buffer + sizeof(Header));
-    *dcp = dummy;
-    dcp->cpid = feedClient->pid();
-    hp->xmitts = midas::ntime();
-    return (write_socket(fdControl, buffer, sizeof(Header) + hp->size) == sizeof(buffer) ? CONSUMER_OK
-                                                                                         : CONSUMER_NOT_CONNECTED);
+    CtrlDisconnect* cd = (CtrlDisconnect*)(buffer + sizeof(Header));
+    *cd = dummy;
+    cd->cpid = consumer->pid;
+    pHader->transmitTimestamp = midas::ntime();
+    return (write_socket(fdControl, buffer, sizeof(Header) + pHader->size) == sizeof(buffer) ? CONSUMER_OK
+                                                                                             : CONSUMER_NOT_CONNECTED);
 }
 
-int PubControlChannel::sendSubscribe(std::string const& mdTick, uint16_t mdExch) {
-    assert(mode == PubControlChannel::consumer);
+uint8_t SubControlChannel::send_subscribe(std::string const& mdTick, uint16_t mdExch) {
+    uint8_t rc = CONSUMER_OK;
 
-    int rc = CONSUMER_OK;
-
-    if (!control_thread || !connected) {
+    if (!connected) {
         reqSubscribe.put(std::make_tuple(mdTick, mdExch));
     } else {
-        MIDAS_LOG_INFO("Session: " << feedClient->session() << ", Sequence: " << (controlSeqNo + 1) ", mdTick: "
-                                   << mdTick << ", mdExch: " << mdExch);
+        MIDAS_LOG_INFO("Session: " << consumer->session << ", Sequence: " << (controlSeqNo + 1)
+                                   << ", md_tick: " << mdTick << ", exchange: " << mdExch);
 
         uint8_t buffer[sizeof(Header) + sizeof(CtrlSubscribe)];
 
-        Header* hp = (Header*)buffer;
-        hp->session = feedClient->session();
-        hp->seq = ++controlSeqNo;
-        hp->streamId = STREAM_ID_CONTROL_CHANNEL;
-        hp->count = 1;
-        hp->size = sizeof(CtrlSubscribe);
+        Header* pHeader = (Header*)buffer;
+        pHeader->session = consumer->session;
+        pHeader->seq = ++controlSeqNo;
+        pHeader->streamId = STREAM_ID_CONTROL_CHANNEL;
+        pHeader->count = 1;
+        pHeader->size = sizeof(CtrlSubscribe);
 
         CtrlSubscribe dummy;
-        CtrlSubscribe* sp = (CtrlSubscribe*)(buffer + sizeof(Header));
-        *sp = dummy;
-        assert(sizeof(sp->symbol) > mdTick.length());
-        memcpy(sp->symbol, mdTick.c_str(), mdTick.length());
-        sp->exchange = mdExch;
-        hp->xmitts = midas::ntime();
-        return (write_socket(fdControl, buffer, sizeof(Header) + hp->size) == sizeof(buffer) ? CONSUMER_OK
-                                                                                             : CONSUMER_NOT_CONNECTED);
+        CtrlSubscribe* cs = (CtrlSubscribe*)(buffer + sizeof(Header));
+        *cs = dummy;
+        memcpy(cs->symbol, mdTick.c_str(), mdTick.length());
+        cs->exchange = mdExch;
+        pHeader->transmitTimestamp = midas::ntime();
+        return (write_socket(fdControl, buffer, sizeof(Header) + pHeader->size) == sizeof(buffer)
+                    ? CONSUMER_OK
+                    : CONSUMER_NOT_CONNECTED);
     }
-
     return rc;
 }
 
-int PubControlChannel::sendUnsubscribe(std::string const& mdTick, uint16_t mdExch) {
-    assert(mode == PubControlChannel::consumer);
+uint8_t SubControlChannel::send_unsubscribe(std::string const& mdTick, uint16_t mdExch) {
+    uint8_t rc = CONSUMER_OK;
 
-    int rc = CONSUMER_OK;
-
-    if (!control_thread || !connected) {
+    if (!connected) {
         reqUnsubscribe.put(std::make_tuple(mdTick, mdExch));
     } else {
-        MIDAS_LOG_INFO("Session: " << feedClient->session() << ", Sequence: " << (controlSeqNo + 1) ", mdTick: "
-                                   << mdTick << ", mdExch: " << mdExch);
+        MIDAS_LOG_INFO("send unsubscribe Session: " << consumer->session << ", Sequence: " << (controlSeqNo + 1)
+                                                    << ", md_tick: " << mdTick << ", exchange: " << mdExch);
 
         uint8_t buffer[sizeof(Header) + sizeof(CtrlUnsubscribe)];
 
-        Header* hp = (Header*)buffer;
-        hp->session = feedClient->session();
-        hp->seq = ++controlSeqNo;
-        hp->streamId = STREAM_ID_CONTROL_CHANNEL;
-        hp->count = 1;
-        hp->size = sizeof(CtrlUnsubscribe);
+        Header* pHeader = (Header*)buffer;
+        pHeader->session = consumer->session;
+        pHeader->seq = ++controlSeqNo;
+        pHeader->streamId = STREAM_ID_CONTROL_CHANNEL;
+        pHeader->count = 1;
+        pHeader->size = sizeof(CtrlUnsubscribe);
 
         CtrlUnsubscribe dummy;
-        CtrlUnsubscribe* usp = (CtrlUnsubscribe*)(buffer + sizeof(Header));
-        *usp = dummy;
-        memcpy(usp->symbol, mdTick.c_str(), mdTick.length());
-        usp->exchange = mdExch;
-        hp->xmitts = midas::ntime();
-        return (write_socket(fdControl, buffer, sizeof(Header) + hp->size) == sizeof(buffer) ? CONSUMER_OK
-                                                                                             : CONSUMER_NOT_CONNECTED);
+        CtrlUnsubscribe* cu = (CtrlUnsubscribe*)(buffer + sizeof(Header));
+        *cu = dummy;
+        memcpy(cu->symbol, mdTick.c_str(), mdTick.length());
+        cu->exchange = mdExch;
+        pHeader->transmitTimestamp = midas::ntime();
+        return (write_socket(fdControl, buffer, sizeof(Header) + pHeader->size) == sizeof(buffer)
+                    ? CONSUMER_OK
+                    : CONSUMER_NOT_CONNECTED);
     }
-
     return rc;
 }
 
-int PubControlChannel::sendHeartbeat() {
+int SubControlChannel::send_heartbeat() {
     uint8_t buffer[sizeof(Header)];
 
-    Header* hp = (Header*)buffer;
-    hp->session = feedClient->session();
-    hp->seq = ++controlSeqNo;
-    hp->streamId = STREAM_ID_CONTROL_CHANNEL;
-    hp->count = 0;
-    hp->size = 0;
-    hp->xmitts = midas::ntime();
-    return (write_socket(fdControl, buffer, sizeof(Header) + hp->size) == sizeof(buffer) ? CONSUMER_OK
-                                                                                         : CONSUMER_NOT_CONNECTED);
+    Header* pHeader = (Header*)buffer;
+    pHeader->session = consumer->session;
+    pHeader->seq = ++controlSeqNo;
+    pHeader->streamId = STREAM_ID_CONTROL_CHANNEL;
+    pHeader->count = 0;
+    pHeader->size = 0;
+    pHeader->transmitTimestamp = midas::ntime();
+    return (write_socket(fdControl, buffer, sizeof(Header) + pHeader->size) == sizeof(buffer) ? CONSUMER_OK
+                                                                                              : CONSUMER_NOT_CONNECTED);
 }
 
-bool PubControlChannel::waitUntilConnected() {
-    assert(mode == PubControlChannel::consumer);
-
+bool SubControlChannel::wait_until_connected() {
     struct timespec expiry;
     clock_gettime(CLOCK_REALTIME, &expiry);
     expiry.tv_sec += (connectTimeout + 1);

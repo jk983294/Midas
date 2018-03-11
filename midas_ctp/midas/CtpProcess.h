@@ -3,10 +3,10 @@
 
 #include <ctp/ThostFtdcMdApi.h>
 #include <ctp/ThostFtdcTraderApi.h>
+#include <market/MarketManager.h>
 #include <net/disruptor/Disruptor.h>
 #include <memory>
 #include "CtpDataConsumer.h"
-#include "MdSpi.h"
 #include "TradeSpi.h"
 #include "dao/DaoManager.h"
 #include "experiment/CtpDataLogConsumer.h"
@@ -21,22 +21,12 @@ using namespace midas;
 
 class CtpProcess : public MidasProcessBase {
 public:
-    typedef CtpDataConsumer DataConsumer;
-    //    typedef CtpDataLogConsumer DataConsumer;
-    typedef midas::Disruptor<CtpMdSpi, DataConsumer, MktDataPayload, midas::ConsumerStages::OneStage> TMktDataDisruptor;
-
     std::shared_ptr<CtpData> data;
-
     CThostFtdcTraderApi* traderApi{nullptr};
     std::shared_ptr<TradeSpi> traderSpi;
-    CThostFtdcMdApi* mdApi{nullptr};
-    std::shared_ptr<CtpMdSpi> mdSpi;
     std::shared_ptr<TradeManager> manager;
-
-    std::thread marketDataThread;
+    std::shared_ptr<MarketManager<CtpDataConsumer>> marketManager;
     std::thread tradeDataThread;
-    typename DataConsumer::SharedPtr consumerPtr;
-    typename TMktDataDisruptor::SharedPtr disruptorPtr;
 
 public:
     CtpProcess() = delete;
@@ -53,7 +43,6 @@ private:
 
     // ctp section
     void trade_thread();
-    void market_thread();
 
 private:
     // admin section

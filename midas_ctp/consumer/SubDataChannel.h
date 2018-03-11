@@ -1,5 +1,5 @@
-#ifndef MIDAS_DATA_CHANNEL_H
-#define MIDAS_DATA_CHANNEL_H
+#ifndef MIDAS_SUB_DATA_CHANNEL_H
+#define MIDAS_SUB_DATA_CHANNEL_H
 
 #include <net/shm/CircularBuffer.h>
 #include <net/shm/SharedMemory.h>
@@ -10,8 +10,14 @@
 #include <string>
 #include <vector>
 
-class DataChannel {
+class Consumer;  // fwd declare
+
+class SubDataChannel {
 public:
+    Consumer* consumer;
+    bool stopped{true};
+    bool poll{false};  // true means it will create thread within data channel
+    pthread_t cbReaderThread;
     uint32_t queueSize{0};
     std::vector<std::string> queueNames;
     std::vector<midas::CircularBuffer<midas::SharedMemory>*> queues;
@@ -23,13 +29,13 @@ public:
     std::atomic<uint64_t> droppedBytes{0};
 
 public:
-    DataChannel(std::string const& key);
+    SubDataChannel(std::string const& key, Consumer* client);
 
-    ~DataChannel();
+    ~SubDataChannel();
 
-    DataChannel(DataChannel const&) = delete;
+    SubDataChannel(SubDataChannel const&) = delete;
 
-    DataChannel& operator=(DataChannel const&) = delete;
+    SubDataChannel& operator=(SubDataChannel const&) = delete;
 
     uint8_t create_queue(std::string const& name);
 
@@ -37,11 +43,11 @@ public:
 
     bool stop();
 
-    // read numBytes from shared memory
-    uint8_t* write_prepare(uint32_t channelNo, uint32_t numBytes);
+    void loop_once();
 
-    // completes writing numBytes into shared memory
-    void write_commit(uint32_t channelNo, uint32_t numBytes);
+    void run_loop();
+
+    static void* run(void* arg);
 };
 
 #endif

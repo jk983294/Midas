@@ -5,7 +5,8 @@
 #include "MdDefs.h"
 
 namespace midas {
-struct MdExchange {
+class MdExchange {
+public:
     MdExchange(uint16_t exchange_, uint8_t exchangeDepth_, uint16_t bytesPerProduct_, uint16_t offsetBytesBid_,
                uint16_t offsetBytesAsk_)
         : exchange(exchange_),

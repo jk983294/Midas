@@ -10,33 +10,26 @@
 #include <tuple>
 
 class Subscriber;
+class Consumer;
 
-class SubControlChannel : std::enable_shared_from_this<SubControlChannel> {
+class SubControlChannel {
 public:
-    Publisher* feedServer;
+    Consumer* consumer;
     bool stopped{false};
-    pid_t pid{0};
     uint64_t session{0};
-    std::atomic<uint64_t> sequence{0};
-    int fdEPOLL{-1};
+    int fdEpoll{-1};
     int fdControl{-1};
     uint32_t intervalHeartbeat{1};
-    uint32_t maxMissingHB{5};
     uint32_t pauseMillisecsAfterDisconnect{250};
     int fdHeartbeatTimer{-1};
-    uint32_t intervalKeepTicking{20};
     int fdKeepTickingTimer{-1};
     int fdPeriodicalTimer{-1};
     std::string ipPublisher;
     uint16_t portPublisher{0};
     std::string ipConsumer;
-    std::string controlCore;
     pthread_t controlThread;
     int connectTimeout{0};
-    std::string controlQueue;
-    uint32_t controlQueueSize{0};
     std::atomic<uint64_t> controlSeqNo{0};
-    uint32_t heartbeatInterval{0};
     using mdsymT = std::tuple<std::string, uint16_t>;
     midas::MwsrQueue<mdsymT> reqSubscribe;
     midas::MwsrQueue<mdsymT> reqUnsubscribe;
@@ -46,15 +39,13 @@ public:
     pthread_cond_t connectedCV;
 
 public:
-    PubControlChannel(std::string const& key, Publisher* feedServer);
+    SubControlChannel(std::string const& key, Consumer* consumer_);
 
-    PubControlChannel(PubControlChannel const&) = delete;
+    SubControlChannel(SubControlChannel const&) = delete;
 
-    PubControlChannel& operator=(PubControlChannel const&) = delete;
+    SubControlChannel& operator=(SubControlChannel const&) = delete;
 
-    ~PubControlChannel();
-
-    std::shared_ptr<PubControlChannel> get_ptr() { return shared_from_this(); }
+    ~SubControlChannel();
 
     bool start() {
         int rc = pthread_create(&controlThread, nullptr, run, this);
@@ -67,35 +58,29 @@ public:
         return stopped;
     }
 
-    bool mdpConnect();
+    bool connect();
 
-    bool waitUntilConnected();
+    bool wait_until_connected();
 
-    bool mdpDisconnect();
+    bool disconnect();
 
-    bool mdpServer();
+    int send_heartbeat();
 
-    int sendHeartbeat();
-
-    void runloop();
+    void run_loop();
 
     static void* run(void* arg);
 
-    void signalConnected();
+    void signal_connected();
 
     int recv(int sockfd, int npkts);  // read 'npkts' message packets where one message packet => [1xHeader + nxMsgs]
 
-    int sendConnect();
+    int send_connect();
 
-    int sendDisconnect();
+    int send_disconnect();
 
-    int sendSubscribe(std::string const& mdTick, uint16_t mdExch);
+    uint8_t send_subscribe(std::string const& mdTick, uint16_t mdExch);
 
-    int sendUnsubscribe(std::string const& mdTick, uint16_t mdExch);
-
-    void runloop_consumer();
-
-    void runloop_publisher();
+    uint8_t send_unsubscribe(std::string const& mdTick, uint16_t mdExch);
 };
 
 #endif

@@ -1,10 +1,5 @@
 #include <midas/MidasConfig.h>
 #include <midas/md/MdDefs.h>
-#include <algorithm>
-#include <cstdlib>
-#include <iterator>
-#include <sstream>
-#include <stdexcept>
 #include "ConsumerProxy.h"
 #include "DataSource.h"
 
@@ -13,8 +8,6 @@ using namespace midas;
 
 DataSource::DataSource(Publisher const& publisher_, uint8_t queueIndex_)
     : queueIndex(queueIndex_), circularBuffer(midas::HeapMemory{16 * 1048576}, true), publisher(publisher_) {
-    core = midas::get_cfg_value<std::string>("ctp", "affinity");
-    scheduler = midas::get_cfg_value<std::string>("ctp", "scheduler");
     canUnsubscribe = midas::get_cfg_value<bool>("ctp", "can_unsubscribe", false);
 }
 
@@ -31,7 +24,7 @@ void DataSource::clear_book_cache(void* userData) {
         Header* hp = (Header*)d;  // in-memory event passing, we don't care other fields
         hp->count = 1;
         hp->size = sizeof(AdminBookClear);
-        AdminBookClear* abc = (AdminBookClear*)((uint8_t*)d + sizeof(Header));
+        AdminBookClear* abc = (AdminBookClear*)(d + sizeof(Header));
         abc->type = ADMIN_BOOK_CLEAR_TYPE;
         abc->msgSize = sizeof(AdminBookClear);
         abc->ticker = userData;
@@ -75,22 +68,5 @@ bool DataSource::send_data_heartbeat() {
     for (auto& c : consumers) {
         c->send_data_heartbeat(queueIndex, step_sequence());
     }
-
     return true;
-}
-
-std::vector<MdExchange> DataSource::participant_exchanges() {
-    std::vector<MdExchange> exchanges;
-    MdExchange me;
-    me.exchangeDepth = 5;
-    me.bytesPerProduct = 16;
-    me.exchange = ExchangeCFFEX;
-    exchanges.push_back(me);
-    me.exchange = ExchangeCZCE;
-    exchanges.push_back(me);
-    me.exchange = ExchangeDCE;
-    exchanges.push_back(me);
-    me.exchange = ExchangeSHFE;
-    exchanges.push_back(me);
-    return exchanges;
 }
