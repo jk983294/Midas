@@ -31,8 +31,8 @@ bool CtpBackTester::configure() {
         data->tradeStatusManager.load_trade_session(tradingHourCfgPath);
     }
 
-    MIDAS_LOG_INFO("using config" << '\n'
-                                  << "dataDirectory: " << dataDirectory << '\n'
-                                  << "candleScale: " << candleScale << '\n');
+    MIDAS_LOG_INFO("using config"
+                   << "dataDirectory: " << dataDirectory << " "
+                   << "candleScale: " << candleScale);
     return true;
 }

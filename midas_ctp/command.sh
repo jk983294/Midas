@@ -4,9 +4,10 @@ cp -r cfg ~/Data/ctp
 
 midas -a 8023 -C /home/kun/Data/ctp/cfg/midas.info -L debug > /var/tmp/midas.log
 backtest -a 8033 -C /home/kun/Data/ctp/cfg/backtest.info -L debug
+backtest -a 8033 -C /home/kun/github/midas/midas_ctp/cfg/backtest.info -L debug
 
 # admin generic
-admin 0:8023 net_help
+admin 0:8023 help
 admin 0:8023 meters
 
 # query local data

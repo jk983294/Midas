@@ -1,7 +1,11 @@
 #ifndef MIDAS_STRATEGY_BASE_H
 #define MIDAS_STRATEGY_BASE_H
 
+#include <midas/Singleton.h>
+#include <model/CtpDef.h>
 #include "model/CandleData.h"
+
+class CtpInstrument;  // forward declaration
 
 struct StrategyParameter {
     CandleScale scale{CandleScale::Minute15};
@@ -14,29 +18,34 @@ struct StrategyParameter {
     static StrategyParameter& instance() { return midas::Singleton<StrategyParameter>::instance(); }
 };
 
-enum StrategyDecision { longSignal, shortSignal, clearPositionSignal, holdPosition, holdEmpty };
+enum StrategyDecision { NoSignal, longSignal, shortSignal, clearLongPositionSignal, clearShortPositionSignal };
+enum StrategyState { HoldMoney, HoldLongPosition, HoldShortPosition };
 
 class StrategyBase {
 public:
-    int itr{0};
+    int itr{0};  // candles iterator
+    int coolDownCount{0};
     int singleInt{1};
     double singleDouble{1.0};
-    const Candles& candles;
-    StrategyDecision decision{StrategyDecision::holdEmpty};
+    const CtpInstrument& instrument;
+    const Candles& candles;  // main candle, defined align with StrategyParameter.scale
+    StrategyDecision decision{StrategyDecision::NoSignal};
+    StrategyState state{StrategyState::HoldMoney};
 
     /**
-     * value > 0.5 means long signal
-     * value < -0.5 means short signal
-     * other value means no signal
+     * value >= 100 means long signal
+     * value <= -100 means short signal
+     * 0 means no signal
+     * (-100, 0) (0, 100) reserved
      */
-    vector<double> signals;
+    vector<int64_t> signals;
 
 public:
-    StrategyBase(const Candles& candles_) : candles(candles_) {}
+    StrategyBase(const CtpInstrument& instrument_, CandleScale scale);
     virtual ~StrategyBase() = default;
 
     virtual void init() = 0;
-    virtual void calculate(size_t index) = 0;
+    virtual void calculate(int index) = 0;
 
     void calculate_all() {
         init();
@@ -45,7 +54,7 @@ public:
         }
     }
 
-    void apply_parameter(StrategyParameter parameter) {
+    void apply_parameter(const StrategyParameter& parameter) {
         singleDouble = parameter.singleDouble;
         singleInt = parameter.singleInt;
     }
@@ -63,16 +72,31 @@ public:
         calculate(itr - 1);
     }
 
-    virtual string get_csv_header() = 0;
-    virtual string get_csv_line(size_t index) = 0;
-
-    void csv_stream(ostream& os) {
-        os << "date,time,open,high,low,close,volume,signals," << get_csv_header() << '\n';
-        int totalAvailableCount = candles.total_available_count();
-        for (int i = 0; i < totalAvailableCount; ++i) {
-            os << candles.data[i] << ',' << signals[i] << ',' << get_csv_line(i) << '\n';
-        }
+    bool has_signal() {
+        if (itr == 0)
+            return false;
+        else
+            return signals[itr - 1] >= signalValueBuyThreshold || signals[itr - 1] <= signalValueSellThreshold;
     }
+
+    int64_t signal_strength() { return std::abs(signal_value()); }
+
+    int64_t signal_value() {
+        if (itr == 0)
+            return 0;
+        else
+            return signals[itr - 1];
+    }
+
+    void set_no_signal(int i) {
+        signals[i] = signalValueNo;
+        decision = StrategyDecision::NoSignal;
+    }
+
+    virtual string get_csv_header() = 0;
+    virtual string get_csv_line(int index) = 0;
+
+    void csv_stream(ostream& os);
 };
 
 #endif

@@ -5,11 +5,11 @@
 
 namespace midas {
 
-bool is_equal(double a, double b) { return std::abs(a - b) < 1e-6; }
+inline bool is_equal(double a, double b) { return std::abs(a - b) < 1e-6; }
 
-bool is_equal(double a, double b, double epsilon) { return std::abs(a - b) < epsilon; }
+inline bool is_equal(double a, double b, double epsilon) { return std::abs(a - b) < epsilon; }
 
-bool is_zero(double v) { return is_equal(v, 0.0); }
+inline bool is_zero(double v) { return is_equal(v, 0.0); }
 
 inline bool is_same_sign(int x, int y) { return !(x > 0 && y < 0) && !(x < 0 && y > 0); }
 

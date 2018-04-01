@@ -2,18 +2,17 @@
 #define MIDAS_PARAMETER_TRAINER_H
 
 #include <vector>
+#include "Simulator.h"
 #include "TrainCommon.h"
 #include "strategy/StrategyBase.h"
 #include "utils/log/Log.h"
-#include "Simulator.h"
-
 
 class ParameterTrainer {
 public:
     int singleIntStart, singleIntEnd, singleIntStep;
     double singleDoubleStart, singleDoubleEnd, singleDoubleStep;
     TrainType trainType;
-    vector<BacktestResult> results;
+    vector<std::shared_ptr<BacktestResult>> results;
     std::unique_ptr<Simulator> simulator;
 
 public:
@@ -33,12 +32,12 @@ public:
 
     void process() {
         StrategyParameter parameter;
-        if(trainType == TrainType::SingleInt){
+        if (trainType == TrainType::SingleInt) {
             for (int i = singleIntStart; i <= singleIntEnd; i += singleIntStep) {
                 parameter.singleInt = i;
                 process(parameter, i);
             }
-        } else if(trainType == TrainType::SingleDouble){
+        } else if (trainType == TrainType::SingleDouble) {
             for (double i = singleDoubleStart; i <= singleDoubleEnd; i += singleDoubleStep) {
                 parameter.singleDouble = i;
                 process(parameter, i);
@@ -49,15 +48,14 @@ public:
     void process(const StrategyParameter& parameter, double param) {
         MIDAS_LOG_INFO("start training with parameter " << param);
         simulator->apply(parameter);
-        BacktestResult result = simulator->get_performance();
-        result.parameter = param;
+        std::shared_ptr<BacktestResult> result = simulator->get_performance();
+        result->parameter = param;
         results.push_back(result);
     }
 
-    void init_simulator(std::shared_ptr<CtpData> data, const string& strategyName){
+    void init_simulator(std::shared_ptr<CtpData> data, const string& strategyName) {
         simulator = make_unique<Simulator>(data);
     }
-
 };
 
 #endif

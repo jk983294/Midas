@@ -31,7 +31,7 @@ void CandleDao::get_all_candles(std::unordered_map<std::string, std::vector<Cand
             data[instrument].push_back({cob, time, open, high, low, close, volume});
         }
     } catch (sql::SQLException& e) {
-        MIDAS_LOG_ERROR("get_all_candles error " << e);
+        MIDAS_LOG_ERROR("get_all_candles error " << e.what());
     }
 }
 
@@ -60,7 +60,7 @@ int CandleDao::save_candles(const std::string& instrument, const std::vector<Can
             ++saved;
         }
     } catch (sql::SQLException& e) {
-        MIDAS_LOG_ERROR("save_candles error " << e);
+        MIDAS_LOG_ERROR("save_candles error " << e.what());
     }
     return saved;
 }

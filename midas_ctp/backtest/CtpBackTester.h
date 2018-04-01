@@ -40,7 +40,7 @@ private:
 
     void link_instrument_info();
 
-    BacktestResult calculate(StrategyType type);
+    std::shared_ptr<BacktestResult> calculate(StrategyType type);
 
 private:
     // admin section

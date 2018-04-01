@@ -24,7 +24,8 @@ void CtpBackTester::app_start() {
     fake_instrument_info_from_product();
     link_instrument_info();
 
-    calculate(StrategyType::TBiMaStrategy);
+    std::shared_ptr<BacktestResult> result = calculate(StrategyType::TBiMaStrategy);
+    MIDAS_LOG_INFO("test result:\n" << *result);
 }
 
 void CtpBackTester::load_test_data(const string& dataPath) {
@@ -43,7 +44,7 @@ void CtpBackTester::load_test_data(const string& dataPath) {
     data->products.swap(loadedProducts);
 }
 
-BacktestResult CtpBackTester::calculate(StrategyType type) {
+std::shared_ptr<BacktestResult> CtpBackTester::calculate(StrategyType type) {
     StrategyFactory::set_strategy(data->instruments, type);
     std::unique_ptr<Simulator> simulator = make_unique<Simulator>(data);
     return simulator->get_performance();
@@ -62,7 +63,9 @@ void CtpBackTester::fake_instrument_info_from_product() {
             field->MinMarketOrderVolume = productField.MinMarketOrderVolume;
             field->MaxLimitOrderVolume = productField.MaxLimitOrderVolume;
             field->MinLimitOrderVolume = productField.MinLimitOrderVolume;
-            data->instrumentInfo.insert({instrument.productName, std::move(field)});
+            field->LongMarginRatio = 0.1;
+            field->ShortMarginRatio = 0.1;
+            data->instrumentInfo.insert({instrument.id, std::move(field)});
         } else {
             MIDAS_LOG_ERROR("cannot fake instrument info for " << instrument.id);
         }

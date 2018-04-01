@@ -10,7 +10,6 @@ public:
     std::shared_ptr<CtpData> data;
     PositionManager& positionManager;
     std::vector<CtpOrder> orders;
-    BacktestResult result;
     std::vector<std::shared_ptr<CtpInstrument>> currentRound;
 
 public:
@@ -18,33 +17,36 @@ public:
 
     void apply(const StrategyParameter& parameter) {}
 
-    BacktestResult get_performance() {
+    std::shared_ptr<BacktestResult> get_performance() {
         init();
         simulate();
+        std::shared_ptr<BacktestResult> result(new BacktestResult);
+        result->init(positionManager);
         return result;
     }
 
 private:
     void simulate() {
-        while (1) {
+        while (true) {
             if (get_available_instrument()) {
                 /**
                  * calculate market value, open new position, close old position
                  */
-                positionManager.mark2market(data->instruments);
-                handle_existing_position();
-                handle_new_position();
+                positionManager.mark2market();
+                std::shared_ptr<CtpInstrument> best = positionManager.new_signals(currentRound);
+                if (best) {
+                    positionManager.order4simulation(best);
+                }
+                positionManager.close_position4simulation();
+                positionManager.order2position4simulation();
 
                 advance_timestamp();
             } else {
-                break;
+                break;  // all instruments have finished time line advance
             }
         }
+        positionManager.close_exist_position4simulation();
     }
-
-    void handle_existing_position() {}
-
-    void handle_new_position() {}
 
     /**
      * find available instruments with earliest time, calculate signal
@@ -75,6 +77,7 @@ private:
 
         for (auto& pInstrument : currentRound) {
             pInstrument->strategy->calculate_previous_candle();
+            pInstrument->market_price(pInstrument->strategy->current_candle().open);
         }
         return true;
     }
@@ -86,11 +89,11 @@ private:
     }
 
     void init() {
-        memset(&result, 0, sizeof(BacktestResult));
         orders.clear();
         for (auto& item : data->instruments) {
             item.second->strategy->init();
         }
+        positionManager.adjust_leverage(data->instruments.size());
         positionManager.init4simulation();
     }
 };

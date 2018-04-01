@@ -81,4 +81,9 @@ bool operator>=(const Timestamp& left, const Timestamp& right) {
     return left.cob > right.cob || (left.cob == right.cob && left.time >= right.time);
 }
 bool operator!=(const Timestamp& left, const Timestamp& right) { return !(left == right); }
+
+ostream& operator<<(ostream& os, const Timestamp& timestamp) {
+    os << timestamp.cob << "." << timestamp.time;
+    return os;
+}
 }

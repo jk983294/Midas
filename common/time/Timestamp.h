@@ -1,6 +1,7 @@
 #ifndef MIDAS_TIMESTAMP_H
 #define MIDAS_TIMESTAMP_H
 
+#include <ostream>
 #include <string>
 
 using namespace std;
@@ -44,6 +45,8 @@ bool operator<=(const Timestamp& left, const Timestamp& right);
 bool operator>=(const Timestamp& left, const Timestamp& right);
 bool operator==(const Timestamp& left, const Timestamp& right);
 bool operator!=(const Timestamp& left, const Timestamp& right);
+
+ostream& operator<<(ostream& os, const Timestamp& timestamp);
 }
 
 #endif

@@ -103,7 +103,10 @@ string CtpBackTester::admin_train(const string& cmd, const TAdminCallbackArgs& a
 string CtpBackTester::admin_calculate(const string& cmd, const TAdminCallbackArgs& args) {
     if (args.size() == 1) {
         string strategyName = args[0];
-        calculate(string2strategy(strategyName));
+        std::shared_ptr<BacktestResult> result = calculate(string2strategy(strategyName));
+        string file = dump2file(*result, "/tmp/calculation.dump");
+        return "calculation finished, result dumped to " + file;
+    } else {
+        return "invalid parameter! valid is (TMaStrategy|TBiMaStrategy)";
     }
-    return "invalid parameter!";
 }

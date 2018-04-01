@@ -18,20 +18,20 @@ inline StrategyType string2strategy(const string& str) {
 
 class StrategyFactory {
 public:
-    static std::unique_ptr<StrategyBase> create_strategy(const Candles& candles_, StrategyType strategyType) {
+    static std::unique_ptr<StrategyBase> create_strategy(const CtpInstrument& instrument, CandleScale scale,
+                                                         StrategyType strategyType) {
         switch (strategyType) {
             case StrategyType::TMaStrategy:
-                return std::make_unique<BiMaStrategy>(candles_);
+                return std::make_unique<BiMaStrategy>(instrument, scale);
             case StrategyType::TBiMaStrategy:
-                return std::make_unique<BiMaStrategy>(candles_);
+                return std::make_unique<BiMaStrategy>(instrument, scale);
             default:
                 throw "invalid strategy type.";
         }
     }
 
     static void set_strategy(CtpInstrument& instrument, StrategyType strategyType) {
-        instrument.strategy =
-            create_strategy(instrument.get_candle_reference(StrategyParameter::instance().scale), strategyType);
+        instrument.strategy = create_strategy(instrument, StrategyParameter::instance().scale, strategyType);
     }
 
     static void set_strategy(map<string, std::shared_ptr<CtpInstrument>>& instruments, StrategyType strategyType) {

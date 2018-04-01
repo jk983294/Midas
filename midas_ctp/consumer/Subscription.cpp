@@ -143,7 +143,7 @@ uint32_t SubTicker::occ_snap(void* target, uint8_t* source, size_t n, uint64_t* 
     while (nLockAttempts < N_Max_Lock_Attempts) {
         // loop with max attempts
         while (nOptAttempts < N_Max_Opt_Attempts) {
-            // snap the verison, long read is atomic on x86 TSO
+            // snap the version, long read is atomic on x86 TSO
             uint64_t meta1 = __atomic_load_n(pMeta, __ATOMIC_RELAXED);
             const auto m1 = reinterpret_cast<MdLock::MetaT*>(&meta1);
             const uint64_t nSnappedVersion = m1->version;
