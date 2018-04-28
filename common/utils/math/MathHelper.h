@@ -2,6 +2,7 @@
 #define MIDAS_MATH_HELPER_H
 
 #include <cmath>
+#include <vector>
 
 namespace midas {
 
@@ -39,6 +40,14 @@ inline bool is_in_range(int value, int low, int high) {
  * check if [x, y] is in range of [a,b]
  */
 inline bool is_in_range(double x, double y, double a, double b) { return is_in_range(x, a, b) && is_in_range(y, a, b); }
+
+inline bool is_up_cross(const std::vector<double>& fast, const std::vector<double>& slow, int index) {
+    return fast[index] > slow[index] && fast[index - 1] < slow[index - 1];
+}
+
+inline bool is_down_cross(const std::vector<double>& fast, const std::vector<double>& slow, int index) {
+    return fast[index] < slow[index] && fast[index - 1] > slow[index - 1];
+}
 }
 
 #endif

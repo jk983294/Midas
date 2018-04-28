@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "Timestamp.h"
 
 namespace midas {
@@ -83,7 +84,7 @@ bool operator>=(const Timestamp& left, const Timestamp& right) {
 bool operator!=(const Timestamp& left, const Timestamp& right) { return !(left == right); }
 
 ostream& operator<<(ostream& os, const Timestamp& timestamp) {
-    os << timestamp.cob << "." << timestamp.time;
+    os << timestamp.cob << "." << std::setw(6) << std::setfill('0') << timestamp.time;
     return os;
 }
 }

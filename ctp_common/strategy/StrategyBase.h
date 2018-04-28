@@ -44,15 +44,18 @@ public:
     StrategyBase(const CtpInstrument& instrument_, CandleScale scale);
     virtual ~StrategyBase() = default;
 
+    void __init();
     virtual void init() = 0;
-    virtual void calculate(int index) = 0;
 
-    void calculate_all() {
-        init();
-        for (int i = 0; i < candles.currentBinIndex; ++i) {
-            calculate(i);
-        }
-    }
+    /**
+     * calculate current candle at its beginning, so there is no low/high/close yet
+     * but we do have open which passed in as marketPrice
+     * @param index
+     * @param marketPrice
+     */
+    virtual void calculate(int index, double marketPrice) = 0;
+
+    void calculate_all();
 
     void apply_parameter(const StrategyParameter& parameter) {
         singleDouble = parameter.singleDouble;
@@ -61,32 +64,21 @@ public:
 
     bool is_valid_time() { return itr < candles.historicDataCount; }
 
-    const CandleData& current_candle() const { return candles.get(itr); }
+    const CandleData& current_candle() const { return candles[itr]; }
 
-    const CandleData& previous_candle() const { return candles.get(itr - 1); }
+    const CandleData& previous_candle() const { return candles[itr - 1]; }
 
-    const midas::Timestamp& current_time() const { return candles.get(itr).timestamp; }
+    const CandleData& pre_pre_candle() const { return candles[itr - 2]; }
 
-    void calculate_previous_candle() {
-        if (itr == 0) return;
-        calculate(itr - 1);
-    }
+    const midas::Timestamp& current_time() const { return candles[itr].timestamp; }
 
-    bool has_signal() {
-        if (itr == 0)
-            return false;
-        else
-            return signals[itr - 1] >= signalValueBuyThreshold || signals[itr - 1] <= signalValueSellThreshold;
-    }
+    void calculate_current(double marketPrice) { calculate(itr, marketPrice); }
+
+    bool has_signal() { return signals[itr] >= signalValueBuyThreshold || signals[itr] <= signalValueSellThreshold; }
 
     int64_t signal_strength() { return std::abs(signal_value()); }
 
-    int64_t signal_value() {
-        if (itr == 0)
-            return 0;
-        else
-            return signals[itr - 1];
-    }
+    int64_t signal_value() { return signals[itr]; }
 
     void set_no_signal(int i) {
         signals[i] = signalValueNo;

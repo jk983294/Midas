@@ -62,7 +62,7 @@ public:
             return currentBinIndex;
     }
 
-    const CandleData& get(int i) const { return data[i]; }
+    const CandleData& operator[](int i) const { return data[i]; }
 };
 
 ostream& operator<<(ostream& os, const CandleData& candle);

@@ -17,7 +17,7 @@ public:
     int orderId;
     int maxInstrument{splitFactor};
     double totalInstrumentValue{0};
-    double totalAsset{0};  //  = cash + totalMargin
+    double totalAsset{0};  // = cash + totalMargin
     double cash{0};        // = sum(position.deltaProfit) - sum(position.deltaMargin)
     double totalProfit{0};
     double totalMargin{0};

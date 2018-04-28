@@ -85,11 +85,21 @@ string CtpBackTester::admin_train(const string& cmd, const TAdminCallbackArgs& a
         string strategyName = args[0];
 
         if (midas::is_int(args[1])) {
-            trainer = make_unique<ParameterTrainer>(std::atoi(args[1].c_str()), std::atoi(args[2].c_str()),
-                                                    std::atoi(args[3].c_str()));
+            int start = std::atoi(args[1].c_str());
+            int end = std::atoi(args[2].c_str());
+            if (start <= end) {
+                trainer = make_unique<ParameterTrainer>(start, end, std::atoi(args[3].c_str()));
+            } else {
+                return "start should less than end";
+            }
         } else if (midas::is_double(args[1])) {
-            trainer = make_unique<ParameterTrainer>(std::atof(args[1].c_str()), std::atof(args[2].c_str()),
-                                                    std::atof(args[3].c_str()));
+            double start = std::atof(args[1].c_str());
+            double end = std::atof(args[2].c_str());
+            if (start <= end) {
+                trainer = make_unique<ParameterTrainer>(start, end, std::atof(args[3].c_str()));
+            } else {
+                return "start should less than end";
+            }
         } else {
             return "invalid parameter!";
         }
@@ -97,7 +107,7 @@ string CtpBackTester::admin_train(const string& cmd, const TAdminCallbackArgs& a
         trainer->init_simulator(data, strategyName);
         trainer->process();
     }
-    return "invalid parameter!";
+    return string{"invalid parameter! valid is train "} + allStrategies + string{" begin end step"};
 }
 
 string CtpBackTester::admin_calculate(const string& cmd, const TAdminCallbackArgs& args) {
@@ -107,6 +117,6 @@ string CtpBackTester::admin_calculate(const string& cmd, const TAdminCallbackArg
         string file = dump2file(*result, "/tmp/calculation.dump");
         return "calculation finished, result dumped to " + file;
     } else {
-        return "invalid parameter! valid is (TMaStrategy|TBiMaStrategy)";
+        return string{"invalid parameter! valid is "} + allStrategies;
     }
 }

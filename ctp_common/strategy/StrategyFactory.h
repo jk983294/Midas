@@ -1,6 +1,7 @@
 #ifndef MIDAS_STRATEGY_FACTORY_H
 #define MIDAS_STRATEGY_FACTORY_H
 
+#include <map>
 #include <memory>
 #include "BiMaStrategy.h"
 #include "StrategyBase.h"
@@ -30,17 +31,9 @@ public:
         }
     }
 
-    static void set_strategy(CtpInstrument& instrument, StrategyType strategyType) {
-        instrument.strategy = create_strategy(instrument, StrategyParameter::instance().scale, strategyType);
-    }
+    static void set_strategy(CtpInstrument& instrument, StrategyType strategyType);
 
-    static void set_strategy(map<string, std::shared_ptr<CtpInstrument>>& instruments, StrategyType strategyType) {
-        for (auto& item : instruments) {
-            if (item.second->isMasterContract) {
-                set_strategy(*(item.second), strategyType);
-            }
-        }
-    }
+    static void set_strategy(std::map<string, std::shared_ptr<CtpInstrument>>& instruments, StrategyType strategyType);
 };
 
 #endif

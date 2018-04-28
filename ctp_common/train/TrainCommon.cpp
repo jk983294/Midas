@@ -8,7 +8,7 @@ void BacktestResult::init(PositionManager& manager) {
 }
 
 ostream& operator<<(ostream& os, const BacktestResult& result) {
-    os << "openTime,closeTime,openPrice,closePrice,direction,size,profit,commission\n";
+    os << "openTime,closeTime,openPrice,closePrice,direction,size,profit,commission,assetValue\n";
     for (auto& position : result.transactions) {
         os << *position << endl;
     }

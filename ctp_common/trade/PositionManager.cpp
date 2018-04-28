@@ -72,11 +72,13 @@ void PositionManager::close_position4simulation() {
     for (auto& position : portfolio) {
         CtpInstrument& instrument = *position->instrument;
         if (position->direction == CtpDirection::Long) {
-            if (instrument.strategy->decision == StrategyDecision::shortSignal) {
+            if (instrument.strategy->decision == StrategyDecision::shortSignal ||
+                instrument.strategy->decision == StrategyDecision::clearLongPositionSignal) {
                 close_position(position);
             }
         } else if (position->direction == CtpDirection::Short) {
-            if (instrument.strategy->decision == StrategyDecision::longSignal) {
+            if (instrument.strategy->decision == StrategyDecision::longSignal ||
+                instrument.strategy->decision == StrategyDecision::clearShortPositionSignal) {
                 close_position(position);
             }
         }
@@ -106,6 +108,7 @@ void PositionManager::close_position(std::shared_ptr<CtpPosition> position) {
     totalProfit -= position->profit;
 
     position->set_close();
+    position->totalAccountValue = totalAsset;
     finished.push_back(position);
 }
 

@@ -25,7 +25,7 @@ void CtpBackTester::app_start() {
     link_instrument_info();
 
     std::shared_ptr<BacktestResult> result = calculate(StrategyType::TBiMaStrategy);
-    MIDAS_LOG_INFO("test result:\n" << *result);
+    //    MIDAS_LOG_INFO("test result:\n" << *result);
 }
 
 void CtpBackTester::load_test_data(const string& dataPath) {

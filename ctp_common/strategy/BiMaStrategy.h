@@ -1,8 +1,10 @@
 #ifndef MIDAS_BI_MA_STRATEGY_H
 #define MIDAS_BI_MA_STRATEGY_H
 
+#include <sstream>
 #include "StrategyBase.h"
 #include "utils/math/DescriptiveStatistics.h"
+#include "utils/math/MathHelper.h"
 
 class BiMaStrategy : public StrategyBase {
 public:
@@ -16,22 +18,23 @@ public:
 public:
     BiMaStrategy(const CtpInstrument& instrument_, CandleScale scale) : StrategyBase(instrument_, scale) {}
 
-    void calculate(int index) override {
-        dsSlow.add_value(candles.data[index].close);
-        dsFast.add_value(candles.data[index].close);
-        slowMa[index] = dsSlow.get_mean();
-        fastMa[index] = dsFast.get_mean();
+    void calculate(int index, double marketPrice) override {
+        if (index == 0) return;
+        dsSlow.add_value(candles.data[index - 1].close);
+        dsFast.add_value(candles.data[index - 1].close);
+        slowMa[index - 1] = dsSlow.get_mean();
+        fastMa[index - 1] = dsFast.get_mean();
 
         if (index > 10) {
             if (coolDownCount > 0) {
                 --coolDownCount;
                 set_no_signal(itr);
             } else if (state == StrategyState::HoldMoney) {
-                if (fastMa[index] > slowMa[index] && fastMa[index - 1] < slowMa[index - 1]) {
+                if (midas::is_up_cross(fastMa, slowMa, index - 1)) {
                     signals[index] = signalValueBuyThreshold;
                     decision = StrategyDecision::longSignal;
                     state = StrategyState::HoldLongPosition;
-                } else if (fastMa[index] < slowMa[index] && fastMa[index - 1] > slowMa[index - 1]) {
+                } else if (midas::is_down_cross(fastMa, slowMa, index - 1)) {
                     signals[itr] = signalValueSellThreshold;
                     decision = StrategyDecision::shortSignal;
                     state = StrategyState::HoldShortPosition;
@@ -39,8 +42,8 @@ public:
                     set_no_signal(itr);
                 }
             } else if (state == StrategyState::HoldLongPosition) {
-                if (fastMa[index] < slowMa[index] && fastMa[index - 1] > slowMa[index - 1]) {
-                    signals[itr] = signalValueSellThreshold;
+                if (midas::is_down_cross(fastMa, slowMa, index - 1)) {
+                    signals[itr] = signalClearLong;
                     decision = StrategyDecision::clearLongPositionSignal;
                     state = StrategyState::HoldMoney;
                     coolDownCount = 20;
@@ -48,8 +51,8 @@ public:
                     set_no_signal(itr);
                 }
             } else if (state == StrategyState::HoldShortPosition) {
-                if (fastMa[index] > slowMa[index] && fastMa[index - 1] < slowMa[index - 1]) {
-                    signals[index] = signalValueBuyThreshold;
+                if (midas::is_up_cross(fastMa, slowMa, index - 1)) {
+                    signals[index] = signalClearShort;
                     decision = StrategyDecision::clearShortPositionSignal;
                     state = StrategyState::HoldMoney;
                     coolDownCount = 20;
@@ -61,6 +64,7 @@ public:
     }
 
     void init() override {
+        __init();
         size_t size = candles.data.size();
         dsSlow.clear();
         dsSlow.set_window_size(slowPeriod);
@@ -68,8 +72,6 @@ public:
         dsFast.set_window_size(fastPeriod);
         slowMa.resize(size);
         fastMa.resize(size);
-        signals.resize(size);
-        fill(signals.begin(), signals.end(), 0);
     }
 
     string get_csv_header() override { return "slow,fast"; }

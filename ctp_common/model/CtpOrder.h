@@ -48,6 +48,7 @@ public:
     double margin{0};                // totalInstrumentValue * ShortMarginRatio
     double deltaMargin{0};           // (latestPrice - previousPrice) * size * VolumeMultiple * ShortMarginRatio
     double commissionFee{0};
+    double totalAccountValue{0};
     midas::Timestamp openTime;
     midas::Timestamp closeTime;
 

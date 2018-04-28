@@ -64,6 +64,6 @@ double CtpPosition::get_commission() {
 ostream& operator<<(ostream& os, const CtpPosition& position) {
     os << position.openTime << "," << position.closeTime << "," << position.openPrice << "," << position.previousPrice
        << "," << (position.direction == CtpDirection::Long ? "long" : "short") << "," << position.size << ","
-       << position.profit << "," << position.commissionFee;
+       << position.profit << "," << position.commissionFee << "," << position.totalAccountValue;
     return os;
 }

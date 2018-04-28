@@ -76,8 +76,9 @@ private:
         if (currentRound.empty()) return false;
 
         for (auto& pInstrument : currentRound) {
-            pInstrument->strategy->calculate_previous_candle();
-            pInstrument->market_price(pInstrument->strategy->current_candle().open);
+            double marketPrice = pInstrument->strategy->current_candle().open;
+            pInstrument->market_price(marketPrice);
+            pInstrument->strategy->calculate_current(marketPrice);
         }
         return true;
     }
