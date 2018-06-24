@@ -12,7 +12,7 @@ ctp
 
     subscribe
     {
-        symbol cu1804
+        symbol cu1809
         exchange_key CtpAll
         exchange_code 6
     }

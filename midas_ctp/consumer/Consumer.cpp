@@ -204,8 +204,7 @@ void Consumer::on_control_channel_established() {
 
 uint8_t Consumer::subscribe(Subscription** ppSub, std::string const& mdTick, uint16_t mdExch, void* userData,
                             bool duplicateOK) {
-    MIDAS_LOG_INFO("Consumer subscribing to " << mdTick << "." << mdExch << ", " << (uint64_t)userData << ", "
-                                              << duplicateOK);
+    MIDAS_LOG_INFO("Consumer subscribing to " << mdTick << ", " << (uint64_t)userData << ", " << duplicateOK);
 
     uint8_t rc;
     if (mdTick.length() >= sizeof(CtrlSubscribe::symbol))  // symbol too long!
@@ -384,7 +383,7 @@ void Consumer::on_book_changed(Header* /*pHeader*/, DataBookChanged* changed) {
 }
 
 void Consumer::on_data_heartbeat(Header* /*pHeader*/, DataHeartbeat* dataHeartbeat) {
-    //    MIDAS_LOG_INFO("on_data_heartbeat called");
+    MIDAS_LOG_INFO("on_data_heartbeat called");
 }
 
 void Consumer::on_connect_response(Header* pHeader, CtrlConnectResponse* response, bool* isConnected) {

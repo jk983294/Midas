@@ -53,5 +53,8 @@ awk '{print $4, $2, $34}' instrument.dump
 ll /dev/shm
 rm -f ctp_cache
 
+./publisher -a 8023 -C /home/kun/github/midas/midas_ctp/cfg/producer.info -L debug
+./consumer -a 8024 -C /home/kun/github/midas/midas_ctp/cfg/consumer.info -L debug
+
 # shared memory error ENOMEM ERROR mlock: 12 Cannot allocate memory
 echo 1000000 > /proc/sys/vm/max_map_count

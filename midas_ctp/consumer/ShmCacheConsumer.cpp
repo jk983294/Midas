@@ -75,7 +75,8 @@ ShmCacheConsumer::ShmCacheConsumer(std::string const& cacheName, std::size_t cac
         shmBytesOffsetBid = 0;
         shmBytesOffsetAsk = bytes_offset_ask(d);
         MIDAS_LOG_INFO("shmBytesPerProduct: " << shmBytesPerProduct << ", shmBytesOffsetBid: " << shmBytesOffsetBid
-                                              << ", shmBytesOffsetAsk: " << shmBytesOffsetAsk);
+                                              << ", shmBytesOffsetAsk: " << shmBytesOffsetAsk
+                                              << ", addrPostMetadata: " << metadataBytes);
     }
 }
 

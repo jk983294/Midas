@@ -260,14 +260,14 @@ void Publisher::on_subscribe(int clientSock, Header* /*pHeader*/, CtrlSubscribe*
 
     auto const& exchange = sp->exchange;
     auto const& flags = sp->flags;
-    MIDAS_LOG_INFO("Received subscribe - Symbol: " << sp->symbol << "." << exchange << ", Flags: " << flags
+    MIDAS_LOG_INFO("Received subscribe - Symbol: " << sp->symbol << ", Flags: " << flags
                                                    << ", Client: " << cit->second->clientId
                                                    << ", Sock: " << clientSock);
 
     // verify that there is a cache for the requested exchange
-    if (bookCaches.count(sp->exchange)) {
+    if (bookCaches.count(exchange)) {
         commandQueues[clientSock].emplace_back(
-            std::make_tuple(MdCommand::subscribe, sp->symbol, sp->exchange, sp->flags));
+            std::make_tuple(MdCommand::subscribe, sp->symbol, exchange, sp->flags));
     } else {
         // Send back an error response: exchange doesn't exist for symbol
         cit->second->send_subscribe_response(SUBSCRIBE_STATUS_BAD_EXCHANGE, UINT16_MAX, sp->symbol, sp->exchange);

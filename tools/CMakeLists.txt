@@ -1,3 +1,4 @@
 add_subdirectory(delta_play)
+add_subdirectory(delta_jnl)
 add_subdirectory(ctp_stats)
 add_subdirectory(latmon)
